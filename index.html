@@ -901,7 +901,7 @@
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="goBack()">← 返回</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="submitForm()">確認送出報名 →</button>
+      <button class="btn btn-primary" id="btnSubmit" style="flex:1;" onclick="submitForm()">確認送出報名 →</button>
     </div>
   </div>
 </div>
@@ -1188,18 +1188,21 @@ function submitForm() {
   regs.push(formData);
   localStorage.setItem('wule_regs', JSON.stringify(regs));
 
-  // 送到 Google Apps Script
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
-  
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', GAS_URL, true);
-    xhr.setRequestHeader('Content-Type', 'text/plain');
-    xhr.send(JSON.stringify(formData));
-  } catch(e) {}
+  // 先顯示載入中
+  document.getElementById('btnSubmit').disabled = true;
+  document.getElementById('btnSubmit').textContent = '送出中…';
 
-  // 顯示完成頁
-  showThanks(formData, deposit);
+  // 送到 Google Apps Script，等回應後再跳頁
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(formData),
+  })
+  .catch(() => {})
+  .finally(() => {
+    showThanks(formData, deposit);
+  });
 }
 
 function showThanks(d, deposit) {
