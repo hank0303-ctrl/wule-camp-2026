@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>武樂營隊 ─ 後台管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9973A;
+    --gold-light: #E8C97A;
+    --gold-pale: #FBF5E8;
+    --ink: #1A1610;
+    --ink-mid: #3D3628;
+    --ink-light: #7A6E5F;
+    --ink-faint: #C4B9A8;
+    --cream: #FAF7F2;
+    --white: #FFFFFF;
+    --red-soft: #C0392B;
+    --green-soft: #2E7D32;
+    --border: #E2D9CA;
+    --shadow: 0 2px 20px rgba(26,22,16,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .login-logo {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 22px;
+    color: var(--gold);
+    margin-bottom: 4px;
+    letter-spacing: 3px;
+  }
+  .login-sub { font-size: 12px; color: var(--ink-faint); margin-bottom: 28px; letter-spacing: 1px; }
+  .login-label { font-size: 13px; font-weight: 500; color: var(--ink-mid); text-align: left; margin-bottom: 6px; display: block; }
+  .login-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--cream);
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: var(--gold); background: var(--white); }
+  .login-err { font-size: 12px; color: var(--red-soft); margin-bottom: 12px; display: none; }
+  .login-err.show { display: block; }
+
+  /* ── ADMIN LAYOUT ── */
+  .admin-wrap { display: none; }
+  .admin-wrap.active { display: block; }
+
+  .admin-header {
+    background: var(--ink);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .admin-header .logo { font-family: 'Noto Serif TC', serif; font-size: 16px; color: var(--gold-light); letter-spacing: 2px; }
+  .admin-header .logout-btn {
+    font-size: 12px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    background: transparent;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+  }
+  .admin-header .logout-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.4); }
+
+  .admin-tabs {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 24px;
+  }
+  .admin-tab {
+    padding: 14px 20px;
+    font-size: 13.5px;
+    color: var(--ink-light);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-weight: 400;
+  }
+  .admin-tab:hover { color: var(--gold); }
+  .admin-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 500; }
+
+  .admin-content { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .panel-sub { font-size: 13px; color: var(--ink-light); margin-bottom: 24px; }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  /* ── PRICE SETTINGS ── */
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .price-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    margin-bottom: 6px;
+  }
+  .price-field input, .price-field .text-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .price-field input:focus, .price-field .text-input:focus { border-color: var(--gold); background: var(--white); }
+  .price-hint { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+
+  .save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: var(--gold);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 18px;
+    transition: all 0.2s;
+  }
+  .save-btn:hover { background: #b5832e; transform: translateY(-1px); }
+  .save-ok { font-size: 12px; color: var(--green-soft); margin-left: 12px; display: none; }
+  .save-ok.show { display: inline; }
+
+  /* ── GAS URL ── */
+  .gas-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 6px;
+  }
+  .gas-input:focus { border-color: var(--gold); background: var(--white); }
+
+  /* ── STATS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-num { font-size: 26px; font-weight: 700; color: var(--gold); }
+  .stat-label { font-size: 12px; color: var(--ink-light); margin-top: 4px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table.reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    min-width: 800px;
+  }
+  .reg-table th {
+    background: var(--cream);
+    color: var(--ink-mid);
+    font-weight: 500;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .reg-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-mid);
+    vertical-align: middle;
+    max-width: 160px;
+    word-break: break-all;
+  }
+  .reg-table tr:last-child td { border-bottom: none; }
+  .reg-table tr:hover td { background: var(--gold-pale); }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge-pending { background: #FFF3CD; color: #856404; }
+  .badge-paid { background: #D1E7DD; color: #0A3622; }
+  .badge-cancel { background: #F8D7DA; color: #842029; }
+
+  .status-select {
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--cream);
+    color: var(--ink-mid);
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    outline: none;
+    background: var(--cream);
+    color: var(--ink);
+    flex: 1;
+    min-width: 160px;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--gold); }
+
+  .export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    cursor: pointer;
+    background: var(--white);
+    transition: all 0.2s;
+  }
+  .export-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+
+  .del-btn {
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    background: #fff5f5;
+    color: var(--red-soft);
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+  }
+  .del-btn:hover { background: var(--red-soft); color: var(--white); border-color: var(--red-soft); }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">武樂營隊</div>
+    <div class="login-sub">後台管理系統</div>
+    <label class="login-label">管理密碼</label>
+    <input type="password" class="login-input" id="pwInput" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="loginErr">密碼錯誤，請重試</div>
+    <button class="save-btn" style="width:100%;justify-content:center;" onclick="doLogin()">登入後台</button>
+    <p style="font-size:11px;color:var(--ink-faint);margin-top:16px;">預設密碼：wule2026（登入後可於設定中修改）</p>
+  </div>
+</div>
+
+<!-- ── ADMIN ── -->
+<div class="admin-wrap" id="adminWrap">
+  <header class="admin-header">
+    <div class="logo">武樂營隊｜後台管理</div>
+    <button class="logout-btn" onclick="doLogout()">登出</button>
+  </header>
+  <div class="admin-tabs">
+    <div class="admin-tab active" onclick="switchTab('registrations')">報名名單</div>
+    <div class="admin-tab" onclick="switchTab('pricing')">費用設定</div>
+    <div class="admin-tab" onclick="switchTab('settings')">系統設定</div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- ── 報名名單 ── -->
+    <div class="panel active" id="panel-registrations">
+      <h2 class="panel-title">報名名單</h2>
+      <p class="panel-sub">所有報名資料一覽，可查看訂金狀態、搜尋學員、匯出 CSV。</p>
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input type="text" class="search-input" id="searchInput" placeholder="搜尋學員姓名、家長、電話…" oninput="renderTable()">
+          <button class="export-btn" onclick="exportCSV()">⬇ 匯出 CSV</button>
+          <button class="export-btn" onclick="clearAll()" style="border-color:#f5c6cb;color:var(--red-soft);">清除全部</button>
+        </div>
+        <div class="table-wrap">
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>報名時間</th>
+                <th>學員姓名</th>
+                <th>性別</th>
+                <th>年齡</th>
+                <th>報名期數</th>
+                <th>總費用</th>
+                <th>訂金</th>
+                <th>訂金狀態</th>
+                <th>家長</th>
+                <th>電話</th>
+                <th>帳號後5碼</th>
+                <th>身體狀況</th>
+                <th>飲食注意</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="regTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 費用設定 ── -->
+    <div class="panel" id="panel-pricing">
+      <h2 class="panel-title">費用設定</h2>
+      <p class="panel-sub">設定各類型期數的報名費用，儲存後立即套用於報名表。</p>
+
+      <div class="card">
+        <div class="card-title">課程費用</div>
+        <div class="price-grid">
+          <div class="price-field">
+            <label>單日費用（7/1、7/2、7/3）</label>
+            <input type="number" id="cfg-single" placeholder="例：1200" min="0">
+            <div class="price-hint">每位學員每天</div>
+          </div>
+          <div class="price-field">
+            <label>整週費用（每梯次）</label>
+            <input type="number" id="cfg-week" placeholder="例：5500" min="0">
+            <div class="price-hint">每位學員每整週（7/6–8/28）</div>
+          </div>
+        </div>
+        <button class="save-btn" onclick="savePricing()">儲存費用設定</button>
+        <span class="save-ok" id="save-ok-pricing">✓ 已儲存</span>
+      </div>
+
+      <div class="card">
+        <div class="card-title">匯款資訊</div>
+        <div class="price-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="price-field">
+            <label>銀行名稱</label>
+            <input type="text" id="cfg-bankName" placeholder="例：玉山銀行 808" class="text-input">
+          </div>
+          <div class="price-field">
+            <label>匯款帳號</label>
+            <input type="text" id="cfg-bankAcct" placeholder="例：0000-000-000000" class="text-input">
+          </div>
+          <div class="price-field">
+            <label>戶名</label>
+            <input type="text" id="cfg-bankHolder" placeholder="例：武樂文化有限公司" class="text-input">
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveBankInfo()">儲存匯款資訊</button>
+        <span class="save-ok" id="save-ok-bank">✓ 已儲存</span>
+      </div>
+    </div>
+
+    <!-- ── 系統設定 ── -->
+    <div class="panel" id="panel-settings">
+      <h2 class="panel-title">系統設定</h2>
+      <p class="panel-sub">設定 Google Apps Script 串接網址與管理密碼。</p>
+
+      <div class="card">
+        <div class="card-title">Google 試算表串接</div>
+        <p style="font-size:13px;color:var(--ink-light);margin-bottom:12px;line-height:1.7;">
+          將報名資料自動寫入 Google 試算表，請先建立 Google Apps Script 並貼上部署後的網址。
+        </p>
+        <input type="text" class="gas-input" id="cfg-gasUrl" placeholder="https://script.google.com/macros/s/…/exec">
+        <div class="price-hint" style="margin-bottom:12px;">請輸入 Google Apps Script 部署後的 Web App URL</div>
+        <button class="save-btn" onclick="saveGasUrl()">儲存網址</button>
+        <span class="save-ok" id="save-ok-gas">✓ 已儲存</span>
+
+        <div style="margin-top:20px;padding:14px;background:var(--cream);border-radius:8px;border:1px solid var(--border);">
+          <p style="font-size:12px;font-weight:700;color:var(--ink-mid);margin-bottom:10px;">📋 Google Apps Script 設定步驟</p>
+          <ol style="padding-left:18px;font-size:12px;color:var(--ink-light);line-height:2;">
+            <li>開啟 <strong>Google 試算表</strong>，建立新試算表</li>
+            <li>點選上方選單：「擴充功能」→「Apps Script」</li>
+            <li>貼上下方提供的 <strong>Code.gs</strong> 程式碼</li>
+            <li>儲存後點「部署」→「新增部署作業」→選「網頁應用程式」</li>
+            <li>執行身分選「我」，存取對象選「所有人」</li>
+            <li>複製部署後的網址，貼到上方欄位儲存</li>
+          </ol>
+        </div>
+
+        <div style="margin-top:16px;">
+          <a id="downloadGas" style="font-size:13px;color:var(--gold);cursor:pointer;text-decoration:underline;" onclick="downloadGasCode()">⬇ 下載 Code.gs 程式碼</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">修改管理密碼</div>
+        <div class="price-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="price-field">
+            <label>新密碼</label>
+            <input type="password" id="cfg-newpw" placeholder="輸入新密碼" class="text-input">
+          </div>
+          <div class="price-field">
+            <label>確認密碼</label>
+            <input type="password" id="cfg-newpw2" placeholder="再次輸入" class="text-input">
+          </div>
+        </div>
+        <button class="save-btn" onclick="changePassword()">更新密碼</button>
+        <span class="save-ok" id="save-ok-pw">✓ 密碼已更新</span>
+        <span class="login-err" id="pw-err" style="display:none;margin-left:10px;">兩次密碼不一致</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DEFAULT_PW = 'wule2026';
+
+function getStoredPw() { return localStorage.getItem('wule_pw') || DEFAULT_PW; }
+
+function doLogin() {
+  const val = document.getElementById('pwInput').value;
+  if (val === getStoredPw()) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('adminWrap').classList.add('active');
+    loadConfig();
+    renderStats();
+    renderTable();
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('adminWrap').classList.remove('active');
+  document.getElementById('pwInput').value = '';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['registrations','pricing','settings'][i] === tab);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ── CONFIG ──
+function getConfig() {
+  const saved = localStorage.getItem('wule_config');
+  return saved ? JSON.parse(saved) : { single: 1200, week: 5500, bankName: '玉山銀行 808', bankAcct: '0000-000-000000', bankHolder: '武樂文化有限公司' };
+}
+
+function loadConfig() {
+  const cfg = getConfig();
+  document.getElementById('cfg-single').value = cfg.single;
+  document.getElementById('cfg-week').value = cfg.week;
+  document.getElementById('cfg-bankName').value = cfg.bankName || '';
+  document.getElementById('cfg-bankAcct').value = cfg.bankAcct || '';
+  document.getElementById('cfg-bankHolder').value = cfg.bankHolder || '';
+  document.getElementById('cfg-gasUrl').value = localStorage.getItem('wule_gas_url') || '';
+}
+
+function savePricing() {
+  const cfg = getConfig();
+  cfg.single = parseInt(document.getElementById('cfg-single').value) || cfg.single;
+  cfg.week = parseInt(document.getElementById('cfg-week').value) || cfg.week;
+  localStorage.setItem('wule_config', JSON.stringify(cfg));
+  showOk('save-ok-pricing');
+}
+
+function saveBankInfo() {
+  const cfg = getConfig();
+  cfg.bankName = document.getElementById('cfg-bankName').value.trim();
+  cfg.bankAcct = document.getElementById('cfg-bankAcct').value.trim();
+  cfg.bankHolder = document.getElementById('cfg-bankHolder').value.trim();
+  localStorage.setItem('wule_config', JSON.stringify(cfg));
+  showOk('save-ok-bank');
+}
+
+function saveGasUrl() {
+  const url = document.getElementById('cfg-gasUrl').value.trim();
+  localStorage.setItem('wule_gas_url', url);
+  showOk('save-ok-gas');
+}
+
+function changePassword() {
+  const pw1 = document.getElementById('cfg-newpw').value;
+  const pw2 = document.getElementById('cfg-newpw2').value;
+  if (!pw1 || pw1 !== pw2) {
+    document.getElementById('pw-err').classList.add('show');
+    return;
+  }
+  document.getElementById('pw-err').classList.remove('show');
+  localStorage.setItem('wule_pw', pw1);
+  document.getElementById('cfg-newpw').value = '';
+  document.getElementById('cfg-newpw2').value = '';
+  showOk('save-ok-pw');
+}
+
+function showOk(id) {
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── REGISTRATIONS ──
+function getRegs() {
+  const d = localStorage.getItem('wule_regs');
+  return d ? JSON.parse(d) : [];
+}
+
+function renderStats() {
+  const regs = getRegs();
+  const paid = regs.filter(r => r.depositStatus === 'paid').length;
+  const pending = regs.filter(r => r.depositStatus !== 'paid' && r.depositStatus !== 'cancel').length;
+  const totalRevenue = regs.filter(r => r.depositStatus === 'paid').reduce((s, r) => s + (r.totalFee || 0), 0);
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${regs.length}</div><div class="stat-label">總報名人數</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green-soft)">${paid}</div><div class="stat-label">已繳訂金</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#856404">${pending}</div><div class="stat-label">待繳訂金</div></div>
+    <div class="stat-card"><div class="stat-num">$${totalRevenue.toLocaleString()}</div><div class="stat-label">已確認總收入</div></div>
+  `;
+}
+
+function renderTable() {
+  const regs = getRegs();
+  const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const filtered = q ? regs.filter(r =>
+    (r.name||'').toLowerCase().includes(q) ||
+    (r.parent||'').toLowerCase().includes(q) ||
+    (r.phone||'').includes(q)
+  ) : regs;
+
+  const tbody = document.getElementById('regTbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="15"><div class="empty-state">尚無報名資料</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((r, i) => {
+    const status = r.depositStatus || 'pending';
+    const badgeMap = { pending: 'badge-pending', paid: 'badge-paid', cancel: 'badge-cancel' };
+    const labelMap = { pending: '待繳', paid: '已繳', cancel: '取消' };
+    return `<tr>
+      <td>${i + 1}</td>
+      <td style="white-space:nowrap;font-size:11px;">${r.timestamp || ''}</td>
+      <td><strong>${r.name || ''}</strong></td>
+      <td>${r.gender || ''}</td>
+      <td>${r.age || ''}</td>
+      <td style="font-size:11px;">${r.sessions || ''}</td>
+      <td>$${(r.totalFee||0).toLocaleString()}</td>
+      <td>$${(r.deposit||0).toLocaleString()}</td>
+      <td>
+        <select class="status-select" onchange="updateStatus(${r._id}, this.value)">
+          <option value="pending" ${status==='pending'?'selected':''}>待繳</option>
+          <option value="paid" ${status==='paid'?'selected':''}>已繳</option>
+          <option value="cancel" ${status==='cancel'?'selected':''}>取消</option>
+        </select>
+      </td>
+      <td>${r.parent || ''}</td>
+      <td>${r.phone || ''}</td>
+      <td>${r.bank || ''}</td>
+      <td style="font-size:11px;">${r.health || ''}</td>
+      <td style="font-size:11px;">${r.diet || ''}</td>
+      <td><button class="del-btn" onclick="deleteReg(${r._id})">刪除</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStatus(id, val) {
+  const regs = getRegs();
+  const r = regs.find(x => x._id === id);
+  if (r) { r.depositStatus = val; localStorage.setItem('wule_regs', JSON.stringify(regs)); }
+  renderStats();
+}
+
+function deleteReg(id) {
+  if (!confirm('確定要刪除這筆報名資料嗎？')) return;
+  const regs = getRegs().filter(r => r._id !== id);
+  localStorage.setItem('wule_regs', JSON.stringify(regs));
+  renderStats();
+  renderTable();
+}
+
+function clearAll() {
+  if (!confirm('確定要清除所有報名資料嗎？此動作無法還原。')) return;
+  localStorage.removeItem('wule_regs');
+  renderStats();
+  renderTable();
+}
+
+function exportCSV() {
+  const regs = getRegs();
+  if (!regs.length) { alert('目前沒有報名資料'); return; }
+  const headers = ['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','訂金狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意'];
+  const statusMap = { pending: '待繳', paid: '已繳', cancel: '取消' };
+  const rows = regs.map(r => [
+    r.timestamp, r.name, r.gender, r.age, r.dob, r.sessions,
+    r.totalFee, r.deposit, statusMap[r.depositStatus||'pending'],
+    r.parent, r.phone, r.bank, r.health, r.diet
+  ].map(v => '"' + (v||'').toString().replace(/"/g,'""') + '"'));
+
+  const csv = '\uFEFF' + [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '武樂營隊報名名單_' + new Date().toLocaleDateString('zh-TW') + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function downloadGasCode() {
+  const code = `// 武樂營隊報名系統 - Google Apps Script
+// 請將此程式碼貼入 Google Apps Script 編輯器，並部署為 Web App
+
+const SHEET_NAME = '報名資料';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+      sheet.appendRow(['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','訂金狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意']);
+    }
+    sheet.appendRow([
+      data.timestamp || new Date().toLocaleString('zh-TW'),
+      data.name, data.gender, data.age, data.dob, data.sessions,
+      data.totalFee, data.deposit, '待繳',
+      data.parent, data.phone, data.bank,
+      data.health, data.diet
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('武樂營隊報名系統運作中')
+    .setMimeType(ContentService.MimeType.TEXT);
+}`;
+
+  const blob = new Blob([code], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Code.gs';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── 接收報名資料（同一頁面時使用，跨頁用 storage event）──
+window.addEventListener('storage', (e) => {
+  if (e.key === 'wule_regs') { renderStats(); renderTable(); }
+});
+</script>
+</body>
+</html>
