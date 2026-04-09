@@ -1188,14 +1188,55 @@ function submitForm() {
   regs.push(formData);
   localStorage.setItem('wule_regs', JSON.stringify(regs));
 
-  // 送到 Google Apps Script（用 GET + script tag，完全無 CORS 問題，手機也能用）
+  // 用隱藏 form 提交到 GAS（最可靠，所有裝置、所有瀏覽器都能用）
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
-  const params = new URLSearchParams({
-    ...formData,
-    redirect: window.location.href.split('?')[0]
+  
+  // 建立隱藏 iframe 接收回應（避免跳頁）
+  let iframe = document.getElementById('_gas_iframe');
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.id = '_gas_iframe';
+    iframe.name = '_gas_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+
+  // 建立隱藏 form
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = GAS_URL;
+  form.target = '_gas_iframe';
+  form.style.display = 'none';
+
+  // 加入所有欄位
+  const fields = {
+    timestamp: formData.timestamp,
+    name: formData.name,
+    gender: formData.gender,
+    age: formData.age,
+    dob: formData.dob,
+    sessions: formData.sessions,
+    totalFee: formData.totalFee,
+    deposit: formData.deposit,
+    depositWithFee: formData.depositWithFee,
+    payment: formData.payment,
+    health: formData.health,
+    diet: formData.diet,
+    parent: formData.parent,
+    phone: formData.phone,
+    bank: formData.bank,
+  };
+  Object.entries(fields).forEach(([k, v]) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = k;
+    input.value = v;
+    form.appendChild(input);
   });
-  const img = new Image();
-  img.src = GAS_URL + '?' + params.toString();
+
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => document.body.removeChild(form), 3000);
 
   // 顯示完成頁
   showThanks(formData, deposit);
