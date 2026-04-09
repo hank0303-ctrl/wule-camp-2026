@@ -1188,16 +1188,32 @@ function submitForm() {
   regs.push(formData);
   localStorage.setItem('wule_regs', JSON.stringify(regs));
 
-  // 先顯示載入中
+  // 顯示載入中
   document.getElementById('btnSubmit').disabled = true;
   document.getElementById('btnSubmit').textContent = '送出中…';
 
-  // 送到 Google Apps Script，等回應後再跳頁
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
+  // 用 Formspree 送出（任何裝置都可用）
+  const FORMSPREE_URL = 'https://formspree.io/f/mjgpdawo';
 
-  fetch(GAS_URL, {
+  fetch(FORMSPREE_URL, {
     method: 'POST',
-    body: JSON.stringify(formData),
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      '報名時間': formData.timestamp,
+      '學員姓名': formData.name,
+      '性別': formData.gender,
+      '年齡': formData.age,
+      '出生年月日': formData.dob,
+      '報名期數': formData.sessions,
+      '總費用': '$' + formData.totalFee.toLocaleString(),
+      '需付訂金': '$' + formData.depositWithFee.toLocaleString(),
+      '付款方式': formData.payment,
+      '身體狀況': formData.health,
+      '飲食注意': formData.diet,
+      '家長姓名': formData.parent,
+      '聯絡電話': formData.phone,
+      '匯款帳號後5碼': formData.bank,
+    }),
   })
   .catch(() => {})
   .finally(() => {
