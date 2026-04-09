@@ -687,37 +687,37 @@
       <div class="form-section-title">學員基本資料</div>
 
       <div class="field-group">
-        <label class="field-label">姓名 <span class="req">*</span></label>
+        <label class="field-label">姓名 <span class="req">*</span>
         <div class="field-hint">小朋友姓名</div>
         <input type="text" class="form-input" id="f-name" placeholder="請填入文字">
         <div class="error-msg" id="err-name">此欄位為必填</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">性別 <span class="req">*</span></label>
+        <label class="field-label">性別 <span class="req">*</span>
         <div class="field-hint">小朋友性別</div>
         <div class="radio-group" id="f-gender">
           <label class="radio-item" onclick="selectRadio('f-gender', this, '男')">
             <input type="radio" name="gender" value="男">
             <div class="radio-dot"></div>男
-          </label>
+          
           <label class="radio-item" onclick="selectRadio('f-gender', this, '女')">
             <input type="radio" name="gender" value="女">
             <div class="radio-dot"></div>女
-          </label>
+          
         </div>
         <div class="error-msg" id="err-gender">請選擇性別</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">年齡 <span class="req">*</span></label>
+        <label class="field-label">年齡 <span class="req">*</span>
         <div class="field-hint">小朋友年齡（歲）</div>
         <input type="number" class="form-input" id="f-age" placeholder="請填入數字" min="3" max="18" style="max-width:160px;">
         <div class="error-msg" id="err-age">請填寫年齡</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">出生年月日 <span class="req">*</span></label>
+        <label class="field-label">出生年月日 <span class="req">*</span>
         <div class="field-hint">小朋友出生年月日</div>
         <input type="date" class="form-input" id="f-dob" style="max-width:200px;">
         <div class="error-msg" id="err-dob">請填寫出生年月日</div>
@@ -731,7 +731,7 @@
 
       <div class="session-group-title">單日體驗</div>
       <div class="session-grid" id="session-single" style="margin-bottom:16px;">
-        <label class="session-item" onclick="toggleSession(this)">
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="single-7/1">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -739,8 +739,8 @@
             <div class="session-date">2026 年 7 月 1 日</div>
           </div>
           <div class="session-price" id="price-single-display">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="single-7/2">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -748,8 +748,8 @@
             <div class="session-date">2026 年 7 月 2 日</div>
           </div>
           <div class="session-price" id="price-single-display2">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="single-7/3">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -757,12 +757,12 @@
             <div class="session-date">2026 年 7 月 3 日</div>
           </div>
           <div class="session-price" id="price-single-display3">$—</div>
-        </label>
+        </div>
       </div>
 
       <div class="session-group-title">整週課程</div>
       <div class="session-grid" id="session-week">
-        <label class="session-item" onclick="toggleSession(this)">
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-7/6">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -770,8 +770,8 @@
             <div class="session-date">7/6 – 7/10</div>
           </div>
           <div class="session-price" id="price-week-display">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-7/13">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -779,8 +779,8 @@
             <div class="session-date">7/13 – 7/17</div>
           </div>
           <div class="session-price" id="price-week-display2">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-7/20">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -788,8 +788,8 @@
             <div class="session-date">7/20 – 7/24</div>
           </div>
           <div class="session-price" id="price-week-display3">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-8/10">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -797,8 +797,8 @@
             <div class="session-date">8/10 – 8/14</div>
           </div>
           <div class="session-price" id="price-week-display4">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-8/17">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -806,8 +806,8 @@
             <div class="session-date">8/17 – 8/21</div>
           </div>
           <div class="session-price" id="price-week-display5">$—</div>
-        </label>
-        <label class="session-item" onclick="toggleSession(this)">
+        </div>
+        <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-8/24">
           <div class="session-check">✓</div>
           <div class="session-info">
@@ -815,7 +815,7 @@
             <div class="session-date">8/24 – 8/28</div>
           </div>
           <div class="session-price" id="price-week-display6">$—</div>
-        </label>
+        </div>
       </div>
       <div class="error-msg" id="err-session" style="margin-top:10px;">請至少選擇一個期數</div>
     </div>
@@ -839,14 +839,14 @@
       <div class="form-section-title">健康與飲食資訊</div>
 
       <div class="field-group">
-        <label class="field-label">身體有無特殊狀況 <span class="req">*</span></label>
+        <label class="field-label">身體有無特殊狀況 <span class="req">*</span>
         <div class="field-hint">若沒有請填：無</div>
         <input type="text" class="form-input" id="f-health" placeholder="請填入文字">
         <div class="error-msg" id="err-health">此欄位為必填</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">有無飲食方面需注意的地方？ <span class="req">*</span></label>
+        <label class="field-label">有無飲食方面需注意的地方？ <span class="req">*</span>
         <div class="field-hint">（不吃牛…等），若沒有請填：無</div>
         <input type="text" class="form-input" id="f-diet" placeholder="請填入文字">
         <div class="error-msg" id="err-diet">此欄位為必填</div>
@@ -858,21 +858,21 @@
       <div class="form-section-title">家長聯絡資料</div>
 
       <div class="field-group">
-        <label class="field-label">家長姓名（聯絡人／關係） <span class="req">*</span></label>
+        <label class="field-label">家長姓名（聯絡人／關係） <span class="req">*</span>
         <div class="field-hint">例：姓名／爸爸、媽媽</div>
         <input type="text" class="form-input" id="f-parent" placeholder="請填入文字">
         <div class="error-msg" id="err-parent">此欄位為必填</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">聯絡電話 <span class="req">*</span></label>
+        <label class="field-label">聯絡電話 <span class="req">*</span>
         <div class="field-hint">家長聯絡人電話</div>
         <input type="tel" class="form-input" id="f-phone" placeholder="請填入文字" style="max-width:240px;">
         <div class="error-msg" id="err-phone">請填寫聯絡電話</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">匯款帳號後 5 碼 <span class="req">*</span></label>
+        <label class="field-label">匯款帳號後 5 碼 <span class="req">*</span>
         <div class="field-hint">如需刷卡請私訊，並輸入刷卡人姓名</div>
         <input type="text" class="form-input" id="f-bank" placeholder="請填入文字" maxlength="10" style="max-width:200px;">
         <div class="error-msg" id="err-bank">請填寫匯款帳號後 5 碼</div>
