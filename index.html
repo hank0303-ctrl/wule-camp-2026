@@ -872,10 +872,30 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label">匯款帳號後 5 碼 <span class="req">*</span>
-        <div class="field-hint">如需刷卡請私訊，並輸入刷卡人姓名</div>
+        <label class="field-label">付款方式 <span class="req">*</span></label>
+        <div class="field-hint">請選擇訂金繳納方式</div>
+        <div class="radio-group" id="f-payment">
+          <label class="radio-item" onclick="selectPayment(this, '銀行轉帳')">
+            <input type="radio" name="payment" value="銀行轉帳">
+            <div class="radio-dot"></div>銀行轉帳
+          </label>
+          <label class="radio-item" onclick="selectPayment(this, '信用卡（+3%手續費）')">
+            <input type="radio" name="payment" value="信用卡">
+            <div class="radio-dot"></div>信用卡（酌收 3% 手續費）
+          </label>
+          <label class="radio-item" onclick="selectPayment(this, '現金')">
+            <input type="radio" name="payment" value="現金">
+            <div class="radio-dot"></div>現場現金
+          </label>
+        </div>
+        <div class="error-msg" id="err-payment">請選擇付款方式</div>
+      </div>
+
+      <div class="field-group" id="bank-field">
+        <label class="field-label">匯款帳號後 5 碼 <span class="req">*</span></label>
+        <div class="field-hint">轉帳後請填寫帳號後 5 碼；信用卡或現金請填「刷卡」或「現金」</div>
         <input type="text" class="form-input" id="f-bank" placeholder="請填入文字" maxlength="10" style="max-width:200px;">
-        <div class="error-msg" id="err-bank">請填寫匯款帳號後 5 碼</div>
+        <div class="error-msg" id="err-bank">請填寫此欄位</div>
       </div>
     </div>
 
@@ -900,21 +920,40 @@
       </div>
 
       <div class="bank-card">
-        <div class="bank-card-title">匯款資訊</div>
-        <div class="bank-row">
-          <span class="bank-label">銀行</span>
-          <span class="bank-value" id="bank-name-display">玉山銀行 808</span>
+        <div class="bank-card-title">繳費方式</div>
+
+        <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+          <div style="font-size:12px;color:var(--gold-light);font-weight:700;margin-bottom:8px;">💳 銀行轉帳</div>
+          <div class="bank-row" style="border:none;padding:3px 0;">
+            <span class="bank-label">銀行</span>
+            <span class="bank-value" id="bank-name-display">台北富邦銀行 中壢分行（代碼 012）</span>
+          </div>
+          <div class="bank-row" style="border:none;padding:3px 0;">
+            <span class="bank-label">戶名</span>
+            <span class="bank-value" id="bank-holder-display">運武樂有限公司</span>
+          </div>
+          <div class="bank-row" style="border:none;padding:3px 0;">
+            <span class="bank-label">帳號</span>
+            <span class="bank-value" id="bank-acct-display">82120000015649</span>
+          </div>
         </div>
-        <div class="bank-row">
-          <span class="bank-label">帳號</span>
-          <span class="bank-value" id="bank-acct-display">0000-000-000000</span>
+
+        <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.1);" id="card-fee-section">
+          <div style="font-size:12px;color:var(--gold-light);font-weight:700;margin-bottom:8px;">💳 信用卡付款</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">酌收 3% 手續費，請私訊武樂官方 LINE 協助辦理</div>
+          <div class="bank-row" style="border:none;padding:6px 0 0;" id="card-total-row">
+            <span class="bank-label" style="font-size:12px;">刷卡訂金含手續費</span>
+            <span style="font-weight:700;color:var(--gold-light);font-size:14px;" id="confirm-deposit-card">$0</span>
+          </div>
         </div>
-        <div class="bank-row">
-          <span class="bank-label">戶名</span>
-          <span class="bank-value" id="bank-holder-display">武樂文化有限公司</span>
+
+        <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+          <div style="font-size:12px;color:var(--gold-light);font-weight:700;margin-bottom:8px;">💵 現金付款</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">請先私訊官方 LINE 預約時間，至教室現場付款</div>
         </div>
-        <div class="bank-row" style="border-bottom:none;margin-top:8px;">
-          <span class="bank-label" style="font-size:13px;">需於 3 日內匯款訂金</span>
+
+        <div class="bank-row" style="border:none;margin-top:10px;">
+          <span class="bank-label" style="font-size:13px;">需於 3 日內完成訂金繳納</span>
           <span class="bank-amount" id="confirm-deposit">$0</span>
         </div>
       </div>
@@ -932,9 +971,9 @@
 const DEFAULT_PRICES = {
   single: 1200,
   week: 5500,
-  bankName: '玉山銀行 808',
-  bankAcct: '0000-000-000000',
-  bankHolder: '武樂文化有限公司'
+  bankName: '台北富邦銀行 中壢分行（代碼 012）',
+  bankAcct: '82120000015649',
+  bankHolder: '運武樂有限公司'
 };
 
 function getConfig() {
@@ -958,6 +997,7 @@ const SESSIONS = [
 let agreed = false;
 let selectedSessions = [];
 let genderVal = '';
+let paymentVal = '';
 
 function initPrices() {
   const cfg = getConfig();
@@ -1006,6 +1046,22 @@ function selectRadio(groupId, el, val) {
   el.classList.add('selected');
   genderVal = val;
   document.getElementById('err-gender').classList.remove('show');
+}
+
+function selectPayment(el, val) {
+  document.querySelectorAll('#f-payment .radio-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  paymentVal = val;
+  document.getElementById('err-payment').classList.remove('show');
+  // 更新帳號欄位提示
+  const hint = document.querySelector('#bank-field .field-hint');
+  if (val === '銀行轉帳') {
+    hint.textContent = '請填寫匯款帳號後 5 碼';
+  } else if (val.includes('信用卡')) {
+    hint.textContent = '信用卡付款請填寫刷卡人姓名';
+  } else {
+    hint.textContent = '現場現金付款請填「現金」';
+  }
 }
 
 function toggleSession(el) {
@@ -1078,6 +1134,10 @@ function validate() {
     document.getElementById('err-gender').classList.add('show');
     ok = false;
   }
+  if (!paymentVal) {
+    document.getElementById('err-payment').classList.add('show');
+    ok = false;
+  }
   if (selectedSessions.length === 0) {
     document.getElementById('err-session').classList.add('show');
     ok = false;
@@ -1100,6 +1160,8 @@ function submitForm() {
     return s.name;
   });
   const deposit = Math.ceil(total * 0.25);
+  const isCard = paymentVal.includes('信用卡');
+  const depositWithFee = isCard ? Math.ceil(deposit * 1.03) : deposit;
 
   const formData = {
     timestamp: new Date().toLocaleString('zh-TW'),
@@ -1110,6 +1172,8 @@ function submitForm() {
     sessions: sessionNames.join('、'),
     totalFee: total,
     deposit: deposit,
+    depositWithFee: depositWithFee,
+    payment: paymentVal,
     health: document.getElementById('f-health').value.trim(),
     diet: document.getElementById('f-diet').value.trim(),
     parent: document.getElementById('f-parent').value.trim(),
@@ -1144,7 +1208,8 @@ function showThanks(d, deposit) {
   document.getElementById('bank-name-display').textContent = cfg.bankName;
   document.getElementById('bank-acct-display').textContent = cfg.bankAcct;
   document.getElementById('bank-holder-display').textContent = cfg.bankHolder;
-  document.getElementById('confirm-deposit').textContent = '$' + deposit.toLocaleString();
+  document.getElementById('confirm-deposit').textContent = '$' + d.depositWithFee.toLocaleString();
+  document.getElementById('confirm-deposit-card').textContent = '$' + Math.ceil(d.deposit * 1.03).toLocaleString();
 
   const rows = [
     ['學員姓名', d.name],
@@ -1153,10 +1218,11 @@ function showThanks(d, deposit) {
     ['出生年月日', d.dob],
     ['報名期數', d.sessions],
     ['總費用', '$' + d.totalFee.toLocaleString()],
-    ['需付訂金', '$' + d.deposit.toLocaleString()],
+    ['付款方式', d.payment],
+    ['需付訂金', '$' + d.depositWithFee.toLocaleString() + (d.payment.includes('信用卡') ? '（含 3% 手續費）' : '')],
     ['家長姓名', d.parent],
     ['聯絡電話', d.phone],
-    ['匯款後 5 碼', d.bank],
+    ['匯款後 5 碼／備註', d.bank],
   ];
 
   document.getElementById('confirm-rows').innerHTML = rows.map(([l, v]) =>
