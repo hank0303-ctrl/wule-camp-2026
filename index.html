@@ -1189,7 +1189,7 @@ function submitForm() {
   localStorage.setItem('wule_regs', JSON.stringify(regs));
 
   // 送到 Google Apps Script
-  const GAS_URL = localStorage.getItem('wule_gas_url') || '';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
   if (GAS_URL) {
     fetch(GAS_URL, {
       method: 'POST',
