@@ -1188,16 +1188,14 @@ function submitForm() {
   regs.push(formData);
   localStorage.setItem('wule_regs', JSON.stringify(regs));
 
-  // 送到 Google Apps Script
+  // 送到 Google Apps Script（用 GET + script tag，完全無 CORS 問題，手機也能用）
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
-  if (GAS_URL) {
-    fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    }).catch(() => {});
-  }
+  const params = new URLSearchParams({
+    ...formData,
+    redirect: window.location.href.split('?')[0]
+  });
+  const img = new Image();
+  img.src = GAS_URL + '?' + params.toString();
 
   // 顯示完成頁
   showThanks(formData, deposit);
