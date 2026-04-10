@@ -511,8 +511,7 @@ function doLogin() {
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('adminWrap').classList.add('active');
     loadConfig();
-    renderStats();
-    renderTable();
+    loadRegsFromSheet();
   } else {
     document.getElementById('loginErr').classList.add('show');
     document.getElementById('pwInput').value = '';
@@ -594,9 +593,49 @@ function showOk(id) {
 }
 
 // ── REGISTRATIONS ──
+// GAS 網址（讀取試算表用）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZR9UBNXlBgnmxdfKQj-UUkjtSkQckkjbSe-oLjA2xbqBZo-ESQYcoLo-GMTywCoCr/exec';
+
+let allRegs = []; // 從試算表讀取的資料
+let statusOverride = {}; // 本地訂金狀態覆蓋
+
+function loadRegsFromSheet() {
+  document.getElementById('statsGrid').innerHTML = '<div style="color:var(--ink-faint);font-size:13px;padding:12px;">載入中…</div>';
+  document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">資料載入中…</div></td></tr>';
+
+  fetch(GAS_URL)
+    .then(r => r.json())
+    .then(json => {
+      const rows = json.data || [];
+      allRegs = rows.map((r, i) => ({
+        _id: i,
+        timestamp:    r['報名時間'] || '',
+        name:         r['學員姓名'] || '',
+        gender:       r['性別'] || '',
+        age:          r['年齡'] || '',
+        dob:          r['出生年月日'] || '',
+        sessions:     r['報名期數'] || '',
+        totalFee:     parseFloat((r['總費用']||'0').toString().replace(/[^0-9.]/g,'')),
+        deposit:      parseFloat((r['需付訂金']||'0').toString().replace(/[^0-9.]/g,'')),
+        payment:      r['付款方式'] || '',
+        depositStatus: statusOverride[i] || (r['訂金狀態'] === '已繳' ? 'paid' : r['訂金狀態'] === '取消' ? 'cancel' : 'pending'),
+        parent:       r['家長姓名'] || '',
+        phone:        r['聯絡電話'] || '',
+        bank:         r['匯款帳號後5碼'] || '',
+        health:       r['身體狀況'] || '',
+        diet:         r['飲食注意'] || '',
+      }));
+      renderStats();
+      renderTable();
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">載入失敗，請重新整理</div></td></tr>';
+    });
+}
+
 function getRegs() {
-  const d = localStorage.getItem('wule_regs');
-  return d ? JSON.parse(d) : [];
+  return allRegs;
 }
 
 function renderStats() {
@@ -630,17 +669,15 @@ function renderTable() {
 
   tbody.innerHTML = filtered.map((r, i) => {
     const status = r.depositStatus || 'pending';
-    const badgeMap = { pending: 'badge-pending', paid: 'badge-paid', cancel: 'badge-cancel' };
-    const labelMap = { pending: '待繳', paid: '已繳', cancel: '取消' };
     return `<tr>
       <td>${i + 1}</td>
-      <td style="white-space:nowrap;font-size:11px;">${r.timestamp || ''}</td>
-      <td><strong>${r.name || ''}</strong></td>
-      <td>${r.gender || ''}</td>
-      <td>${r.age || ''}</td>
-      <td style="font-size:11px;">${r.sessions || ''}</td>
-      <td>$${(r.totalFee||0).toLocaleString()}</td>
-      <td>$${(r.deposit||0).toLocaleString()}</td>
+      <td style="white-space:nowrap;font-size:11px;">${r.timestamp}</td>
+      <td><strong>${r.name}</strong></td>
+      <td>${r.gender}</td>
+      <td>${r.age}</td>
+      <td style="font-size:11px;">${r.sessions}</td>
+      <td>${r.totalFee ? '$'+r.totalFee.toLocaleString() : ''}</td>
+      <td>${r.deposit ? '$'+r.deposit.toLocaleString() : ''}</td>
       <td>
         <select class="status-select" onchange="updateStatus(${r._id}, this.value)">
           <option value="pending" ${status==='pending'?'selected':''}>待繳</option>
@@ -648,46 +685,34 @@ function renderTable() {
           <option value="cancel" ${status==='cancel'?'selected':''}>取消</option>
         </select>
       </td>
-      <td>${r.parent || ''}</td>
-      <td>${r.phone || ''}</td>
-      <td>${r.bank || ''}</td>
-      <td style="font-size:11px;">${r.health || ''}</td>
-      <td style="font-size:11px;">${r.diet || ''}</td>
-      <td><button class="del-btn" onclick="deleteReg(${r._id})">刪除</button></td>
+      <td>${r.parent}</td>
+      <td>${r.phone}</td>
+      <td>${r.bank}</td>
+      <td style="font-size:11px;">${r.health}</td>
+      <td style="font-size:11px;">${r.diet}</td>
+      <td><button class="del-btn" onclick="alert('請直接到 Google 試算表刪除此筆資料')">刪除</button></td>
     </tr>`;
   }).join('');
 }
 
 function updateStatus(id, val) {
-  const regs = getRegs();
-  const r = regs.find(x => x._id === id);
-  if (r) { r.depositStatus = val; localStorage.setItem('wule_regs', JSON.stringify(regs)); }
+  statusOverride[id] = val;
+  allRegs[id].depositStatus = val;
   renderStats();
-}
-
-function deleteReg(id) {
-  if (!confirm('確定要刪除這筆報名資料嗎？')) return;
-  const regs = getRegs().filter(r => r._id !== id);
-  localStorage.setItem('wule_regs', JSON.stringify(regs));
-  renderStats();
-  renderTable();
 }
 
 function clearAll() {
-  if (!confirm('確定要清除所有報名資料嗎？此動作無法還原。')) return;
-  localStorage.removeItem('wule_regs');
-  renderStats();
-  renderTable();
+  alert('請直接到 Google 試算表操作');
 }
 
 function exportCSV() {
   const regs = getRegs();
   if (!regs.length) { alert('目前沒有報名資料'); return; }
-  const headers = ['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','訂金狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意'];
+  const headers = ['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','付款方式','訂金狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意'];
   const statusMap = { pending: '待繳', paid: '已繳', cancel: '取消' };
   const rows = regs.map(r => [
     r.timestamp, r.name, r.gender, r.age, r.dob, r.sessions,
-    r.totalFee, r.deposit, statusMap[r.depositStatus||'pending'],
+    r.totalFee, r.deposit, r.payment, statusMap[r.depositStatus||'pending'],
     r.parent, r.phone, r.bank, r.health, r.diet
   ].map(v => '"' + (v||'').toString().replace(/"/g,'""') + '"'));
 
@@ -700,51 +725,10 @@ function exportCSV() {
 }
 
 function downloadGasCode() {
-  const code = `// 武樂營隊報名系統 - Google Apps Script
-// 請將此程式碼貼入 Google Apps Script 編輯器，並部署為 Web App
-
-const SHEET_NAME = '報名資料';
-
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName(SHEET_NAME);
-    if (!sheet) {
-      sheet = ss.insertSheet(SHEET_NAME);
-      sheet.appendRow(['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','訂金狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意']);
-    }
-    sheet.appendRow([
-      data.timestamp || new Date().toLocaleString('zh-TW'),
-      data.name, data.gender, data.age, data.dob, data.sessions,
-      data.totalFee, data.deposit, '待繳',
-      data.parent, data.phone, data.bank,
-      data.health, data.diet
-    ]);
-    return ContentService.createTextOutput(JSON.stringify({ success: true }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  alert('請使用現有的 GmailToSheet.gs');
 }
 
-function doGet(e) {
-  return ContentService.createTextOutput('武樂營隊報名系統運作中')
-    .setMimeType(ContentService.MimeType.TEXT);
-}`;
-
-  const blob = new Blob([code], { type: 'text/plain;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'Code.gs';
-  a.click(); URL.revokeObjectURL(url);
-}
-
-// ── 接收報名資料（同一頁面時使用，跨頁用 storage event）──
-window.addEventListener('storage', (e) => {
-  if (e.key === 'wule_regs') { renderStats(); renderTable(); }
-});
+window.addEventListener('storage', () => {});
 </script>
 </body>
 </html>
