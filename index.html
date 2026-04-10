@@ -694,17 +694,15 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label">性別 <span class="req">*</span>
+        <label class="field-label">性別 <span class="req">*</span></label>
         <div class="field-hint">小朋友性別</div>
         <div class="radio-group" id="f-gender">
-          <label class="radio-item" onclick="selectRadio('f-gender', this, '男')">
-            <input type="radio" name="gender" value="男">
+          <div class="radio-item" onclick="selectRadio('f-gender', this, '男')">
             <div class="radio-dot"></div>男
-          
-          <label class="radio-item" onclick="selectRadio('f-gender', this, '女')">
-            <input type="radio" name="gender" value="女">
+          </div>
+          <div class="radio-item" onclick="selectRadio('f-gender', this, '女')">
             <div class="radio-dot"></div>女
-          
+          </div>
         </div>
         <div class="error-msg" id="err-gender">請選擇性別</div>
       </div>
@@ -766,7 +764,7 @@
           <input type="checkbox" value="week-7/6">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第一週</div>
+            <div class="session-name">第一期</div>
             <div class="session-date">7/6 – 7/10</div>
           </div>
           <div class="session-price" id="price-week-display">$—</div>
@@ -775,7 +773,7 @@
           <input type="checkbox" value="week-7/13">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第二週</div>
+            <div class="session-name">第二期</div>
             <div class="session-date">7/13 – 7/17</div>
           </div>
           <div class="session-price" id="price-week-display2">$—</div>
@@ -784,7 +782,7 @@
           <input type="checkbox" value="week-7/20">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第三週</div>
+            <div class="session-name">第三期</div>
             <div class="session-date">7/20 – 7/24</div>
           </div>
           <div class="session-price" id="price-week-display3">$—</div>
@@ -793,7 +791,7 @@
           <input type="checkbox" value="week-8/10">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第四週</div>
+            <div class="session-name">第四期</div>
             <div class="session-date">8/10 – 8/14</div>
           </div>
           <div class="session-price" id="price-week-display4">$—</div>
@@ -802,7 +800,7 @@
           <input type="checkbox" value="week-8/17">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第五週</div>
+            <div class="session-name">第五期</div>
             <div class="session-date">8/17 – 8/21</div>
           </div>
           <div class="session-price" id="price-week-display5">$—</div>
@@ -811,7 +809,7 @@
           <input type="checkbox" value="week-8/24">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第六週</div>
+            <div class="session-name">第六期</div>
             <div class="session-date">8/24 – 8/28</div>
           </div>
           <div class="session-price" id="price-week-display6">$—</div>
@@ -875,18 +873,15 @@
         <label class="field-label">付款方式 <span class="req">*</span></label>
         <div class="field-hint">請選擇訂金繳納方式</div>
         <div class="radio-group" id="f-payment">
-          <label class="radio-item" onclick="selectPayment(this, '銀行轉帳')">
-            <input type="radio" name="payment" value="銀行轉帳">
+          <div class="radio-item" onclick="selectPayment(this, '銀行轉帳')">
             <div class="radio-dot"></div>銀行轉帳
-          </label>
-          <label class="radio-item" onclick="selectPayment(this, '信用卡（+3%手續費）')">
-            <input type="radio" name="payment" value="信用卡">
+          </div>
+          <div class="radio-item" onclick="selectPayment(this, '信用卡（+3%手續費）')">
             <div class="radio-dot"></div>信用卡（酌收 3% 手續費）
-          </label>
-          <label class="radio-item" onclick="selectPayment(this, '現金')">
-            <input type="radio" name="payment" value="現金">
+          </div>
+          <div class="radio-item" onclick="selectPayment(this, '現金')">
             <div class="radio-dot"></div>現場現金
-          </label>
+          </div>
         </div>
         <div class="error-msg" id="err-payment">請選擇付款方式</div>
       </div>
@@ -986,12 +981,12 @@ const SESSIONS = [
   { id: 'single-7/1', name: '單日 7/1', type: 'single' },
   { id: 'single-7/2', name: '單日 7/2', type: 'single' },
   { id: 'single-7/3', name: '單日 7/3', type: 'single' },
-  { id: 'week-7/6',   name: '第一週 (7/6–7/10)', type: 'week' },
-  { id: 'week-7/13',  name: '第二週 (7/13–7/17)', type: 'week' },
-  { id: 'week-7/20',  name: '第三週 (7/20–7/24)', type: 'week' },
-  { id: 'week-8/10',  name: '第四週 (8/10–8/14)', type: 'week' },
-  { id: 'week-8/17',  name: '第五週 (8/17–8/21)', type: 'week' },
-  { id: 'week-8/24',  name: '第六週 (8/24–8/28)', type: 'week' },
+  { id: 'week-7/6',   name: '第一期 (7/6–7/10)', type: 'week' },
+  { id: 'week-7/13',  name: '第二期 (7/13–7/17)', type: 'week' },
+  { id: 'week-7/20',  name: '第三期 (7/20–7/24)', type: 'week' },
+  { id: 'week-8/10',  name: '第四期 (8/10–8/14)', type: 'week' },
+  { id: 'week-8/17',  name: '第五期 (8/17–8/21)', type: 'week' },
+  { id: 'week-8/24',  name: '第六期 (8/24–8/28)', type: 'week' },
 ];
 
 let agreed = false;
@@ -1089,15 +1084,28 @@ function updateFee() {
     return;
   }
 
+  // 計算選了幾期整期
+  const weekCount = selectedSessions.filter(s => s.startsWith('week-')).length;
+  const singleFree = weekCount >= 4; // 4期以上單日免費
+
   let total = 0;
   let html = '';
   selectedSessions.forEach(sid => {
     const s = SESSIONS.find(x => x.id === sid);
     if (!s) return;
-    const price = s.type === 'single' ? cfg.single : cfg.week;
+    let price = s.type === 'single' ? cfg.single : cfg.week;
+    let priceLabel = '$' + price.toLocaleString();
+    if (s.type === 'single' && singleFree) {
+      price = 0;
+      priceLabel = '<span style="text-decoration:line-through;color:rgba(255,255,255,0.3);">$' + cfg.single.toLocaleString() + '</span> <span style="color:#E8C97A;">免費</span>';
+    }
     total += price;
-    html += `<div class="fee-row"><span>${s.name}</span><span class="fee-amount">$${price.toLocaleString()}</span></div>`;
+    html += `<div class="fee-row"><span>${s.name}</span><span class="fee-amount">${priceLabel}</span></div>`;
   });
+
+  if (singleFree && selectedSessions.some(s => s.startsWith('single-'))) {
+    html = `<div style="font-size:12px;color:var(--gold-light);padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">🎁 報名 4 期以上，單日體驗免費！</div>` + html;
+  }
 
   items.innerHTML = html;
   const deposit = Math.ceil(total * 0.25);
@@ -1152,10 +1160,12 @@ function submitForm() {
   }
 
   const cfg = getConfig();
+  const weekCount = selectedSessions.filter(s => s.startsWith('week-')).length;
+  const singleFree = weekCount >= 4;
   let total = 0;
   const sessionNames = selectedSessions.map(sid => {
     const s = SESSIONS.find(x => x.id === sid);
-    const price = s.type === 'single' ? cfg.single : cfg.week;
+    let price = s.type === 'single' ? (singleFree ? 0 : cfg.single) : cfg.week;
     total += price;
     return s.name;
   });
