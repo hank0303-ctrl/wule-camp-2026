@@ -601,7 +601,7 @@
     <div class="terms-card">
       <div class="terms-section-title">二、退費規定（含例假日及國定假日）</div>
       <div class="terms-body">
-        <p style="font-size:12.5px;color:var(--ink-light);margin-bottom:12px;">退費基準日以「武樂官方 LINE 文字訊息」到達我方之時間為準。退費比例以<strong>總費用</strong>為計算基準。</p>
+        <p style="font-size:12.5px;color:var(--ink-light);margin-bottom:12px;">退費基準日以「<strong>武樂小小運動家官方 LINE</strong> 文字訊息」到達我方之時間為準。退費比例以<strong>總費用</strong>為計算基準。</p>
         <div class="refund-table-wrap">
           <table class="refund-tbl">
             <thead><tr><th>通知時間（距活動開始）</th><th>退還比例</th></tr></thead>
@@ -633,6 +633,13 @@
             <li>課程學費屬全期整體規劃，恕不依天數比例退還。</li>
           </ul>
         </div>
+        <div class="terms-clause">
+          <h4>3. 天災或不可抗力因素</h4>
+          <ul>
+            <li>因颱風、地震、政府公告停課等不可抗力因素導致無法上課，扣除行政手續費後，依實際未參加天數比例退還費用。</li>
+            <li>行政手續費依實際情況由主辦方公告，並以「武樂小小運動家官方 LINE」通知為準。</li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -653,7 +660,7 @@
       <div class="terms-section-title">五、行政申辦守則</div>
       <div class="terms-body">
         <ul style="padding-left:16px;">
-          <li style="margin-bottom:8px;"><strong>唯一憑證：</strong>所有退費申請，一律以「武樂官方 LINE 文字訊息」為有效憑證。</li>
+          <li style="margin-bottom:8px;"><strong>唯一憑證：</strong>所有退費申請，一律以「武樂小小運動家官方 LINE 文字訊息」為有效憑證。</li>
           <li style="margin-bottom:8px;"><strong>拒絕口頭協議：</strong>不接受電話口頭承諾或現場約定。</li>
           <li><strong>轉帳即合約：</strong>完成報名表及訂金轉帳，即代表契約成立，視同同意本條款全部內容。</li>
         </ul>
@@ -708,17 +715,21 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label">年齡 <span class="req">*</span>
-        <div class="field-hint">小朋友年齡（歲）</div>
-        <input type="number" class="form-input" id="f-age" placeholder="請填入數字" min="3" max="18" style="max-width:160px;">
-        <div class="error-msg" id="err-age">請填寫年齡</div>
+        <label class="field-label">出生年月日 <span class="req">*</span></label>
+        <div class="field-hint">填寫後自動計算年齡</div>
+        <input type="date" class="form-input" id="f-dob" style="max-width:200px;" onchange="calcAge()">
+        <div class="error-msg" id="err-dob">請填寫出生年月日</div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">出生年月日 <span class="req">*</span>
-        <div class="field-hint">小朋友出生年月日</div>
-        <input type="date" class="form-input" id="f-dob" style="max-width:200px;">
-        <div class="error-msg" id="err-dob">請填寫出生年月日</div>
+        <label class="field-label">年齡 <span class="req">*</span></label>
+        <div class="field-hint">由出生年月日自動帶入</div>
+        <input type="number" class="form-input" id="f-age" placeholder="填寫出生年月日後自動帶入" min="1" max="20" style="max-width:160px;" readonly>
+        <div class="error-msg" id="err-age">請填寫出生年月日</div>
+        <div id="age-warning" style="display:none;margin-top:8px;background:#FFF3CD;border:1px solid #FFC107;border-radius:8px;padding:10px 14px;font-size:13px;color:#856404;">
+          ⚠️ 本營隊適合年齡為 <strong>5–10 歲</strong>，如需確認是否可參加，請私訊
+          <a href="https://lin.ee/VRxOt0n" target="_blank" style="color:#C9973A;font-weight:700;">武樂小小運動家官方 LINE</a>。
+        </div>
       </div>
     </div>
 
@@ -727,7 +738,7 @@
       <div class="form-section-title">報名期數</div>
       <p class="field-hint" style="margin-bottom:14px;">可複選，費用將自動計算於下方。</p>
 
-      <div class="session-group-title">單日體驗</div>
+      <div class="session-group-title">單日課程</div>
       <div class="session-grid" id="session-single" style="margin-bottom:16px;">
         <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="single-7/1">
@@ -886,6 +897,23 @@
         <div class="error-msg" id="err-payment">請選擇付款方式</div>
       </div>
 
+      <!-- 銀行轉帳資訊，選銀行轉帳時顯示 -->
+      <div id="bank-info-box" style="display:none;background:var(--ink);border-radius:10px;padding:16px;margin-bottom:4px;">
+        <div style="font-size:12px;color:var(--gold-light);font-weight:700;margin-bottom:10px;letter-spacing:1px;">匯款資訊</div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:13px;">
+          <span style="color:rgba(255,255,255,0.5);">銀行</span>
+          <span style="color:var(--white);">台北富邦銀行 中壢分行（012）</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:13px;">
+          <span style="color:rgba(255,255,255,0.5);">戶名</span>
+          <span style="color:var(--white);">運武樂有限公司</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;">
+          <span style="color:rgba(255,255,255,0.5);">帳號</span>
+          <span style="color:var(--gold-light);font-weight:700;letter-spacing:1px;">82120000015649</span>
+        </div>
+      </div>
+
       <div class="field-group" id="bank-field">
         <label class="field-label">匯款帳號後 5 碼 <span class="req">*</span></label>
         <div class="field-hint">轉帳後請填寫帳號後 5 碼；信用卡或現金請填「刷卡」或「現金」</div>
@@ -957,6 +985,13 @@
         📌 匯款完成後，請截圖傳至武樂官方 LINE 並告知學員姓名，我們將於 24 小時內確認收款。<br>
         <span style="font-size:12px;color:var(--ink-light);">如有任何問題請透過官方 LINE 聯繫，謝謝。</span>
       </div>
+
+      <a href="https://lin.ee/VRxOt0n" target="_blank" style="display:block;margin-top:20px;text-decoration:none;">
+        <div style="background:#06C755;border-radius:10px;padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:10px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 5.92 2 10.72c0 3.04 1.68 5.72 4.24 7.44-.16.56-.56 2.08-.64 2.4-.08.4.16.4.32.28.12-.08 1.92-1.28 2.72-1.84.44.08.88.12 1.36.12 5.52 0 10-3.92 10-8.72S17.52 2 12 2z"/></svg>
+          <span style="color:white;font-weight:700;font-size:15px;">加入武樂小小運動家官方 LINE</span>
+        </div>
+      </a>
     </div>
   </div>
 </div>
@@ -1005,6 +1040,25 @@ function initPrices() {
   document.getElementById('bank-holder-display').textContent = cfg.bankHolder;
 }
 
+function calcAge() {
+  const dob = document.getElementById('f-dob').value;
+  if (!dob) return;
+  const today = new Date();
+  const birth = new Date(dob);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  document.getElementById('f-age').value = age;
+  document.getElementById('err-age').classList.remove('show');
+  // 顯示警語
+  const warn = document.getElementById('age-warning');
+  if (age < 5 || age > 10) {
+    warn.style.display = 'block';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
 function toggleAgree() {
   agreed = !agreed;
   document.getElementById('agreeBox').classList.toggle('checked', agreed);
@@ -1048,6 +1102,10 @@ function selectPayment(el, val) {
   el.classList.add('selected');
   paymentVal = val;
   document.getElementById('err-payment').classList.remove('show');
+  
+  // 顯示/隱藏銀行資訊
+  document.getElementById('bank-info-box').style.display = val === '銀行轉帳' ? 'block' : 'none';
+  
   // 更新帳號欄位提示
   const hint = document.querySelector('#bank-field .field-hint');
   if (val === '銀行轉帳') {
@@ -1071,6 +1129,14 @@ function toggleSession(el) {
   document.getElementById('err-session').classList.remove('show');
 }
 
+function getSingleDiscount(weekCount) {
+  // 回傳 { freeDays: N, halfPrice: bool }
+  if (weekCount >= 6) return { freeDays: 3, halfPrice: false };
+  if (weekCount >= 5) return { freeDays: 2, halfPrice: true };
+  if (weekCount >= 4) return { freeDays: 1, halfPrice: true };
+  return { freeDays: 0, halfPrice: false };
+}
+
 function updateFee() {
   const cfg = getConfig();
   const items = document.getElementById('fee-items');
@@ -1084,28 +1150,43 @@ function updateFee() {
     return;
   }
 
-  // 計算選了幾期整期
   const weekCount = selectedSessions.filter(s => s.startsWith('week-')).length;
-  const singleFree = weekCount >= 4; // 4期以上單日免費
+  const singles = selectedSessions.filter(s => s.startsWith('single-'));
+  const { freeDays, halfPrice } = getSingleDiscount(weekCount);
 
   let total = 0;
   let html = '';
-  selectedSessions.forEach(sid => {
+
+  // 只要達到4期以上就顯示優惠提示，不需要已選單日
+  if (weekCount >= 4) {
+    let msg = '';
+    if (weekCount >= 6) msg = '🎁 報名 6 期，單日課程全部免費！';
+    else if (weekCount >= 5) msg = '🎁 報名 5 期，前 2 天單日免費，其餘半價！';
+    else msg = '🎁 報名 4 期，第 1 天單日免費，其餘半價！';
+    html += `<div style="font-size:12px;color:var(--gold-light);padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">${msg}</div>`;
+  }
+
+  selectedSessions.forEach((sid, idx) => {
     const s = SESSIONS.find(x => x.id === sid);
     if (!s) return;
-    let price = s.type === 'single' ? cfg.single : cfg.week;
+    let price = s.type === 'week' ? cfg.week : cfg.single;
     let priceLabel = '$' + price.toLocaleString();
-    if (s.type === 'single' && singleFree) {
-      price = 0;
-      priceLabel = '<span style="text-decoration:line-through;color:rgba(255,255,255,0.3);">$' + cfg.single.toLocaleString() + '</span> <span style="color:#E8C97A;">免費</span>';
+
+    if (s.type === 'single') {
+      const singleIdx = singles.indexOf(sid);
+      if (singleIdx < freeDays) {
+        // 免費
+        price = 0;
+        priceLabel = `<span style="text-decoration:line-through;color:rgba(255,255,255,0.3);">$${cfg.single.toLocaleString()}</span> <span style="color:#E8C97A;font-weight:700;">免費</span>`;
+      } else if (halfPrice) {
+        // 半價
+        price = Math.ceil(cfg.single / 2);
+        priceLabel = `<span style="text-decoration:line-through;color:rgba(255,255,255,0.3);">$${cfg.single.toLocaleString()}</span> <span style="color:#E8C97A;">$${price.toLocaleString()}</span>`;
+      }
     }
     total += price;
     html += `<div class="fee-row"><span>${s.name}</span><span class="fee-amount">${priceLabel}</span></div>`;
   });
-
-  if (singleFree && selectedSessions.some(s => s.startsWith('single-'))) {
-    html = `<div style="font-size:12px;color:var(--gold-light);padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">🎁 報名 4 期以上，單日體驗免費！</div>` + html;
-  }
 
   items.innerHTML = html;
   const deposit = Math.ceil(total * 0.25);
@@ -1161,11 +1242,17 @@ function submitForm() {
 
   const cfg = getConfig();
   const weekCount = selectedSessions.filter(s => s.startsWith('week-')).length;
-  const singleFree = weekCount >= 4;
+  const singles = selectedSessions.filter(s => s.startsWith('single-'));
+  const { freeDays, halfPrice } = getSingleDiscount(weekCount);
   let total = 0;
   const sessionNames = selectedSessions.map(sid => {
     const s = SESSIONS.find(x => x.id === sid);
-    let price = s.type === 'single' ? (singleFree ? 0 : cfg.single) : cfg.week;
+    let price = s.type === 'week' ? cfg.week : cfg.single;
+    if (s.type === 'single') {
+      const singleIdx = singles.indexOf(sid);
+      if (singleIdx < freeDays) price = 0;
+      else if (halfPrice) price = Math.ceil(cfg.single / 2);
+    }
     total += price;
     return s.name;
   });
