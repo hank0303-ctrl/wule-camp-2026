@@ -38,7 +38,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 
 /* ABOUT */
 .about{background:var(--gray);}
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;align-items:start;}
 .about-photos{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .about-photo{border-radius:14px;overflow:hidden;aspect-ratio:4/3;}
 .about-photo img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s;}
@@ -130,8 +130,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 .reveal.on{opacity:1;transform:none;}
 
 @media(max-width:640px){
-  .about-photos{max-height:220px;overflow:hidden;}
-  .about-photo.tall{max-height:220px;}
+  .about-photos{}
+  .about-photo.tall{aspect-ratio:3/4;}
 
   .about-grid{grid-template-columns:1fr;}
   .pillars{grid-template-columns:1fr 1fr;gap:6px;}
@@ -146,7 +146,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   .wk{grid-template-columns:50px 1fr;}
   .wk::after{left:24px!important;}
   .wk-panel-grid{grid-template-columns:1fr;}
-  .pillars{grid-template-columns:1fr;}
   .sch-tabs{gap:6px;}
   .sch-tab{font-size:12px;padding:6px 12px;}
 }
@@ -172,6 +171,36 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 
 
 .pillar-emoji{font-size:18px;margin-bottom:2px;line-height:1;}
+
+/* ── FAB NAVIGATION ── */
+.fab-wrap{position:fixed;bottom:24px;right:20px;z-index:999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.fab-menu{display:flex;flex-direction:column;gap:6px;align-items:flex-end;transition:all 0.3s;}
+.fab-menu.hidden{opacity:0;pointer-events:none;transform:translateY(12px);}
+.fab-item{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;color:var(--teal);
+  font-size:13px;font-weight:700;
+  padding:8px 14px;border-radius:30px;
+  box-shadow:0 3px 14px rgba(0,0,0,0.15);
+  text-decoration:none;white-space:nowrap;
+  border:1.5px solid #C8E8DC;
+  transition:all 0.2s;
+}
+.fab-item:hover{background:var(--teal);color:#fff;transform:translateX(-3px);}
+.fab-item-icon{font-size:14px;}
+.fab-btn{
+  width:50px;height:50px;border-radius:50%;
+  background:var(--teal);color:#fff;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 16px rgba(15,110,86,0.4);
+  font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;
+  -webkit-tap-highlight-color:transparent;
+}
+.fab-btn:hover{background:#085041;transform:scale(1.05);}
+.fab-btn.open{background:#085041;}
+
 </style>
 </head>
 <body>
@@ -202,7 +231,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   </div>
 </section>
 
-<section class="section about">
+<section class="section about" id="sec-about">
   <div class="si reveal">
     <div class="s-label">關於營隊</div>
     <h2 class="s-title">讓孩子在挑戰中成長<br><em>在運動中建立自信</em></h2>
@@ -243,7 +272,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   </div>
 </section>
 
-<section class="section weeks">
+<section class="section weeks" id="sec-weeks">
   <div class="si">
     <div class="reveal">
       <div class="s-label">每週主題</div>
@@ -436,7 +465,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   </div>
 </section>
 
-<section class="section outdoor">
+<section class="section outdoor" id="sec-outdoor">
   <div class="si reveal">
     <div class="s-label">戶外探索亮點</div>
     <h2 class="s-title">每週出遊<em>六大精選景點</em></h2>
@@ -452,7 +481,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   </div>
 </section>
 
-<section class="section schedule">
+<section class="section schedule" id="sec-schedule">
   <div class="si reveal">
     <div class="s-label">週課表總覽</div>
     <h2 class="s-title">每週<em>課程時間表</em></h2>
@@ -495,7 +524,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   </div>
 </section>
 
-<section class="cta">
+<section class="cta" id="sec-cta">
   <div class="reveal">
     <h2 class="s-title">準備好了嗎？<br><em>這個夏天一起熱血出發！</em></h2>
     <p class="cta-sub">讓孩子在挑戰中成長，在運動中建立自信 💪<br>可單週報名，彈性選擇</p>
@@ -611,6 +640,40 @@ function closeModalOutside(e, overlay){
   if(e.target===overlay) { overlay.classList.remove('open'); document.body.style.overflow=''; }
 }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';}) });
+</script>
+
+
+<!-- FAB NAVIGATION -->
+<div class="fab-wrap" id="fabWrap">
+  <div class="fab-menu hidden" id="fabMenu">
+    <a class="fab-item" href="#sec-about" onclick="closeFab()"><span class="fab-item-icon">🏕️</span>關於營隊</a>
+    <a class="fab-item" href="#sec-weeks" onclick="closeFab()"><span class="fab-item-icon">📅</span>每週主題</a>
+    <a class="fab-item" href="#sec-outdoor" onclick="closeFab()"><span class="fab-item-icon">🌿</span>戶外探索</a>
+    <a class="fab-item" href="#sec-schedule" onclick="closeFab()"><span class="fab-item-icon">📋</span>週課表</a>
+    <a class="fab-item" href="#sec-cta" onclick="closeFab()"><span class="fab-item-icon">✍️</span>立即報名</a>
+  </div>
+  <button class="fab-btn" id="fabBtn" onclick="toggleFab()">☰</button>
+</div>
+
+<script id="fab-script">
+function toggleFab(){
+  const menu = document.getElementById('fabMenu');
+  const btn  = document.getElementById('fabBtn');
+  const open = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', open);
+  btn.classList.toggle('open', !open);
+  btn.textContent = open ? '☰' : '✕';
+}
+function closeFab(){
+  document.getElementById('fabMenu').classList.add('hidden');
+  const btn = document.getElementById('fabBtn');
+  btn.classList.remove('open');
+  btn.textContent = '☰';
+}
+// close when clicking outside
+document.addEventListener('click', e => {
+  if(!document.getElementById('fabWrap').contains(e.target)) closeFab();
+});
 </script>
 
 </body>
