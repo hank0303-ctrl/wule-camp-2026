@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>2026 武動暑假｜全能運動挑戰營</title>
+<meta name="description" content="2026武樂夏令營，六週全能運動挑戰營，武術、拳擊、翻滾、舞蹈、戶外探索，適合5-10歲。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#0F9E75;--teal-mid:#1DAA80;--teal-light:#5DCAA5;--teal-pale:#E1F5EE;
+  --orange:#FF7A2F;--yellow:#FFD600;--dark:#1A1A1A;--gray:#F5F5F0;--text:#2C2C2C;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);overflow-x:hidden;}
+
+/* HERO */
+.hero{position:relative;background:#fff;display:flex;flex-direction:column;align-items:center;overflow:hidden;padding-bottom:48px;}
+.hero-photos-top{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;height:260px;}
+.hp{overflow:hidden;}
+.hp img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;}
+.hp:hover img{transform:scale(1.05);}
+.badge-wrap{margin-top:-80px;z-index:5;position:relative;}
+.badge-wrap img{width:340px;max-width:85vw;filter:drop-shadow(0 8px 24px rgba(15,110,86,0.2));}
+.hero-info{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px;padding:0 20px;}
+.info-pill{background:var(--teal-pale);color:var(--teal);font-weight:700;font-size:14px;padding:8px 18px;border-radius:30px;border:1.5px solid var(--teal-light);}
+.date-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;padding:0 20px;width:100%;max-width:500px;}
+.dg-item{border-radius:12px;padding:12px 16px;color:#fff;font-weight:900;font-size:17px;line-height:1.2;}
+.dg-item small{display:block;font-size:11px;font-weight:500;opacity:0.88;margin-top:3px;}
+
+/* SECTION */
+.section{padding:64px 24px;}
+.si{max-width:960px;margin:0 auto;}
+.s-label{display:inline-flex;align-items:center;gap:8px;background:var(--teal-pale);color:var(--teal);font-weight:900;font-size:12px;letter-spacing:3px;padding:5px 16px;border-radius:4px;margin-bottom:14px;border-left:3px solid var(--teal);}
+.s-title{font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.25;margin-bottom:16px;}
+.s-title em{font-style:normal;color:var(--teal);}
+
+/* ABOUT */
+.about{background:var(--gray);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;}
+.about-photos{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.about-photo{border-radius:14px;overflow:hidden;aspect-ratio:4/3;}
+.about-photo img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s;}
+.about-photo:hover img{transform:scale(1.05);}
+.about-photo.tall{grid-row:span 2;aspect-ratio:unset;}
+.pillars{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pillar{background:#fff;border-radius:16px;padding:20px 16px;border:1.5px solid #E0EDE8;transition:all 0.3s;text-align:center;}
+.pillar:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 10px 24px rgba(15,110,86,0.1);}
+.pillar-icon{font-size:32px;margin-bottom:8px;}
+.pillar-name{font-weight:900;font-size:15px;margin-bottom:4px;color:var(--teal);}
+.pillar-kw{font-size:12px;color:#777;line-height:1.6;}
+
+/* WEEKS */
+.weeks{background:#fff;}
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:36px;}
+.wk{display:grid;grid-template-columns:72px 1fr;position:relative;}
+.wk:not(:last-child)::after{content:'';position:absolute;left:35px;top:58px;bottom:-20px;width:2px;background:#E0EDE8;}
+.wk-num{display:flex;flex-direction:column;align-items:center;padding-top:14px;}
+.wk-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff;font-weight:900;flex-shrink:0;cursor:pointer;transition:transform 0.2s;}
+.wk-dot:hover{transform:scale(1.1);}
+.wk-body{border-radius:16px;padding:0;margin:8px 0 20px;border-left:4px solid transparent;overflow:hidden;}
+.wk-header{padding:20px 22px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.wk-date{font-size:12px;color:#999;margin-bottom:4px;letter-spacing:1px;}
+.wk-theme{font-size:clamp(16px,2.5vw,20px);font-weight:900;margin-bottom:3px;}
+.wk-core{font-size:13px;font-weight:700;}
+.wk-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.wk-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:rgba(255,255,255,0.6);border:1px solid rgba(0,0,0,0.1);}
+.wk-chevron{font-size:18px;transition:transform 0.3s;flex-shrink:0;margin-left:12px;opacity:0.6;}
+.wk-panel{max-height:0;overflow:hidden;transition:max-height 0.45s ease;background:#fff;}
+.wk-panel.open{max-height:700px;}
+.wk-panel-inner{padding:0 22px 24px;}
+.wk-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.wk-panel-photo{border-radius:12px;overflow:hidden;height:180px;}
+.wk-panel-photo img{width:100%;height:100%;object-fit:cover;}
+.wk-panel-text{font-size:14px;line-height:1.8;color:#444;}
+.wk-panel-text h4{font-size:15px;font-weight:900;margin-bottom:8px;}
+.wk-outdoor-row{display:flex;align-items:flex-start;gap:10px;background:var(--teal-pale);border-radius:10px;padding:12px 14px;margin-top:14px;}
+.wk-outdoor-icon{font-size:20px;flex-shrink:0;}
+.wk-outdoor-info .label{font-size:11px;color:#999;font-weight:700;letter-spacing:1px;margin-bottom:2px;}
+.wk-outdoor-info .place{font-size:14px;font-weight:900;color:var(--teal);}
+.wk-outdoor-info .desc{font-size:12px;color:#666;margin-top:2px;line-height:1.5;}
+
+/* OUTDOOR */
+.outdoor{background:var(--teal);}
+.outdoor .s-label{background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.5);}
+.outdoor .s-title{color:#fff;}
+.outdoor .s-title em{color:var(--yellow);}
+.outdoor-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px;}
+.oc{background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.22);border-radius:16px;padding:22px;transition:all 0.3s;}
+.oc:hover{background:rgba(255,255,255,0.18);transform:translateY(-3px);}
+.oc-icon{font-size:28px;margin-bottom:8px;}
+.oc-name{font-size:17px;font-weight:900;color:#fff;margin-bottom:6px;}
+.oc-desc{font-size:13px;color:rgba(255,255,255,0.8);line-height:1.7;}
+.oc-week{display:inline-block;margin-top:10px;background:rgba(255,255,255,0.2);border-radius:20px;padding:3px 10px;font-size:11px;color:#fff;font-weight:700;}
+
+/* SCHEDULE */
+.schedule{background:var(--gray);}
+.sch-tabs{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;}
+.sch-tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all 0.2s;background:#fff;color:#888;}
+.sch-tab.active{color:#fff;}
+.sch-panel{display:none;margin-top:20px;}
+.sch-panel.active{display:block;}
+.sch-table{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;font-size:13px;}
+.sch-table th{padding:11px 8px;text-align:center;color:#fff;font-weight:700;font-size:12px;}
+.sch-table td{padding:10px 8px;text-align:center;background:#fff;border-bottom:1px solid #EAEAE5;vertical-align:middle;line-height:1.4;}
+.sch-table tr:last-child td{border-bottom:none;}
+.sch-table .row-label{background:var(--teal-pale);color:var(--teal);font-weight:900;font-size:12px;white-space:nowrap;}
+.sch-merged{color:#888;font-size:12px;}
+
+/* GALLERY */
+.gallery{background:#fff;}
+.gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:190px;gap:8px;margin-top:28px;}
+.g{border-radius:12px;overflow:hidden;}
+.g img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;}
+.g:hover img{transform:scale(1.07);}
+.g.tall{grid-row:span 2;}
+.g.wide{grid-column:span 2;}
+
+/* CTA */
+.cta{background:var(--dark);padding:72px 24px;text-align:center;}
+.cta .s-title{color:#fff;text-align:center;font-size:clamp(24px,4vw,44px);}
+.cta .s-title em{color:var(--yellow);}
+.cta-sub{color:rgba(255,255,255,0.55);font-size:15px;margin:14px 0 32px;line-height:1.8;}
+.cta-btn{display:inline-block;background:var(--teal);color:#fff;font-weight:900;font-size:18px;padding:16px 52px;border-radius:60px;text-decoration:none;transition:all 0.3s;box-shadow:0 8px 24px rgba(15,110,86,0.35);}
+.cta-btn:hover{background:var(--yellow);color:var(--dark);transform:translateY(-3px);}
+
+/* ANIMATIONS */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity 0.7s,transform 0.7s;}
+.reveal.on{opacity:1;transform:none;}
+
+@media(max-width:640px){
+  .hero-photos-top{grid-template-columns:1fr 1fr;height:170px;}
+  .hp:nth-child(3),.hp:nth-child(4){display:none;}
+  .date-grid{grid-template-columns:1fr 1fr;}
+  .about-grid{grid-template-columns:1fr;}
+  .outdoor-grid{grid-template-columns:1fr;}
+  .gallery-grid{grid-template-columns:1fr 1fr;grid-auto-rows:140px;}
+  .g.wide{grid-column:span 1;}
+  .wk{grid-template-columns:50px 1fr;}
+  .wk::after{left:24px!important;}
+  .wk-panel-grid{grid-template-columns:1fr;}
+  .pillars{grid-template-columns:1fr;}
+  .sch-tabs{gap:6px;}
+  .sch-tab{font-size:12px;padding:6px 12px;}
+}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-photos-top">
+    <div class="hp"><img src="images/photo_15.jpg" alt="夏令營活動" loading="lazy"></div>
+    <div class="hp"><img src="images/photo_09.jpg" alt="夏令營活動" loading="lazy"></div>
+    <div class="hp"><img src="images/photo_02.jpg" alt="夏令營活動" loading="lazy"></div>
+    <div class="hp"><img src="images/photo_16.jpg" alt="夏令營活動" loading="lazy"></div>
+  </div>
+  <div class="badge-wrap">
+    <img src="images/badge.png" alt="2026 熱血挑戰の夏 全能運動挑戰營">
+  </div>
+  <div class="hero-info">
+    <div class="info-pill">🕐 AM 07:30 – PM 04:30</div>
+    <div class="info-pill">👦 適合 5–10 歲</div>
+    <div class="info-pill">📍 桃園市中壢區</div>
+    <div class="info-pill">✅ 可單週報名</div>
+  </div>
+  <div class="date-grid">
+    <div class="dg-item" style="background:#FF6B1A">7/6 – 7/10<small>第一週・武動覺醒</small></div>
+    <div class="dg-item" style="background:#E63946">7/13 – 7/17<small>第二週・熱血出擊</small></div>
+    <div class="dg-item" style="background:#2ECC71">7/20 – 7/24<small>第三週・翻轉極限</small></div>
+    <div class="dg-item" style="background:#FF9A8B">8/10 – 8/14<small>第四週・節奏出任務</small></div>
+    <div class="dg-item" style="background:#C4A200">8/17 – 8/21<small>第五週・武動進階</small></div>
+    <div class="dg-item" style="background:#1A8FD1">8/24 – 8/28<small>第六週・終極對決</small></div>
+  </div>
+</section>
+
+<section class="section about">
+  <div class="si reveal">
+    <div class="s-label">關於營隊</div>
+    <h2 class="s-title">讓孩子在挑戰中成長<br><em>在運動中建立自信</em></h2>
+    <p style="color:#666;font-size:16px;line-height:1.9;max-width:580px;margin-bottom:28px">2026 全能運動挑戰營是一場完整的六週冒險。武術、拳擊、翻滾、舞蹈，每週全新主題，帶領孩子突破自我、建立自信，享受運動的快樂。</p>
+    <div class="about-grid">
+      <div class="about-photos">
+        <div class="about-photo tall"><img src="images/photo_17.jpg" alt="" loading="lazy"></div>
+        <div class="about-photo"><img src="images/photo_03.jpg" alt="" loading="lazy"></div>
+        <div class="about-photo"><img src="images/photo_04.jpg" alt="" loading="lazy"></div>
+      </div>
+      <div class="pillars">
+        <div class="pillar"><div class="pillar-icon">🥋</div><div class="pillar-name">武術訓練</div><div class="pillar-kw">身體協調 × 意志訓練<br>學會尊重</div></div>
+        <div class="pillar"><div class="pillar-icon">🥊</div><div class="pillar-name">拳擊訓練</div><div class="pillar-kw">爆發力 × 敏捷反應<br>情緒釋放</div></div>
+        <div class="pillar"><div class="pillar-icon">🤸</div><div class="pillar-name">防身術 &amp; 翻滾</div><div class="pillar-kw">情境演練 × 肢體協調<br>突破恐懼</div></div>
+        <div class="pillar"><div class="pillar-icon">⚾</div><div class="pillar-name">球類課程</div><div class="pillar-kw">羽毛球 × 棒球 × 足球<br>團隊合作</div></div>
+        <div class="pillar"><div class="pillar-icon">🚌</div><div class="pillar-name">戶外教學</div><div class="pillar-kw">每週出遊探索<br>博物館 × 觀光工廠</div></div>
+        <div class="pillar"><div class="pillar-icon">🎨</div><div class="pillar-name">手作課程</div><div class="pillar-kw">創意動手做<br>專注力 × 成就感</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section weeks">
+  <div class="si">
+    <div class="reveal">
+      <div class="s-label">每週主題</div>
+      <h2 class="s-title">六週<em>完整冒險地圖</em></h2>
+      <p style="color:#888;font-size:14px;margin-bottom:8px">點擊每週卡片查看詳細課程 👇</p>
+    </div>
+    <div class="timeline">
+
+      <div class="wk reveal">
+        <div class="wk-num"><div class="wk-dot" style="background:#FF6B1A">W1</div></div>
+        <div class="wk-body" style="background:#FFF0E8;border-left-color:#FF6B1A">
+          <div class="wk-header" onclick="toggleWk(this)">
+            <div>
+              <div class="wk-date">7月6日 – 7月10日</div>
+              <div class="wk-theme" style="color:#FF6B1A">武動覺醒｜小小武者養成週</div>
+              <div class="wk-core" style="color:#FF6B1A">武術 × 紀律 × 身體控制</div>
+              <div class="wk-tags"><span class="wk-tag" style="color:#FF6B1A;border-color:#FF6B1A40">平衡</span><span class="wk-tag" style="color:#FF6B1A;border-color:#FF6B1A40">核心</span><span class="wk-tag" style="color:#FF6B1A;border-color:#FF6B1A40">反應</span><span class="wk-tag" style="color:#FF6B1A;border-color:#FF6B1A40">專注力</span></div>
+            </div>
+            <div class="wk-chevron" style="color:#FF6B1A">▼</div>
+          </div>
+          <div class="wk-panel">
+            <div class="wk-panel-inner">
+              <div class="wk-panel-grid">
+                <div class="wk-panel-photo"><img src="images/photo_12.jpg" alt="" loading="lazy"></div>
+                <div class="wk-panel-text"><h4 style="color:#FF6B1A">本週課程重點</h4>從最基本的站姿、呼吸、架勢開始，讓孩子學習出手、踢腿等武術動作，結合遊戲式教學，培養專注與動作反應力，建立穩定的身體控制與自信心！</div>
+              </div>
+              <div class="wk-outdoor-row">
+                <div class="wk-outdoor-icon">🏭</div>
+                <div class="wk-outdoor-info">
+                  <div class="label">本週戶外探索・7/9 (四)</div>
+                  <div class="place">香帥蛋糕製所</div>
+                  <div class="desc">走進蛋糕生產線，親眼看到美食從原料到成品的全過程，好吃又好玩！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wk reveal">
+        <div class="wk-num"><div class="wk-dot" style="background:#E63946">W2</div></div>
+        <div class="wk-body" style="background:#FDE8EA;border-left-color:#E63946">
+          <div class="wk-header" onclick="toggleWk(this)">
+            <div>
+              <div class="wk-date">7月13日 – 7月17日</div>
+              <div class="wk-theme" style="color:#E63946">熱血出擊｜小小拳王訓練營</div>
+              <div class="wk-core" style="color:#E63946">拳擊 × 反應 × 爆發力</div>
+              <div class="wk-tags"><span class="wk-tag" style="color:#E63946;border-color:#E6394640">速度</span><span class="wk-tag" style="color:#E63946;border-color:#E6394640">力量</span><span class="wk-tag" style="color:#E63946;border-color:#E6394640">專注</span><span class="wk-tag" style="color:#E63946;border-color:#E6394640">釋放壓力</span></div>
+            </div>
+            <div class="wk-chevron" style="color:#E63946">▼</div>
+          </div>
+          <div class="wk-panel">
+            <div class="wk-panel-inner">
+              <div class="wk-panel-grid">
+                <div class="wk-panel-photo"><img src="images/photo_05.jpg" alt="" loading="lazy"></div>
+                <div class="wk-panel-text"><h4 style="color:#E63946">本週課程重點</h4>從拳套上手到步伐移動，孩子將體驗基本拳擊技巧與對打概念，強化節奏感、專注力與爆發力，也學會尊重對手與自我保護！</div>
+              </div>
+              <div class="wk-outdoor-row">
+                <div class="wk-outdoor-icon">🎨</div>
+                <div class="wk-outdoor-info">
+                  <div class="label">本週戶外探索・7/16 (四)</div>
+                  <div class="place">三峽藍染中心 × 新北美術館</div>
+                  <div class="desc">百年藍染工藝體驗 + 當代藝術探索，文化與創意的雙重驚喜！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wk reveal">
+        <div class="wk-num"><div class="wk-dot" style="background:#2ECC71">W3</div></div>
+        <div class="wk-body" style="background:#E8F9F0;border-left-color:#2ECC71">
+          <div class="wk-header" onclick="toggleWk(this)">
+            <div>
+              <div class="wk-date">7月20日 – 7月24日</div>
+              <div class="wk-theme" style="color:#2ECC71">翻轉極限｜體能翻滾挑戰週</div>
+              <div class="wk-core" style="color:#2ECC71">翻滾 × 協調 × 勇氣</div>
+              <div class="wk-tags"><span class="wk-tag" style="color:#2ECC71;border-color:#2ECC7140">柔軟度</span><span class="wk-tag" style="color:#2ECC71;border-color:#2ECC7140">協調</span><span class="wk-tag" style="color:#2ECC71;border-color:#2ECC7140">突破恐懼</span><span class="wk-tag" style="color:#2ECC71;border-color:#2ECC7140">空間感</span></div>
+            </div>
+            <div class="wk-chevron" style="color:#2ECC71">▼</div>
+          </div>
+          <div class="wk-panel">
+            <div class="wk-panel-inner">
+              <div class="wk-panel-grid">
+                <div class="wk-panel-photo"><img src="images/photo_06.jpg" alt="" loading="lazy"></div>
+                <div class="wk-panel-text"><h4 style="color:#2ECC71">本週課程重點</h4>透過前滾翻、側翻、跨越障礙等訓練，孩子將挑戰自己的身體極限，培養空間感與協調能力，最重要的是學會突破恐懼、勇敢嘗試！</div>
+              </div>
+              <div class="wk-outdoor-row">
+                <div class="wk-outdoor-icon">🔭</div>
+                <div class="wk-outdoor-info">
+                  <div class="label">本週戶外探索・7/23 (四)</div>
+                  <div class="place">科教館</div>
+                  <div class="desc">互動科學展覽，讓每個孩子都能動手做實驗，點燃對科學的好奇心！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wk reveal">
+        <div class="wk-num"><div class="wk-dot" style="background:#FF9A8B">W4</div></div>
+        <div class="wk-body" style="background:#FFF0EE;border-left-color:#FF9A8B">
+          <div class="wk-header" onclick="toggleWk(this)">
+            <div>
+              <div class="wk-date">8月10日 – 8月14日</div>
+              <div class="wk-theme" style="color:#FF9A8B">節奏出任務｜流行舞感訓練週</div>
+              <div class="wk-core" style="color:#FF9A8B">舞蹈 × 節奏 × 表現力</div>
+              <div class="wk-tags"><span class="wk-tag" style="color:#FF9A8B;border-color:#FF9A8B40">律動</span><span class="wk-tag" style="color:#FF9A8B;border-color:#FF9A8B40">自信</span><span class="wk-tag" style="color:#FF9A8B;border-color:#FF9A8B40">表達</span><span class="wk-tag" style="color:#FF9A8B;border-color:#FF9A8B40">舞台感</span></div>
+            </div>
+            <div class="wk-chevron" style="color:#FF9A8B">▼</div>
+          </div>
+          <div class="wk-panel">
+            <div class="wk-panel-inner">
+              <div class="wk-panel-grid">
+                <div class="wk-panel-photo"><img src="images/photo_07.jpg" alt="" loading="lazy"></div>
+                <div class="wk-panel-text"><h4 style="color:#FF9A8B">本週課程重點</h4>跟著音樂動起來！學習流行舞蹈基礎動作，感受節奏與身體律動的結合。這週最輕鬆好玩，週末更會拍攝成果影片留下精彩回憶！</div>
+              </div>
+              <div class="wk-outdoor-row">
+                <div class="wk-outdoor-icon">🦒</div>
+                <div class="wk-outdoor-info">
+                  <div class="label">本週戶外探索・8/13 (四)</div>
+                  <div class="place">新竹市立動物園 × 新竹昆蟲館</div>
+                  <div class="desc">近距離接觸各種動物，再探神奇昆蟲世界，感受大自然的多樣生命！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wk reveal">
+        <div class="wk-num"><div class="wk-dot" style="background:#C4A200">W5</div></div>
+        <div class="wk-body" style="background:#FFF8DC;border-left-color:#C4A200">
+          <div class="wk-header" onclick="toggleWk(this)">
+            <div>
+              <div class="wk-date">8月17日 – 8月21日</div>
+              <div class="wk-theme" style="color:#C4A200">武動進階｜小小戰士強化週</div>
+              <div class="wk-core" style="color:#C4A200">武術進階 × 技巧 × 穩定</div>
+              <div class="wk-tags"><span class="wk-tag" style="color:#C4A200;border-color:#C4A20040">穩定</span><span class="wk-tag" style="color:#C4A200;border-color:#C4A20040">技巧</span><span class="wk-tag" style="color:#C4A200;border-color:#C4A20040">紀律</span><span class="wk-tag" style="color:#C4A200;border-color:#C4A20040">專注</span></div>
+            </div>
+            <div class="wk-chevron" style="color:#C4A200">▼</div>
+          </div>
+          <div class="wk-panel">
+            <div class="wk-panel-inner">
+              <div class="wk-panel-grid">
+                <div class="wk-panel-photo"><img src="images/photo_10.jpg" alt="" loading="lazy"></div>
+                <div class="wk-panel-text"><h4 style="color:#C4A200">本週課程重點</h4>在第一週武術基礎上更進一步，學習更複雜的套路與技巧組合，強化身體穩定性與動作精準度，讓孩子真正感受到「自己變強了」的成就感！</div>
+              </div>
+              <div class="wk-outdoor-row">
+                <div class="wk-outdoor-icon">⚓</div>
+                <div class="wk-outdoor-info">
+                  <div class="label">本週戶外探索・8/20 (四)</div>
+                  <div class="place">十三行博物館</div>
+                  <div class="desc">穿越千年考古現場，認識台灣史前文化的神秘面紗！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wk reveal">
+        <div class="wk-num"><div class="wk-dot" style="background:#1A8FD1">W6</div></div>
+        <div class="wk-body" style="background:#E6F4FB;border-left-color:#1A8FD1">
+          <div class="wk-header" onclick="toggleWk(this)">
+            <div>
+              <div class="wk-date">8月24日 – 8月28日</div>
+              <div class="wk-theme" style="color:#1A8FD1">終極對決｜拳力爆發挑戰週</div>
+              <div class="wk-core" style="color:#1A8FD1">拳擊進階 × 爆發 × 成果展現</div>
+              <div class="wk-tags"><span class="wk-tag" style="color:#1A8FD1;border-color:#1A8FD140">爆發力</span><span class="wk-tag" style="color:#1A8FD1;border-color:#1A8FD140">反應</span><span class="wk-tag" style="color:#1A8FD1;border-color:#1A8FD140">自信</span><span class="wk-tag" style="color:#1A8FD1;border-color:#1A8FD140">成果展現</span></div>
+            </div>
+            <div class="wk-chevron" style="color:#1A8FD1">▼</div>
+          </div>
+          <div class="wk-panel">
+            <div class="wk-panel-inner">
+              <div class="wk-panel-grid">
+                <div class="wk-panel-photo"><img src="images/photo_11.jpg" alt="" loading="lazy"></div>
+                <div class="wk-panel-text"><h4 style="color:#1A8FD1">本週課程重點</h4>六週冒險的最終章！進階拳擊對練與實戰模擬，讓孩子展現六週以來的所有成長。最後舉辦成果發表，讓每個孩子帶著滿滿自信離開！</div>
+              </div>
+              <div class="wk-outdoor-row">
+                <div class="wk-outdoor-icon">🌊</div>
+                <div class="wk-outdoor-info">
+                  <div class="label">本週戶外探索・8/27 (四)</div>
+                  <div class="place">基隆海科館</div>
+                  <div class="desc">深入海洋科技展覽，探索深海生物秘境，六週冒險的完美句點！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section outdoor">
+  <div class="si reveal">
+    <div class="s-label">戶外探索亮點</div>
+    <h2 class="s-title">每週出遊<em>六大精選景點</em></h2>
+    <p style="color:rgba(255,255,255,0.8);font-size:15px;line-height:1.8;max-width:560px;margin-bottom:4px">每週四固定戶外教學日，帶孩子走出教室，在真實世界中探索、學習、體驗！</p>
+    <div class="outdoor-grid">
+      <div class="oc"><div class="oc-icon">🏭</div><div class="oc-name">香帥蛋糕製所</div><div class="oc-desc">走進蛋糕生產線，親眼看到美食從原料到成品的全過程，好吃又好玩！</div><span class="oc-week">第一週・7/9</span></div>
+      <div class="oc"><div class="oc-icon">🎨</div><div class="oc-name">三峽藍染中心 × 新北美術館</div><div class="oc-desc">百年藍染工藝體驗 + 當代藝術探索，文化與創意的雙重驚喜！</div><span class="oc-week">第二週・7/16</span></div>
+      <div class="oc"><div class="oc-icon">🔭</div><div class="oc-name">科教館</div><div class="oc-desc">互動科學展覽，讓每個孩子都能動手做實驗，點燃對科學的好奇心！</div><span class="oc-week">第三週・7/23</span></div>
+      <div class="oc"><div class="oc-icon">🦒</div><div class="oc-name">新竹動物園 × 昆蟲館</div><div class="oc-desc">近距離接觸各種動物，再探神奇昆蟲世界，感受大自然的多樣生命！</div><span class="oc-week">第四週・8/13</span></div>
+      <div class="oc"><div class="oc-icon">⚓</div><div class="oc-name">十三行博物館</div><div class="oc-desc">穿越千年考古現場，用雙眼認識台灣最神秘的史前文明！</div><span class="oc-week">第五週・8/20</span></div>
+      <div class="oc"><div class="oc-icon">🌊</div><div class="oc-name">基隆海科館</div><div class="oc-desc">深入海洋科技展覽，探索深海生物秘境，六週冒險的完美句點！</div><span class="oc-week">第六週・8/27</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section schedule">
+  <div class="si reveal">
+    <div class="s-label">週課表總覽</div>
+    <h2 class="s-title">每週<em>課程時間表</em></h2>
+    <p style="color:#888;font-size:13px;margin-top:-8px;margin-bottom:4px">* 詳細課程依實際狀況微調，開課後會發佈完整課表給報名家長</p>
+    <div class="sch-tabs" id="schTabs">
+<div class="sch-tab active" style="background:#FF6B1A;color:#fff" data-color="#FF6B1A" onclick="switchTab(0)">第一週</div>
+<div class="sch-tab "  data-color="#E63946" onclick="switchTab(1)">第二週</div>
+<div class="sch-tab "  data-color="#2ECC71" onclick="switchTab(2)">第三週</div>
+<div class="sch-tab "  data-color="#FF9A8B" onclick="switchTab(3)">第四週</div>
+<div class="sch-tab "  data-color="#C4A200" onclick="switchTab(4)">第五週</div>
+<div class="sch-tab "  data-color="#1A8FD1" onclick="switchTab(5)">第六週</div>
+</div>
+<div class="sch-panel active" id="sch-0"><table class="sch-table"><thead><tr><th style="background:#FF6B1A">時間</th><th style="background:#FF6B1A">7/6 (一)</th><th style="background:#FF6B1A">7/7 (二)</th><th style="background:#FF6B1A">7/8 (三)</th><th style="background:#FF6B1A">7/9 (四)</th><th style="background:#FF6B1A">7/10 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>昆蟲課</td><td>武術基礎功</td><td>🏭香帥蛋糕<br>戶外活動</td><td>球類課<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>武術課</td><td>武術課</td><td>拳擊課</td><td>戶外活動</td><td>武術課</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-1"><table class="sch-table"><thead><tr><th style="background:#E63946">時間</th><th style="background:#E63946">7/13 (一)</th><th style="background:#E63946">7/14 (二)</th><th style="background:#E63946">7/15 (三)</th><th style="background:#E63946">7/16 (四)</th><th style="background:#E63946">7/17 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>手作課</td><td>拳擊課</td><td>🎨三峽藍染<br>戶外活動</td><td>體能球類<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>拳擊課</td><td>拳擊課</td><td>武術課</td><td>戶外活動</td><td>拳擊課</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-2"><table class="sch-table"><thead><tr><th style="background:#2ECC71">時間</th><th style="background:#2ECC71">7/20 (一)</th><th style="background:#2ECC71">7/21 (二)</th><th style="background:#2ECC71">7/22 (三)</th><th style="background:#2ECC71">7/23 (四)</th><th style="background:#2ECC71">7/24 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>翻滾練習</td><td>體能課<br>翻滾練習</td><td>快樂練功趣</td><td>🔭科教館<br>戶外活動</td><td>球類課<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>武術課</td><td>拳擊課</td><td>翻滾體能</td><td>戶外活動</td><td>翻滾體能</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-3"><table class="sch-table"><thead><tr><th style="background:#FF9A8B">時間</th><th style="background:#FF9A8B">8/10 (一)</th><th style="background:#FF9A8B">8/11 (二)</th><th style="background:#FF9A8B">8/12 (三)</th><th style="background:#FF9A8B">8/13 (四)</th><th style="background:#FF9A8B">8/14 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>舞蹈課</td><td>快樂練功趣</td><td>🦒新竹動物園<br>戶外活動</td><td>球類課<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>舞蹈課</td><td>武術課</td><td>拳擊課</td><td>戶外活動</td><td>舞蹈成果</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-4"><table class="sch-table"><thead><tr><th style="background:#C4A200">時間</th><th style="background:#C4A200">8/17 (一)</th><th style="background:#C4A200">8/18 (二)</th><th style="background:#C4A200">8/19 (三)</th><th style="background:#C4A200">8/20 (四)</th><th style="background:#C4A200">8/21 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>昆蟲課10:30</td><td>羽球</td><td>⚓十三行博物館<br>戶外活動</td><td>體能球類<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>拳擊課</td><td>拳擊課</td><td>武術進階</td><td>戶外活動</td><td>拳擊課</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-5"><table class="sch-table"><thead><tr><th style="background:#1A8FD1">時間</th><th style="background:#1A8FD1">8/24 (一)</th><th style="background:#1A8FD1">8/25 (二)</th><th style="background:#1A8FD1">8/26 (三)</th><th style="background:#1A8FD1">8/27 (四)</th><th style="background:#1A8FD1">8/28 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>手作課</td><td>拳擊對練</td><td>🌊基隆海科館<br>戶外活動</td><td>球類課<br>成果展準備</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>武術套路</td><td>拳擊進階</td><td>武術成果</td><td>戶外活動</td><td>🏆成果發表</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<section class="section gallery">
+  <div class="si">
+    <div class="reveal" style="text-align:center;margin-bottom:28px">
+      <div class="s-label">營隊花絮</div>
+      <h2 class="s-title">孩子們的<em>精彩瞬間</em></h2>
+    </div>
+    <div class="gallery-grid reveal">
+      <div class="g tall"><img src="images/photo_17.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_01.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_09.jpg" alt="" loading="lazy"></div>
+      <div class="g tall"><img src="images/photo_12.jpg" alt="" loading="lazy"></div>
+      <div class="g wide"><img src="images/photo_15.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_03.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_05.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_06.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_07.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_10.jpg" alt="" loading="lazy"></div>
+      <div class="g wide"><img src="images/photo_16.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_11.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_13.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_08.jpg" alt="" loading="lazy"></div>
+      <div class="g"><img src="images/photo_14.jpg" alt="" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="reveal">
+    <h2 class="s-title">準備好了嗎？<br><em>這個夏天一起熱血出發！</em></h2>
+    <p class="cta-sub">讓孩子在挑戰中成長，在運動中建立自信 💪<br>可單週報名，彈性選擇</p>
+    <a href="./index.html" class="cta-btn">立即報名 →</a>
+  </div>
+</section>
+
+<script>
+function toggleWk(header) {
+  const panel = header.nextElementSibling;
+  const chev = header.querySelector('.wk-chevron');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+function switchTab(idx) {
+  const tabs = document.querySelectorAll('.sch-tab');
+  const panels = document.querySelectorAll('.sch-panel');
+  tabs.forEach((t,i) => {
+    if(i===idx){ t.classList.add('active'); t.style.background=t.dataset.color; t.style.color='#fff'; }
+    else{ t.classList.remove('active'); t.style.background='#fff'; t.style.color='#888'; }
+  });
+  panels.forEach((p,i) => p.classList.toggle('active', i===idx));
+}
+const obs = new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('on');}),{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
