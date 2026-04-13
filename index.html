@@ -850,9 +850,8 @@
         </div>
       </div>
 
-      <!-- 延托時間設定 -->
       <div id="aftercare-detail" style="display:none;margin-top:16px;">
-        <div class="field-hint" style="margin-bottom:10px;color:var(--ink-mid);">每天固定相同延托結束時間，勾選的期數統一套用</div>
+        <div class="field-hint" style="margin-bottom:10px;color:var(--ink-mid);">每天固定相同延托結束時間，所選期數統一套用</div>
         <div id="aftercare-days-grid"></div>
       </div>
 
@@ -1119,52 +1118,33 @@ function selectAftercare(el, val) {
 function buildAftercareDays() {
   const grid = document.getElementById('aftercare-days-grid');
   if (!grid) return;
-
-  // 計算總共幾個「延托天數」
   let totalDays = 0;
-  const sessionLabels = [];
   selectedSessions.forEach(sid => {
     const s = SESSIONS.find(x => x.id === sid);
-    if (!s) return;
-    if (s.type === 'single') {
-      totalDays += 1;
-      sessionLabels.push(DAYS_MAP[sid] || sid);
-    } else {
-      totalDays += 5;
-      sessionLabels.push(DAYS_MAP[sid] || sid);
-    }
+    if (s) totalDays += s.type === 'week' ? 5 : 1;
   });
-
   if (totalDays === 0) {
-    grid.innerHTML = '<div style="font-size:13px;color:var(--ink-light);padding:8px 0;">請先選擇報名期數</div>';
+    grid.innerHTML = '<div style="font-size:13px;color:var(--ink-light);">請先選擇報名期數</div>';
     return;
   }
-
   grid.innerHTML = `
     <div style="background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
       <div style="font-size:13px;font-weight:500;color:var(--ink-mid);margin-bottom:4px;">每天延托結束時間</div>
       <div style="font-size:12px;color:var(--ink-light);margin-bottom:10px;">套用至所選的所有天（共 ${totalDays} 天）</div>
       <select id="ac-time-global" style="width:100%;max-width:200px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:var(--white);color:var(--ink);" onchange="calcAftercareFee()">
-        <option value="">不延托</option>
-        <option value="17:30">至 17:30（30分）</option>
-        <option value="18:00">至 18:00（1小時）</option>
-        <option value="18:30">至 18:30（1.5小時）</option>
-        <option value="19:00">至 19:00（2小時）</option>
+        <option value="">請選擇時間</option>
+        <option value="17:30">至 17:30（30 分鐘）</option>
+        <option value="18:00">至 18:00（1 小時）</option>
+        <option value="18:30">至 18:30（1.5 小時）</option>
+        <option value="19:00">至 19:00（2 小時）</option>
       </select>
-    </div>
-  `;
+    </div>`;
 }
 
 function calcAftercareCost(endTime) {
   if (!endTime) return 0;
-  const [h, m] = endTime.split(':').map(Number);
-  const totalMin = (h - 17) * 60 + m;
-  const fullHours = Math.floor(totalMin / 60);
-  const remMin = totalMin % 60;
-  let cost = fullHours * 150;
-  if (remMin >= 30) cost += 150;
-  else if (remMin > 0) cost += 100;
-  return cost;
+  const costMap = { '17:30': 100, '18:00': 150, '18:30': 250, '19:00': 300 };
+  return costMap[endTime] || 0;
 }
 
 function calcAftercareFee() {
@@ -1173,21 +1153,15 @@ function calcAftercareFee() {
     updateTotalWithAftercare(0);
     return;
   }
-
   const sel = document.getElementById('ac-time-global');
   if (!sel || !sel.value) {
     document.getElementById('aftercare-fee-rows').innerHTML = '';
     updateTotalWithAftercare(0);
     return;
   }
-
-  const endTime = sel.value;
-  const unitCost = calcAftercareCost(endTime);
-
-  // 計算各期天數，判斷是否整週（享8折）
+  const unitCost = calcAftercareCost(sel.value);
   let aftercareTotal = 0;
   let html = '';
-
   selectedSessions.forEach(sid => {
     const s = SESSIONS.find(x => x.id === sid);
     if (!s) return;
@@ -1196,10 +1170,9 @@ function calcAftercareFee() {
     const dayCost = isWeek ? Math.round(unitCost * 0.8) : unitCost;
     const periodCost = dayCost * days;
     aftercareTotal += periodCost;
-    const label = isWeek ? `${s.name}（週一至週五，每天）` : s.name;
+    const label = isWeek ? `${s.name}（週一至週五）` : s.name;
     html += `<div class="fee-row" style="font-size:12px;"><span>延托 ${label}</span><span class="fee-amount">$${periodCost.toLocaleString()}</span></div>`;
   });
-
   if (aftercareTotal > 0) {
     html = `<div class="fee-row" style="padding-top:10px;border-top:1px solid rgba(255,255,255,0.15);margin-top:4px;font-size:12px;color:var(--gold-light);font-weight:500;"><span>── 延托費用 ──</span></div>` + html;
   }
@@ -1226,7 +1199,6 @@ function getAftercareSummary() {
   const sel = document.getElementById('ac-time-global');
   if (!sel || !sel.value) return '需要（未填時間）';
   return `需要，每天延托至 ${sel.value}`;
-}
 }
 
 function toggleAgree() {
