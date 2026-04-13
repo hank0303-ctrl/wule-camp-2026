@@ -830,9 +830,41 @@
     </div>
 
     <!-- 費用小計 -->
+    <!-- 延托服務 -->
+    <div class="form-section" style="margin-top:0;">
+      <div class="form-section-title">延托服務（選填）</div>
+      <p class="field-hint" style="margin-bottom:14px;">延托時間 17:00 起，最晚至 19:00，NT$150／小時，不足 30 分鐘以 NT$100 計。</p>
+
+      <div class="field-group" style="margin-bottom:0;">
+        <label class="field-label">是否需要延托？</label>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
+          <div class="radio-item" onclick="selectAftercare(this,'no')" id="ac-no" style="flex:none;">
+            <div class="radio-dot"></div>不需要
+          </div>
+          <div class="radio-item" onclick="selectAftercare(this,'yes')" id="ac-yes" style="flex:none;">
+            <div class="radio-dot"></div>需要延托
+          </div>
+          <div class="radio-item" onclick="selectAftercare(this,'tbd')" id="ac-tbd" style="flex:none;">
+            <div class="radio-dot"></div>需要但時間待確認（週五結算）
+          </div>
+        </div>
+      </div>
+
+      <!-- 延托時間設定 -->
+      <div id="aftercare-detail" style="display:none;margin-top:16px;">
+        <div class="field-hint" style="margin-bottom:10px;color:var(--ink-mid);">每天固定相同延托結束時間，勾選的期數統一套用</div>
+        <div id="aftercare-days-grid"></div>
+      </div>
+
+      <div id="aftercare-tbd-note" style="display:none;margin-top:12px;padding:12px 14px;background:var(--gold-pale);border:1px solid var(--gold-light);border-radius:8px;font-size:13px;color:var(--ink-mid);">
+        📌 請於報名完成後私訊 <a href="https://lin.ee/VRxOt0n" target="_blank" style="color:var(--gold);font-weight:700;">武樂小小運動家官方 LINE</a> 告知延托時間，費用統一於週五結算。
+      </div>
+    </div>
+
     <div class="fee-summary" id="feeSummary">
       <div class="fee-summary-title">費用計算</div>
       <div id="fee-items"><div class="fee-empty">尚未選擇期數</div></div>
+      <div id="aftercare-fee-rows"></div>
       <div class="fee-row total" id="fee-total" style="display:none;">
         <span>總費用</span>
         <span class="fee-amount" id="fee-total-num">$0</span>
@@ -1059,6 +1091,144 @@ function calcAge() {
   }
 }
 
+// ── 延托邏輯 ──
+let aftercareVal = 'no'; // no / yes / tbd
+const DAYS_MAP = { 'single-7/1':'7/1（週三）', 'single-7/2':'7/2（週四）', 'single-7/3':'7/3（週五）',
+  'week-7/6':'7/6-7/10（一到五）', 'week-7/13':'7/13-7/17（一到五）', 'week-7/20':'7/20-7/24（一到五）',
+  'week-8/10':'8/10-8/14（一到五）', 'week-8/17':'8/17-8/21（一到五）', 'week-8/24':'8/24-8/28（一到五）' };
+const WEEK_DAYS = ['一','二','三','四','五'];
+
+function selectAftercare(el, val) {
+  document.getElementById('aftercare-detail').style.display = 'none';
+  document.getElementById('aftercare-tbd-note').style.display = 'none';
+  ['ac-no','ac-yes','ac-tbd'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  aftercareVal = val;
+  if (val === 'yes') {
+    buildAftercareDays();
+    document.getElementById('aftercare-detail').style.display = 'block';
+  } else if (val === 'tbd') {
+    document.getElementById('aftercare-tbd-note').style.display = 'block';
+  }
+  calcAftercareFee();
+}
+
+function buildAftercareDays() {
+  const grid = document.getElementById('aftercare-days-grid');
+  if (!grid) return;
+
+  // 計算總共幾個「延托天數」
+  let totalDays = 0;
+  const sessionLabels = [];
+  selectedSessions.forEach(sid => {
+    const s = SESSIONS.find(x => x.id === sid);
+    if (!s) return;
+    if (s.type === 'single') {
+      totalDays += 1;
+      sessionLabels.push(DAYS_MAP[sid] || sid);
+    } else {
+      totalDays += 5;
+      sessionLabels.push(DAYS_MAP[sid] || sid);
+    }
+  });
+
+  if (totalDays === 0) {
+    grid.innerHTML = '<div style="font-size:13px;color:var(--ink-light);padding:8px 0;">請先選擇報名期數</div>';
+    return;
+  }
+
+  grid.innerHTML = `
+    <div style="background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:13px;font-weight:500;color:var(--ink-mid);margin-bottom:4px;">每天延托結束時間</div>
+      <div style="font-size:12px;color:var(--ink-light);margin-bottom:10px;">套用至所選的所有天（共 ${totalDays} 天）</div>
+      <select id="ac-time-global" style="width:100%;max-width:200px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:var(--white);color:var(--ink);" onchange="calcAftercareFee()">
+        <option value="">不延托</option>
+        <option value="17:30">至 17:30（30分）</option>
+        <option value="18:00">至 18:00（1小時）</option>
+        <option value="18:30">至 18:30（1.5小時）</option>
+        <option value="19:00">至 19:00（2小時）</option>
+      </select>
+    </div>
+  `;
+}
+
+function calcAftercareCost(endTime) {
+  if (!endTime) return 0;
+  const [h, m] = endTime.split(':').map(Number);
+  const totalMin = (h - 17) * 60 + m;
+  const fullHours = Math.floor(totalMin / 60);
+  const remMin = totalMin % 60;
+  let cost = fullHours * 150;
+  if (remMin >= 30) cost += 150;
+  else if (remMin > 0) cost += 100;
+  return cost;
+}
+
+function calcAftercareFee() {
+  if (aftercareVal !== 'yes') {
+    document.getElementById('aftercare-fee-rows').innerHTML = '';
+    updateTotalWithAftercare(0);
+    return;
+  }
+
+  const sel = document.getElementById('ac-time-global');
+  if (!sel || !sel.value) {
+    document.getElementById('aftercare-fee-rows').innerHTML = '';
+    updateTotalWithAftercare(0);
+    return;
+  }
+
+  const endTime = sel.value;
+  const unitCost = calcAftercareCost(endTime);
+
+  // 計算各期天數，判斷是否整週（享8折）
+  let aftercareTotal = 0;
+  let html = '';
+
+  selectedSessions.forEach(sid => {
+    const s = SESSIONS.find(x => x.id === sid);
+    if (!s) return;
+    const isWeek = s.type === 'week';
+    const days = isWeek ? 5 : 1;
+    const dayCost = isWeek ? Math.round(unitCost * 0.8) : unitCost;
+    const periodCost = dayCost * days;
+    aftercareTotal += periodCost;
+    const label = isWeek ? `${s.name}（週一至週五，每天）` : s.name;
+    html += `<div class="fee-row" style="font-size:12px;"><span>延托 ${label}</span><span class="fee-amount">$${periodCost.toLocaleString()}</span></div>`;
+  });
+
+  if (aftercareTotal > 0) {
+    html = `<div class="fee-row" style="padding-top:10px;border-top:1px solid rgba(255,255,255,0.15);margin-top:4px;font-size:12px;color:var(--gold-light);font-weight:500;"><span>── 延托費用 ──</span></div>` + html;
+  }
+  document.getElementById('aftercare-fee-rows').innerHTML = html;
+  updateTotalWithAftercare(aftercareTotal);
+}
+
+let baseCourseTotal = 0;
+
+function updateTotalWithAftercare(aftercareTotal) {
+  const total = baseCourseTotal + aftercareTotal;
+  const deposit = Math.ceil(total * 0.25);
+  if (total > 0) {
+    document.getElementById('fee-total-num').textContent = '$' + total.toLocaleString();
+    document.getElementById('fee-deposit-num').textContent = '$' + deposit.toLocaleString();
+    document.getElementById('fee-total').style.display = 'flex';
+    document.getElementById('fee-deposit').style.display = 'flex';
+  }
+}
+
+function getAftercareSummary() {
+  if (aftercareVal === 'no') return '不需要';
+  if (aftercareVal === 'tbd') return '需要（時間待確認，週五結算）';
+  const sel = document.getElementById('ac-time-global');
+  if (!sel || !sel.value) return '需要（未填時間）';
+  return `需要，每天延托至 ${sel.value}`;
+}
+}
+
 function toggleAgree() {
   agreed = !agreed;
   document.getElementById('agreeBox').classList.toggle('checked', agreed);
@@ -1189,11 +1359,18 @@ function updateFee() {
   });
 
   items.innerHTML = html;
+  baseCourseTotal = total;
   const deposit = Math.ceil(total * 0.25);
   document.getElementById('fee-total-num').textContent = '$' + total.toLocaleString();
   document.getElementById('fee-deposit-num').textContent = '$' + deposit.toLocaleString();
   totalEl.style.display = 'flex';
   depositEl.style.display = 'flex';
+
+  // 若已選延托，重建延托天數並重算
+  if (aftercareVal === 'yes') {
+    buildAftercareDays();
+    calcAftercareFee();
+  }
 }
 
 function validate() {
@@ -1276,6 +1453,7 @@ function submitForm() {
     parent: document.getElementById('f-parent').value.trim(),
     phone: document.getElementById('f-phone').value.trim(),
     bank: document.getElementById('f-bank').value.trim(),
+    aftercare: getAftercareSummary(),
   };
 
   // 存入 localStorage（後台讀取用）
@@ -1310,6 +1488,7 @@ function submitForm() {
       '家長姓名': formData.parent,
       '聯絡電話': formData.phone,
       '匯款帳號後5碼': formData.bank,
+      '延托服務': formData.aftercare,
     }),
   })
   .catch(() => {})
@@ -1338,6 +1517,7 @@ function showThanks(d, deposit) {
     ['家長姓名', d.parent],
     ['聯絡電話', d.phone],
     ['匯款後 5 碼／備註', d.bank],
+    ['延托服務', d.aftercare],
   ];
 
   document.getElementById('confirm-rows').innerHTML = rows.map(([l, v]) =>
