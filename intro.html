@@ -235,6 +235,17 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   .price-cell{padding:14px 6px;}
 }
 
+
+/* FAQ */
+.faq-item{background:#fff;border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.faq-q{width:100%;background:none;border:none;padding:18px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;font-size:15px;font-weight:700;color:var(--text);transition:background 0.2s;}
+.faq-q:hover{background:var(--teal-pale);}
+.faq-num{background:var(--teal);color:#fff;font-size:12px;font-weight:900;padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.faq-arrow{margin-left:auto;color:var(--teal);font-size:12px;transition:transform 0.3s;flex-shrink:0;}
+.faq-q.open .faq-arrow{transform:rotate(180deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height 0.35s ease,padding 0.3s;}
+.faq-a.open{max-height:400px;padding:0 20px 18px;}
+.faq-a p{font-size:14px;color:#555;line-height:1.8;margin:4px 0;}
 </style>
 </head>
 <body>
@@ -658,6 +669,100 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   </div>
 </section>
 
+<section class="section" style="background:var(--gray);" id="sec-faq">
+  <div class="si reveal">
+    <div class="s-label">常見問題</div>
+    <h2 class="s-title">夏令營常見 <em>Q&amp;A</em></h2>
+  </div>
+  <div class="si" style="max-width:700px;margin-top:24px;">
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q1</span>每週都有戶外教學嗎？怎麼去？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 每週四安排戶外活動（博物館、手作場館等）</p>
+        <p>✔️ 統一搭乘遊覽車或包車</p>
+        <p>✔️ 全程老師陪同＋點名管理，安全放心</p>
+      </div>
+    </div>
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q2</span>午休在哪裡？需要準備什麼？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 午休於教室內大型運動空間</p>
+        <p>✔️ 請自備小枕頭與棉被</p>
+      </div>
+    </div>
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q3</span>午餐與點心內容？安全嗎？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 午餐以便當為主（卡拉雞腿、紅糟肉、糖醋豬、魚排等）</p>
+        <p>✔️ 不定期搭配壽司、炒麵、水餃、鍋貼、炒飯等</p>
+        <p>✔️ 餐點多樣、均衡，讓孩子吃得安心又有變化</p>
+      </div>
+    </div>
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q4</span>可以先參觀教室嗎？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 每週日 14:00–18:00 開放預約參觀</p>
+        <p>✔️ 歡迎提前預約，我們會安排時間接待</p>
+      </div>
+    </div>
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q5</span>體能課會不會太激烈？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 課程採「遊戲化 × 趣味式」設計</p>
+        <p>✔️ 著重基本動作與肢體協調</p>
+        <p>✔️ 無對打內容，初學者與小朋友都適合</p>
+      </div>
+    </div>
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q6</span>可以延托嗎？怎麼收費？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 最晚可延托至 19:00</p>
+        <p>✔️ NT$150／小時（未滿30分鐘 $100）</p>
+        <p>✔️ 固定一週延托享 8 折優惠</p>
+      </div>
+    </div>
+
+    <div class="faq-item reveal">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-num">Q7</span>游泳課安全嗎？不會游泳可以參加嗎？
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">
+        <p>✔️ 不會游泳也可以參加，會依程度分組教學</p>
+        <p>✔️ 每班約 10 位孩子，安排適合初學者與進階程度</p>
+        <p>✔️ 水中由 1 位專業教練指導</p>
+        <p>✔️ 水上另有 2 位老師全程協助看護</p>
+        <p>✔️ 全程留意孩子狀況，讓家長安心放心</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <section class="section gallery">
   <div class="si">
     <div class="reveal" style="text-align:center;margin-bottom:28px">
@@ -693,6 +798,21 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 </section>
 
 <script>
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = btn.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-q').forEach(b => {
+    b.classList.remove('open');
+    b.nextElementSibling.classList.remove('open');
+  });
+  // Open clicked if it was closed
+  if (!isOpen) {
+    btn.classList.add('open');
+    answer.classList.add('open');
+  }
+}
+
 function toggleWk(header) {
   const panel = header.nextElementSibling;
   const chev = header.querySelector('.wk-chevron');
