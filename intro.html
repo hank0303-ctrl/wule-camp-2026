@@ -235,6 +235,22 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
   .price-cell{padding:14px 6px;}
 }
 
+/* ── FAQ ── */
+.faq{background:var(--gray);padding:64px 24px;}
+.faq .s-label{background:var(--teal-pale);color:var(--teal);border-color:var(--teal-light);}
+.faq-list{margin-top:32px;display:flex;flex-direction:column;gap:12px;max-width:760px;margin-left:auto;margin-right:auto;}
+.faq-item{background:#fff;border-radius:16px;overflow:hidden;border:1.5px solid #E0EDE8;transition:box-shadow 0.3s;}
+.faq-item:hover{box-shadow:0 8px 28px rgba(15,110,86,0.1);}
+.faq-q{display:flex;align-items:center;gap:14px;padding:18px 22px;cursor:pointer;user-select:none;}
+.faq-q-num{background:var(--teal);color:#fff;font-weight:900;font-size:13px;border-radius:8px;padding:3px 10px;flex-shrink:0;letter-spacing:1px;}
+.faq-q-text{font-size:15px;font-weight:900;color:var(--dark);flex:1;line-height:1.4;}
+.faq-chev{font-size:16px;color:var(--teal);transition:transform 0.3s;flex-shrink:0;opacity:0.7;}
+.faq-panel{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
+.faq-panel.open{max-height:400px;}
+.faq-panel-inner{padding:0 22px 20px 22px;border-top:1px solid #E8F0EC;}
+.faq-ans{display:flex;align-items:flex-start;gap:10px;padding:10px 0 4px;font-size:14px;color:#555;line-height:1.75;}
+.faq-check{color:var(--teal);font-size:15px;flex-shrink:0;margin-top:2px;}
+
 </style>
 </head>
 <body>
@@ -536,7 +552,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 <div class="sch-tab "  data-color="#C4A200" onclick="switchTab(4)">第五週</div>
 <div class="sch-tab "  data-color="#1A8FD1" onclick="switchTab(5)">第六週</div>
 </div>
-<div class="sch-panel active" id="sch-0"><table class="sch-table"><thead><tr><th style="background:#FF6B1A">時間</th><th style="background:#FF6B1A">7/6 (一)</th><th style="background:#FF6B1A">7/7 (二)</th><th style="background:#FF6B1A">7/8 (三)</th><th style="background:#FF6B1A">7/9 (四)</th><th style="background:#FF6B1A">7/10 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>昆蟲課</td><td>武術基礎功</td><td>🏭香帥蛋糕<br>戶外活動</td><td>球類課<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>武術課</td><td>武術課</td><td>拳擊課</td><td>戶外活動</td><td>武術課</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-1"><table class="sch-table"><thead><tr><th style="background:#E63946">時間</th><th style="background:#E63946">7/13 (一)</th><th style="background:#E63946">7/14 (二)</th><th style="background:#E63946">7/15 (三)</th><th style="background:#E63946">7/16 (四)</th><th style="background:#E63946">7/17 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>手作課</td><td>拳擊課</td><td>🎨三峽藍染<br>戶外活動</td><td>體能球類<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>拳擊課</td><td>拳擊課</td><td>武術課</td><td>戶外活動</td><td>拳擊課</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-2"><table class="sch-table"><thead><tr><th style="background:#2ECC71">時間</th><th style="background:#2ECC71">7/20 (一)</th><th style="background:#2ECC71">7/21 (二)</th><th style="background:#2ECC71">7/22 (三)</th><th style="background:#2ECC71">7/23 (四)</th><th style="background:#2ECC71">7/24 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>翻滾練習</td><td>體能課<br>翻滾練習</td><td>快樂練功趣</td><td>🔭科教館<br>戶外活動</td><td>球類課<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>武術課</td><td>拳擊課</td><td>翻滾體能</td><td>戶外活動</td><td>翻滾體能</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-3"><table class="sch-table"><thead><tr><th style="background:#FF9A8B">時間</th><th style="background:#FF9A8B">8/10 (一)</th><th style="background:#FF9A8B">8/11 (二)</th><th style="background:#FF9A8B">8/12 (三)</th><th style="background:#FF9A8B">8/13 (四)</th><th style="background:#FF9A8B">8/14 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>舞蹈課</td><td>快樂練功趣</td><td>🦒新竹動物園<br>戶外活動</td><td>球類課<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>舞蹈課</td><td>武術課</td><td>拳擊課</td><td>戶外活動</td><td>舞蹈成果</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-4"><table class="sch-table"><thead><tr><th style="background:#C4A200">時間</th><th style="background:#C4A200">8/17 (一)</th><th style="background:#C4A200">8/18 (二)</th><th style="background:#C4A200">8/19 (三)</th><th style="background:#C4A200">8/20 (四)</th><th style="background:#C4A200">8/21 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>昆蟲課10:30</td><td>羽球</td><td>⚓十三行博物館<br>戶外活動</td><td>體能球類<br>手作課</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>拳擊課</td><td>拳擊課</td><td>武術進階</td><td>戶外活動</td><td>拳擊課</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-5"><table class="sch-table"><thead><tr><th style="background:#1A8FD1">時間</th><th style="background:#1A8FD1">8/24 (一)</th><th style="background:#1A8FD1">8/25 (二)</th><th style="background:#1A8FD1">8/26 (三)</th><th style="background:#1A8FD1">8/27 (四)</th><th style="background:#1A8FD1">8/28 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>體能課<br>手作課</td><td>體能課<br>手作課</td><td>拳擊對練</td><td>🌊基隆海科館<br>戶外活動</td><td>球類課<br>成果展準備</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐</td></tr><tr><td class="row-label">下午</td><td>武術套路</td><td>拳擊進階</td><td>武術成果</td><td>戶外活動</td><td>🏆成果發表</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div>
+<div class="sch-panel active" id="sch-0"><table class="sch-table"><thead><tr><th style="background:#FF6B1A">時間</th><th style="background:#FF6B1A">7/6 (一)</th><th style="background:#FF6B1A">7/7 (二)</th><th style="background:#FF6B1A">7/8 (三)</th><th style="background:#FF6B1A">7/9 (四)</th><th style="background:#FF6B1A">7/10 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>小小體能冒險家<br>創意手作實驗室</td><td>小小水戰士</td><td>小小球感達人<br>小小神射手</td><td>🏭戶外探索之旅</td><td>小小羽球高手</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐／午休</td></tr><tr><td class="row-label">下午</td><td colspan="3">武術動作養成課</td><td>戶外探索之旅</td><td>武術動作養成課</td></tr><tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">快樂補給站</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-1"><table class="sch-table"><thead><tr><th style="background:#E63946">時間</th><th style="background:#E63946">7/13 (一)</th><th style="background:#E63946">7/14 (二)</th><th style="background:#E63946">7/15 (三)</th><th style="background:#E63946">7/16 (四)</th><th style="background:#E63946">7/17 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>小小體能冒險家<br>創意手作實驗室</td><td>小小水戰士</td><td>小小球感達人<br>小小神射手</td><td>🎨戶外探索之旅</td><td>小小羽球高手</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐／午休</td></tr><tr><td class="row-label">下午</td><td colspan="3">拳擊反應訓練</td><td>戶外探索之旅</td><td>拳擊反應訓練</td></tr><tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">快樂補給站</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-2"><table class="sch-table"><thead><tr><th style="background:#2ECC71">時間</th><th style="background:#2ECC71">7/20 (一)</th><th style="background:#2ECC71">7/21 (二)</th><th style="background:#2ECC71">7/22 (三)</th><th style="background:#2ECC71">7/23 (四)</th><th style="background:#2ECC71">7/24 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>小小羽球高手</td><td>創意手作實驗室<br>創意手作實驗室</td><td>小小球感達人<br>昆蟲探險任務</td><td>🔭戶外探索之旅</td><td>小小體能冒險家<br>小小神射手</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐／午休</td></tr><tr><td class="row-label">下午</td><td colspan="3">小小翻滾探險家</td><td>戶外探索之旅</td><td>小小翻滾探險家</td></tr><tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">快樂補給站</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-3"><table class="sch-table"><thead><tr><th style="background:#FF9A8B">時間</th><th style="background:#FF9A8B">8/10 (一)</th><th style="background:#FF9A8B">8/11 (二)</th><th style="background:#FF9A8B">8/12 (三)</th><th style="background:#FF9A8B">8/13 (四)</th><th style="background:#FF9A8B">8/14 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>小小體能冒險家<br>創意手作實驗室</td><td>小小水戰士</td><td>小小球感達人<br>小小神射手</td><td>🦒戶外探索之旅</td><td>小小羽球高手</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐／午休</td></tr><tr><td class="row-label">下午</td><td colspan="3">武術動作養成課</td><td>戶外探索之旅</td><td>武術動作養成課</td></tr><tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">快樂補給站</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-4"><table class="sch-table"><thead><tr><th style="background:#C4A200">時間</th><th style="background:#C4A200">8/17 (一)</th><th style="background:#C4A200">8/18 (二)</th><th style="background:#C4A200">8/19 (三)</th><th style="background:#C4A200">8/20 (四)</th><th style="background:#C4A200">8/21 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>小小體能冒險家<br>創意手作實驗室</td><td>小小體能冒險家<br>昆蟲探險任務</td><td>小小羽球高手</td><td>⚓戶外探索之旅</td><td>小小球感達人<br>小小神射手</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐／午休</td></tr><tr><td class="row-label">下午</td><td colspan="3">節奏律動舞蹈課</td><td>戶外探索之旅</td><td>節奏律動舞蹈課</td></tr><tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">快樂補給站</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div><div class="sch-panel " id="sch-5"><table class="sch-table"><thead><tr><th style="background:#1A8FD1">時間</th><th style="background:#1A8FD1">8/24 (一)</th><th style="background:#1A8FD1">8/25 (二)</th><th style="background:#1A8FD1">8/26 (三)</th><th style="background:#1A8FD1">8/27 (四)</th><th style="background:#1A8FD1">8/28 (五)</th></tr></thead><tbody><tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr><tr><td class="row-label">上午</td><td>小小體能冒險家<br>創意手作實驗室</td><td>小小水戰士</td><td>小小球感達人<br>小小神射手</td><td>🌊戶外探索之旅</td><td>小小羽球高手</td></tr><tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐／午休</td></tr><tr><td class="row-label">下午</td><td colspan="3">拳擊反應訓練</td><td>戶外探索之旅</td><td>拳擊反應訓練</td></tr><tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">快樂補給站</td></tr><tr><td class="row-label">16:30</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr></tbody></table></div>
   </div>
 </section>
 
@@ -611,6 +627,164 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
       <div class="price-note">單日請假無退費；若病假請假達三日以上，提出診斷證明依比例退費。</div>
       <div class="price-note">因個人因素請假，恕不補課。</div>
     </div>
+
+    <!-- 7/1-3 Single Day + Multi-week bonus -->
+    <div style="max-width:700px;margin:28px auto 0;display:flex;flex-direction:column;gap:16px;">
+
+      <!-- 單日方案 -->
+      <div style="background:#FFF8E0;border-radius:16px;overflow:hidden;border:2px solid #E8D9B0;">
+        <div style="background:#E8A020;padding:10px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">📅</span>
+          <span style="color:#fff;font-weight:900;font-size:15px;letter-spacing:1px;">7/1（二）、7/2（三）、7/3（四）｜單日課程方案</span>
+        </div>
+        <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="color:#555;font-size:14px;line-height:1.8;">開營前三天可<strong style="color:#C4870A;">單日報名</strong>，彈性體驗不需綁定整週。</div>
+          <div style="text-align:center;flex-shrink:0;">
+            <div style="font-size:28px;font-weight:900;color:#C4870A;line-height:1;">$1,350</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;">/ 天</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 多週優惠 -->
+      <div style="background:#FAF3E0;border-radius:16px;overflow:hidden;border:2px solid #E8D9B0;">
+        <div style="background:#C4870A;padding:10px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🎁</span>
+          <span style="color:#fff;font-weight:900;font-size:15px;letter-spacing:1px;">多週報名優惠｜贈送 7/1–7/3 單日課程</span>
+        </div>
+        <div style="padding:16px 20px 20px;">
+          <p style="color:#888;font-size:12px;margin-bottom:14px;">報名四週以上，即可享贈送單日課程優惠（限用於 7/1–7/3 單日課程，原價 $1,350／天）</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div style="background:#fff;border-radius:12px;padding:14px 10px;text-align:center;border:1.5px solid #E8D9B0;">
+              <div style="font-size:22px;margin-bottom:6px;">4️⃣</div>
+              <div style="font-weight:900;font-size:14px;color:#C4870A;margin-bottom:6px;">報名四週</div>
+              <div style="font-size:12px;color:#555;line-height:1.7;">贈 <strong>1 天</strong>免費<br>另 2 天半價（$675）</div>
+            </div>
+            <div style="background:#fff;border-radius:12px;padding:14px 10px;text-align:center;border:1.5px solid #E8D9B0;">
+              <div style="font-size:22px;margin-bottom:6px;">5️⃣</div>
+              <div style="font-weight:900;font-size:14px;color:#C4870A;margin-bottom:6px;">報名五週</div>
+              <div style="font-size:12px;color:#555;line-height:1.7;">贈 <strong>2 天</strong>免費<br>另 1 天半價（$675）</div>
+            </div>
+            <div style="background:#FFF8DC;border-radius:12px;padding:14px 10px;text-align:center;border:2px solid #C4870A;position:relative;">
+              <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#E63946;color:#fff;font-size:10px;font-weight:900;padding:2px 10px;border-radius:10px;white-space:nowrap;">最划算</div>
+              <div style="font-size:22px;margin-bottom:6px;">6️⃣</div>
+              <div style="font-weight:900;font-size:14px;color:#C4870A;margin-bottom:6px;">報名六週</div>
+              <div style="font-size:12px;color:#555;line-height:1.7;">贈 <strong>3 天</strong>全免費<br>7/1–7/3 全送！</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FAQ SECTION -->
+<section class="faq" id="sec-faq">
+  <div class="si reveal">
+    <div class="s-label">常見問題</div>
+    <h2 class="s-title">家長最想知道的<em>Q&amp;A</em></h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q1</span>
+          <span class="faq-q-text">每週都有戶外教學嗎？怎麼去？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>每週四安排戶外活動，地點包含博物館、手作場館等精選景點。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>統一搭乘遊覽車或包車前往，全程老師陪同並點名管理，安全放心。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q2</span>
+          <span class="faq-q-text">午休在哪裡？需要準備什麼？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>午休於教室內大型運動空間，環境寬敞舒適。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>請自備小枕頭與棉被。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q3</span>
+          <span class="faq-q-text">午餐與點心內容？安全嗎？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>午餐以便當為主（卡拉雞腿、紅糟肉、糖醋豬、魚排等），口味多樣。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>不定期搭配壽司、炒麵、水餃、鍋貼、炒飯等，讓孩子吃得均衡又有變化。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q4</span>
+          <span class="faq-q-text">可以事先參觀教室嗎？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>每週日 14:00–18:00 開放預約參觀，歡迎提前預約，我們會安排時間接待。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q5</span>
+          <span class="faq-q-text">體能課會不會太激烈？孩子能適應嗎？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>課程採「遊戲化 × 趣味式」設計，著重基本動作與肢體協調訓練。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>無對打內容，初學者與小年齡層孩子都完全適合。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q6</span>
+          <span class="faq-q-text">可以延托嗎？怎麼收費？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>最晚可延托至 19:00，NT$150／小時（未滿30分鐘以 $100 計算）。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>固定一週延托享 8 折優惠，每週五統一結算。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-q-num">Q7</span>
+          <span class="faq-q-text">游泳課安全嗎？不會游泳可以參加嗎？</span>
+          <span class="faq-chev">▼</span>
+        </div>
+        <div class="faq-panel">
+          <div class="faq-panel-inner">
+            <div class="faq-ans"><span class="faq-check">✔</span><span>不會游泳也可以參加！依程度分組教學，每班約 10 位孩子。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>水中由 1 位專業教練指導，水上另有 2 位老師全程協助看護。</span></div>
+            <div class="faq-ans"><span class="faq-check">✔</span><span>課程安排適合初學者到進階程度，全程留意孩子狀況，讓家長安心放心。</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </section>
 
@@ -649,6 +823,20 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 </section>
 
 <script>
+function toggleFaq(q) {
+  const panel = q.nextElementSibling;
+  const chev = q.querySelector('.faq-chev');
+  const isOpen = panel.classList.contains('open');
+  // close all
+  document.querySelectorAll('.faq-panel.open').forEach(p => {
+    p.classList.remove('open');
+    p.previousElementSibling.querySelector('.faq-chev').style.transform = '';
+  });
+  if (!isOpen) {
+    panel.classList.add('open');
+    chev.style.transform = 'rotate(180deg)';
+  }
+}
 function toggleWk(header) {
   const panel = header.nextElementSibling;
   const chev = header.querySelector('.wk-chevron');
@@ -792,6 +980,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySel
     <a class="fab-item" href="#sec-outdoor" onclick="closeFab()"><span class="fab-item-icon">🌿</span>戶外探索</a>
     <a class="fab-item" href="#sec-schedule" onclick="closeFab()"><span class="fab-item-icon">📋</span>週課表</a>
     <a class="fab-item" href="#sec-pricing" onclick="closeFab()"><span class="fab-item-icon">💰</span>費用說明</a>
+    <a class="fab-item" href="#sec-faq" onclick="closeFab()"><span class="fab-item-icon">❓</span>常見問題</a>
     <a class="fab-item" href="#sec-cta" onclick="closeFab()"><span class="fab-item-icon">✍️</span>立即報名</a>
   </div>
   <button class="fab-btn" id="fabBtn" onclick="toggleFab()">☰</button>
