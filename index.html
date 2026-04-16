@@ -739,44 +739,22 @@
       <div class="form-section-title">報名期數</div>
       <p class="field-hint" style="margin-bottom:14px;">可複選，費用將自動計算於下方。</p>
 
-      <div class="session-group-title">單日課程</div>
-      <div class="session-grid" id="session-single" style="margin-bottom:16px;">
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="single-7/1">
-          <div class="session-check">✓</div>
-          <div class="session-info">
-            <div class="session-name">單日 7/1</div>
-            <div class="session-date">2026 年 7 月 1 日</div>
-          </div>
-          <div class="session-price" id="price-single-display">$—</div>
-        </div>
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="single-7/2">
-          <div class="session-check">✓</div>
-          <div class="session-info">
-            <div class="session-name">單日 7/2</div>
-            <div class="session-date">2026 年 7 月 2 日</div>
-          </div>
-          <div class="session-price" id="price-single-display2">$—</div>
-        </div>
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="single-7/3">
-          <div class="session-check">✓</div>
-          <div class="session-info">
-            <div class="session-name">單日 7/3</div>
-            <div class="session-date">2026 年 7 月 3 日</div>
-          </div>
-          <div class="session-price" id="price-single-display3">$—</div>
-        </div>
-      </div>
-
-      <div class="session-group-title">整週課程</div>
+      <div class="session-group-title">全部週次<span id="price-tier-label" style="font-size:11px;font-weight:400;color:var(--gold-light);margin-left:8px;"></span></div>
       <div class="session-grid" id="session-week">
+        <div class="session-item" onclick="toggleSession(this)">
+          <input type="checkbox" value="week-w1">
+          <div class="session-check">✓</div>
+          <div class="session-info">
+            <div class="session-name">第一週（W1）</div>
+            <div class="session-date">7/1 – 7/3（三天）</div>
+          </div>
+          <div class="session-price" id="price-w1-display">$—</div>
+        </div>
         <div class="session-item" onclick="toggleSession(this)">
           <input type="checkbox" value="week-7/6">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第一期</div>
+            <div class="session-name">第二週（W2）</div>
             <div class="session-date">7/6 – 7/10</div>
           </div>
           <div class="session-price" id="price-week-display">$—</div>
@@ -785,7 +763,7 @@
           <input type="checkbox" value="week-7/13">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第二期</div>
+            <div class="session-name">第三週（W3）</div>
             <div class="session-date">7/13 – 7/17</div>
           </div>
           <div class="session-price" id="price-week-display2">$—</div>
@@ -794,7 +772,7 @@
           <input type="checkbox" value="week-7/20">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第三期</div>
+            <div class="session-name">第四週（W4）</div>
             <div class="session-date">7/20 – 7/24</div>
           </div>
           <div class="session-price" id="price-week-display3">$—</div>
@@ -803,7 +781,7 @@
           <input type="checkbox" value="week-8/10">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第四期</div>
+            <div class="session-name">第五週（W5）</div>
             <div class="session-date">8/10 – 8/14</div>
           </div>
           <div class="session-price" id="price-week-display4">$—</div>
@@ -812,7 +790,7 @@
           <input type="checkbox" value="week-8/17">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第五期</div>
+            <div class="session-name">第六週（W6）</div>
             <div class="session-date">8/17 – 8/21</div>
           </div>
           <div class="session-price" id="price-week-display5">$—</div>
@@ -821,7 +799,7 @@
           <input type="checkbox" value="week-8/24">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第六期</div>
+            <div class="session-name">第七週（W7）</div>
             <div class="session-date">8/24 – 8/28</div>
           </div>
           <div class="session-price" id="price-week-display6">$—</div>
@@ -1031,12 +1009,30 @@
 <script>
 // ── CONFIG (會從後台寫入 localStorage) ──
 const DEFAULT_PRICES = {
-  single: 1200,
-  week: 5500,
+  weekNormal: 7390,
+  weekEarly: 6990,
+  weekSuperEarly: 6790,
+  w1Price: 4050,
   bankName: '台北富邦銀行 中壢分行（代碼 012）',
   bankAcct: '82120000015649',
   bankHolder: '運武樂有限公司'
 };
+
+function getWeekPrice(cfg) {
+  const today = new Date();
+  const superEarlyDeadline = new Date('2026-05-15');
+  const earlyDeadline = new Date('2026-06-15');
+  if (today <= superEarlyDeadline) return cfg.weekSuperEarly || DEFAULT_PRICES.weekSuperEarly;
+  if (today <= earlyDeadline) return cfg.weekEarly || DEFAULT_PRICES.weekEarly;
+  return cfg.weekNormal || DEFAULT_PRICES.weekNormal;
+}
+
+function getMultiDiscount(weekCount) {
+  if (weekCount >= 6) return 1500;
+  if (weekCount >= 5) return 1000;
+  if (weekCount >= 4) return 500;
+  return 0;
+}
 
 function getConfig() {
   const saved = localStorage.getItem('wule_config');
@@ -1045,15 +1041,13 @@ function getConfig() {
 
 // ── SESSIONS ──
 const SESSIONS = [
-  { id: 'single-7/1', name: '單日 7/1', type: 'single' },
-  { id: 'single-7/2', name: '單日 7/2', type: 'single' },
-  { id: 'single-7/3', name: '單日 7/3', type: 'single' },
-  { id: 'week-7/6',   name: '第一期 (7/6–7/10)', type: 'week' },
-  { id: 'week-7/13',  name: '第二期 (7/13–7/17)', type: 'week' },
-  { id: 'week-7/20',  name: '第三期 (7/20–7/24)', type: 'week' },
-  { id: 'week-8/10',  name: '第四期 (8/10–8/14)', type: 'week' },
-  { id: 'week-8/17',  name: '第五期 (8/17–8/21)', type: 'week' },
-  { id: 'week-8/24',  name: '第六期 (8/24–8/28)', type: 'week' },
+  { id: 'week-w1',   name: '第一週 W1 (7/1–7/3)',   type: 'w1' },
+  { id: 'week-7/6',  name: '第二週 W2 (7/6–7/10)',  type: 'week' },
+  { id: 'week-7/13', name: '第三週 W3 (7/13–7/17)', type: 'week' },
+  { id: 'week-7/20', name: '第四週 W4 (7/20–7/24)', type: 'week' },
+  { id: 'week-8/10', name: '第五週 W5 (8/10–8/14)', type: 'week' },
+  { id: 'week-8/17', name: '第六週 W6 (8/17–8/21)', type: 'week' },
+  { id: 'week-8/24', name: '第七週 W7 (8/24–8/28)', type: 'week' },
 ];
 
 let agreed = false;
@@ -1063,10 +1057,20 @@ let paymentVal = '';
 
 function initPrices() {
   const cfg = getConfig();
-  const singlePrices = document.querySelectorAll('[id^="price-single-display"]');
   const weekPrices = document.querySelectorAll('[id^="price-week-display"]');
-  singlePrices.forEach(el => el.textContent = '$' + cfg.single.toLocaleString());
-  weekPrices.forEach(el => el.textContent = '$' + cfg.week.toLocaleString());
+  const weekPrice = getWeekPrice(cfg);
+  const w1Price = cfg.w1Price || DEFAULT_PRICES.w1Price;
+  weekPrices.forEach(el => el.textContent = '$' + weekPrice.toLocaleString());
+  const w1Display = document.getElementById('price-w1-display');
+  if (w1Display) w1Display.textContent = '$' + w1Price.toLocaleString();
+  // 顯示早鳥標籤
+  const tierLabel = document.getElementById('price-tier-label');
+  if (tierLabel) {
+    const today2 = new Date();
+    if (today2 <= new Date('2026-05-15')) tierLabel.textContent = '⚡ 超早鳥價 $6,790（5/15前）';
+    else if (today2 <= new Date('2026-06-15')) tierLabel.textContent = '🐣 早鳥價 $6,990（6/15前）';
+    else tierLabel.textContent = '原價 $7,390';
+  }
   document.getElementById('bank-name-display').textContent = cfg.bankName;
   document.getElementById('bank-acct-display').textContent = cfg.bankAcct;
   document.getElementById('bank-holder-display').textContent = cfg.bankHolder;
@@ -1093,8 +1097,9 @@ function calcAge() {
 
 // ── 延托邏輯 ──
 let aftercareVal = 'no'; // no / yes / tbd
-const DAYS_MAP = { 'single-7/1':'7/1（週三）', 'single-7/2':'7/2（週四）', 'single-7/3':'7/3（週五）',
-  'week-7/6':'7/6-7/10（一到五）', 'week-7/13':'7/13-7/17（一到五）', 'week-7/20':'7/20-7/24（一到五）',
+const DAYS_MAP = {
+  'week-w1':  '7/1-7/3（三、四、五）',
+  'week-7/6': '7/6-7/10（一到五）', 'week-7/13':'7/13-7/17（一到五）', 'week-7/20':'7/20-7/24（一到五）',
   'week-8/10':'8/10-8/14（一到五）', 'week-8/17':'8/17-8/21（一到五）', 'week-8/24':'8/24-8/28（一到五）' };
 const WEEK_DAYS = ['一','二','三','四','五'];
 
@@ -1122,7 +1127,7 @@ function buildAftercareDays() {
   let totalDays = 0;
   selectedSessions.forEach(sid => {
     const s = SESSIONS.find(x => x.id === sid);
-    if (s) totalDays += s.type === 'week' ? 5 : 1;
+    if (s) totalDays += s.type === 'w1' ? 3 : s.type === 'week' ? 5 : 0;
   });
   if (totalDays === 0) {
     grid.innerHTML = '<div style="font-size:13px;color:var(--ink-light);">請先選擇報名期數</div>';
@@ -1272,16 +1277,10 @@ function toggleSession(el) {
   document.getElementById('err-session').classList.remove('show');
 }
 
-function getSingleDiscount(weekCount) {
-  // 回傳 { freeDays: N, halfPrice: bool }
-  if (weekCount >= 6) return { freeDays: 3, halfPrice: false };
-  if (weekCount >= 5) return { freeDays: 2, halfPrice: true };
-  if (weekCount >= 4) return { freeDays: 1, halfPrice: true };
-  return { freeDays: 0, halfPrice: false };
-}
-
 function updateFee() {
   const cfg = getConfig();
+  const weekPrice = getWeekPrice(cfg);
+  const w1Price = cfg.w1Price || DEFAULT_PRICES.w1Price;
   const items = document.getElementById('fee-items');
   const totalEl = document.getElementById('fee-total');
   const depositEl = document.getElementById('fee-deposit');
@@ -1293,43 +1292,42 @@ function updateFee() {
     return;
   }
 
-  const weekCount = selectedSessions.filter(s => s.startsWith('week-')).length;
-  const singles = selectedSessions.filter(s => s.startsWith('single-'));
-  const { freeDays, halfPrice } = getSingleDiscount(weekCount);
+  const weekCount = selectedSessions.filter(sid => { const s = SESSIONS.find(x => x.id === sid); return s && s.type === 'week'; }).length;
+  const hasW1 = selectedSessions.includes('week-w1');
+  const discount = getMultiDiscount(weekCount);
+
+  // 早鳥提示
+  const today = new Date();
+  const superEarlyDeadline = new Date('2026-05-15');
+  const earlyDeadline = new Date('2026-06-15');
+  let priceTierLabel = '';
+  if (today <= superEarlyDeadline) priceTierLabel = '⚡ 超早鳥價（5/15前）';
+  else if (today <= earlyDeadline) priceTierLabel = '🐣 早鳥價（6/15前）';
 
   let total = 0;
   let html = '';
 
-  // 只要達到4期以上就顯示優惠提示，不需要已選單日
-  if (weekCount >= 4) {
-    let msg = '';
-    if (weekCount >= 6) msg = '🎁 報名 6 期，單日課程全部免費！';
-    else if (weekCount >= 5) msg = '🎁 報名 5 期，前 2 天單日免費，其餘半價！';
-    else msg = '🎁 報名 4 期，第 1 天單日免費，其餘半價！';
-    html += `<div style="font-size:12px;color:var(--gold-light);padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">${msg}</div>`;
+  if (priceTierLabel) {
+    html += `<div style="font-size:12px;color:var(--gold-light);padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">${priceTierLabel}</div>`;
   }
 
-  selectedSessions.forEach((sid, idx) => {
+  selectedSessions.forEach(sid => {
     const s = SESSIONS.find(x => x.id === sid);
     if (!s) return;
-    let price = s.type === 'week' ? cfg.week : cfg.single;
-    let priceLabel = '$' + price.toLocaleString();
-
-    if (s.type === 'single') {
-      const singleIdx = singles.indexOf(sid);
-      if (singleIdx < freeDays) {
-        // 免費
-        price = 0;
-        priceLabel = `<span style="text-decoration:line-through;color:rgba(255,255,255,0.3);">$${cfg.single.toLocaleString()}</span> <span style="color:#E8C97A;font-weight:700;">免費</span>`;
-      } else if (halfPrice) {
-        // 半價
-        price = Math.ceil(cfg.single / 2);
-        priceLabel = `<span style="text-decoration:line-through;color:rgba(255,255,255,0.3);">$${cfg.single.toLocaleString()}</span> <span style="color:#E8C97A;">$${price.toLocaleString()}</span>`;
-      }
-    }
+    let price = s.type === 'w1' ? w1Price : weekPrice;
     total += price;
-    html += `<div class="fee-row"><span>${s.name}</span><span class="fee-amount">${priceLabel}</span></div>`;
+    html += `<div class="fee-row"><span>${s.name}</span><span class="fee-amount">$${price.toLocaleString()}</span></div>`;
   });
+
+  // 多週折扣（只算W2–W6週數）
+  if (discount > 0) {
+    let discountMsg = '';
+    if (weekCount >= 6) discountMsg = '🎁 報名 6 週折扣';
+    else if (weekCount >= 5) discountMsg = '🎁 報名 5 週折扣';
+    else discountMsg = '🎁 報名 4 週折扣';
+    total -= discount;
+    html += `<div class="fee-row" style="color:var(--gold-light);"><span>${discountMsg}</span><span class="fee-amount">−$${discount.toLocaleString()}</span></div>`;
+  }
 
   items.innerHTML = html;
   baseCourseTotal = total;
@@ -1410,21 +1408,18 @@ function submitForm() {
   }
 
   const cfg = getConfig();
-  const weekCount = selectedSessions.filter(s => s.startsWith('week-')).length;
-  const singles = selectedSessions.filter(s => s.startsWith('single-'));
-  const { freeDays, halfPrice } = getSingleDiscount(weekCount);
+  const weekPrice = getWeekPrice(cfg);
+  const w1Price = cfg.w1Price || DEFAULT_PRICES.w1Price;
+  const weekCount = selectedSessions.filter(sid => { const s = SESSIONS.find(x => x.id === sid); return s && s.type === 'week'; }).length;
+  const discount = getMultiDiscount(weekCount);
   let total = 0;
   const sessionNames = selectedSessions.map(sid => {
     const s = SESSIONS.find(x => x.id === sid);
-    let price = s.type === 'week' ? cfg.week : cfg.single;
-    if (s.type === 'single') {
-      const singleIdx = singles.indexOf(sid);
-      if (singleIdx < freeDays) price = 0;
-      else if (halfPrice) price = Math.ceil(cfg.single / 2);
-    }
+    let price = s.type === 'w1' ? w1Price : weekPrice;
     total += price;
     return s.name;
   });
+  total -= discount;
   const deposit = Math.ceil(total * 0.25);
   const isCard = paymentVal.includes('信用卡');
   const depositWithFee = isCard ? Math.ceil(deposit * 1.03) : deposit;
@@ -1491,6 +1486,14 @@ function submitForm() {
 
 function showThanks(d, deposit) {
   const cfg = getConfig();
+  // 顯示早鳥標籤
+  const tierLabel = document.getElementById('price-tier-label');
+  if (tierLabel) {
+    const today2 = new Date();
+    if (today2 <= new Date('2026-05-15')) tierLabel.textContent = '⚡ 超早鳥價 $6,790（5/15前）';
+    else if (today2 <= new Date('2026-06-15')) tierLabel.textContent = '🐣 早鳥價 $6,990（6/15前）';
+    else tierLabel.textContent = '原價 $7,390';
+  }
   document.getElementById('bank-name-display').textContent = cfg.bankName;
   document.getElementById('bank-acct-display').textContent = cfg.bankAcct;
   document.getElementById('bank-holder-display').textContent = cfg.bankHolder;
