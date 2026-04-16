@@ -763,41 +763,48 @@ function loadRegsFromSheet(showToast = false) {
   document.getElementById('statsGrid').innerHTML = '<div style="color:var(--ink-faint);font-size:13px;padding:12px;">載入中…</div>';
   document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">資料載入中…</div></td></tr>';
 
-  fetch(GAS_URL)
-    .then(r => r.json())
-    .then(json => {
-      const rows = json.data || [];
-      allRegs = rows.map((r, i) => ({
-        _id: i,
-        rowNum: i + 2, // 試算表第2列開始（第1列是標題）
-        timestamp:    r['報名時間'] || '',
-        name:         r['學員姓名'] || '',
-        gender:       r['性別'] || '',
-        age:          r['年齡'] || '',
-        dob:          r['出生年月日'] || '',
-        sessions:     r['報名期數'] || '',
-        totalFee:     parseFloat((r['總費用']||'0').toString().replace(/[^0-9.]/g,'')),
-        deposit:      parseFloat((r['需付訂金']||'0').toString().replace(/[^0-9.]/g,'')),
-        payment:      r['付款方式'] || '',
-        depositStatus: statusOverride[i] || (r['訂金狀態'] === '已繳' ? 'paid' : r['訂金狀態'] === '取消' ? 'cancel' : 'pending'),
-        parent:       r['家長姓名'] || '',
-        phone:        r['聯絡電話'] || '',
-        bank:         r['匯款帳號後5碼'] || '',
-        health:       r['身體狀況'] || '',
-        diet:         r['飲食注意'] || '',
-      }));
-      renderStats();
-      renderTable();
-      if (showToast) showSyncToast('✓ 已同步最新資料');
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">載入失敗，請確認 GAS 網址並重試</div></td></tr>';
-      if (showToast) showSyncToast('✗ 同步失敗，請重試', true);
-    })
-    .finally(() => {
-      if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
-    });
+  const cbName = 'gasCallback_' + Date.now();
+  const script = document.createElement('script');
+  const timer = setTimeout(() => {
+    delete window[cbName];
+    document.body.removeChild(script);
+    document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">載入失敗，請確認 GAS 網址並重試</div></td></tr>';
+    if (showToast) showSyncToast('✗ 同步失敗，請重試', true);
+    if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
+  }, 10000);
+
+  window[cbName] = function(json) {
+    clearTimeout(timer);
+    delete window[cbName];
+    document.body.removeChild(script);
+    const rows = json.data || [];
+    allRegs = rows.map((r, i) => ({
+      _id: i,
+      rowNum: i + 2,
+      timestamp:    r['報名時間'] || '',
+      name:         r['學員姓名'] || '',
+      gender:       r['性別'] || '',
+      age:          r['年齡'] || '',
+      dob:          r['出生年月日'] || '',
+      sessions:     r['報名期數'] || '',
+      totalFee:     parseFloat((r['總費用']||'0').toString().replace(/[^0-9.]/g,'')),
+      deposit:      parseFloat((r['需付訂金']||'0').toString().replace(/[^0-9.]/g,'')),
+      payment:      r['付款方式'] || '',
+      depositStatus: statusOverride[i] || (r['訂金狀態'] === '已繳' ? 'paid' : r['訂金狀態'] === '取消' ? 'cancel' : 'pending'),
+      parent:       r['家長姓名'] || '',
+      phone:        r['聯絡電話'] || '',
+      bank:         r['匯款帳號後5碼'] || '',
+      health:       r['身體狀況'] || '',
+      diet:         r['飲食注意'] || '',
+    }));
+    renderStats();
+    renderTable();
+    if (showToast) showSyncToast('✓ 已同步最新資料');
+    if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
+  };
+
+  script.src = GAS_URL + '?callback=' + cbName;
+  document.body.appendChild(script);
 }
 
 function showSyncToast(msg, isErr = false) {
@@ -891,9 +898,12 @@ function updateStatus(id, val) {
     rowNum: reg.rowNum,
     status: statusLabel,
   });
-  fetch(GAS_URL + '?' + params.toString())
-    .then(() => showSyncToast('✓ 狀態已同步'))
-    .catch(() => showSyncToast('✗ 同步失敗，狀態已在本機更新', true));
+  const cbName2 = 'gasStatusCb_' + Date.now();
+  const s2 = document.createElement('script');
+  window[cbName2] = function() { delete window[cbName2]; document.body.removeChild(s2); showSyncToast('✓ 狀態已同步'); };
+  s2.onerror = function() { delete window[cbName2]; document.body.removeChild(s2); showSyncToast('✗ 同步失敗，狀態已在本機更新', true); };
+  s2.src = GAS_URL + '?' + params.toString() + '&callback=' + cbName2;
+  document.body.appendChild(s2);
 }
 
 function clearAll() {
