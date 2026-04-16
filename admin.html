@@ -332,6 +332,10 @@
     transition: all 0.2s;
   }
   .del-btn:hover { background: var(--red-soft); color: var(--white); border-color: var(--red-soft); }
+
+  @media(max-width: 700px) {
+    .invoice-grid { grid-template-columns: 1fr !important; }
+  }
 </style>
 </head>
 <body>
@@ -357,11 +361,148 @@
   </header>
   <div class="admin-tabs">
     <div class="admin-tab active" onclick="switchTab('registrations')">報名名單</div>
+    <div class="admin-tab" onclick="switchTab('invoice')">收費單</div>
     <div class="admin-tab" onclick="switchTab('pricing')">費用設定</div>
     <div class="admin-tab" onclick="switchTab('settings')">系統設定</div>
   </div>
 
   <div class="admin-content">
+
+    <!-- ── 收費單 ── -->
+    <div class="panel" id="panel-invoice">
+      <h2 class="panel-title">收費單產生器</h2>
+      <p class="panel-sub">選擇學員後自動帶入費用資料，可新增細項，生成收費圖片直接傳給家長。</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="invoice-grid">
+
+        <!-- 左側：設定 -->
+        <div>
+          <div class="card">
+            <div class="card-title">選擇學員</div>
+            <select id="inv-student" onchange="loadStudentData()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:var(--cream);color:var(--ink);outline:none;">
+              <option value="">── 請選擇學員 ──</option>
+            </select>
+          </div>
+
+          <div class="card" id="inv-info-card" style="display:none;">
+            <div class="card-title">學員資訊</div>
+            <div id="inv-student-info" style="font-size:13px;line-height:2;color:var(--ink-mid);"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">費用明細</div>
+
+            <div id="inv-base-rows" style="margin-bottom:14px;"></div>
+
+            <!-- 自訂細項 -->
+            <div style="margin-bottom:10px;font-size:12px;font-weight:700;color:var(--ink-light);letter-spacing:1px;">自訂項目</div>
+            <div id="inv-custom-rows"></div>
+            <button onclick="addCustomRow()" style="margin-top:8px;padding:7px 14px;border:1.5px dashed var(--border);border-radius:8px;background:transparent;color:var(--ink-light);font-family:inherit;font-size:13px;cursor:pointer;width:100%;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-light)'">
+              ＋ 新增細項
+            </button>
+
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                <span style="color:var(--ink-light);">課程費用</span>
+                <span id="inv-course-total" style="font-weight:500;">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;" id="inv-extra-row" style="display:none;">
+                <span style="color:var(--ink-light);">其他費用</span>
+                <span id="inv-extra-total" style="font-weight:500;">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+                <span>總計</span>
+                <span id="inv-grand-total" style="color:var(--gold);">$0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">繳費資訊</div>
+            <div style="display:grid;gap:12px;">
+              <div class="price-field">
+                <label>繳費截止日期</label>
+                <input type="date" id="inv-due" class="text-input" onchange="updatePreview()">
+              </div>
+              <div class="price-field">
+                <label>繳費方式</label>
+                <select id="inv-method" class="text-input" onchange="updatePreview()" style="appearance:none;">
+                  <option value="銀行轉帳">銀行轉帳</option>
+                  <option value="信用卡">信用卡（酌收 3% 手續費）</option>
+                  <option value="現金">現金</option>
+                </select>
+              </div>
+              <div class="price-field">
+                <label>備註說明</label>
+                <input type="text" id="inv-note" class="text-input" placeholder="例：尾款繳納通知" oninput="updatePreview()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：預覽 -->
+        <div>
+          <div class="card" style="position:sticky;top:20px;">
+            <div class="card-title">收費單預覽</div>
+            <div id="invoice-preview" style="background:#FAF7F2;border-radius:10px;padding:0;overflow:hidden;border:1px solid var(--border);">
+              <!-- 收費單畫面 -->
+              <div style="background:#1A1610;padding:20px 24px;">
+                <div style="font-family:'Noto Serif TC',serif;font-size:18px;color:#E8C97A;letter-spacing:3px;margin-bottom:4px;">武樂小小運動家</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;">2026 SUMMER CAMP</div>
+              </div>
+              <div style="padding:20px 24px;">
+                <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:12px;">收費通知單</div>
+
+                <div id="prev-student-block" style="background:white;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid var(--border);">
+                  <div style="font-size:12px;color:var(--ink-light);margin-bottom:4px;">學員姓名</div>
+                  <div id="prev-name" style="font-size:16px;font-weight:700;color:var(--ink);">──</div>
+                  <div id="prev-sessions" style="font-size:11px;color:var(--ink-light);margin-top:4px;">尚未選擇學員</div>
+                </div>
+
+                <div id="prev-items" style="margin-bottom:14px;"></div>
+
+                <div style="background:white;border-radius:8px;padding:12px 14px;border:1px solid var(--border);margin-bottom:14px;">
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                    <span style="color:var(--ink-light);">已繳金額</span>
+                    <span id="prev-paid" style="color:var(--green-soft);font-weight:500;">$0</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;">
+                    <span style="color:var(--ink-light);">尚待繳納</span>
+                    <span id="prev-remain" style="color:var(--red-soft);font-weight:700;font-size:16px;">$0</span>
+                  </div>
+                  <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;">
+                    <span style="color:var(--ink-light);">繳費方式</span>
+                    <span id="prev-method" style="color:var(--ink-mid);">銀行轉帳</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px;">
+                    <span style="color:var(--ink-light);">繳費截止</span>
+                    <span id="prev-due" style="color:var(--red-soft);font-weight:500;">──</span>
+                  </div>
+                </div>
+
+                <div style="background:#1A1610;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+                  <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px;">銀行轉帳資訊</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,0.7);">台北富邦銀行 中壢分行（012）</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,0.7);">戶名：運武樂有限公司</div>
+                  <div style="font-size:13px;color:#E8C97A;font-weight:700;letter-spacing:1px;margin-top:4px;">82120000015649</div>
+                </div>
+
+                <div id="prev-note-block" style="display:none;background:#FBF5E8;border-radius:8px;padding:10px 14px;margin-bottom:14px;border:1px solid #E8C97A;">
+                  <div style="font-size:12px;color:var(--ink-mid);">📌 <span id="prev-note"></span></div>
+                </div>
+
+                <div style="font-size:11px;color:var(--ink-light);text-align:center;">匯款完成後請截圖傳至武樂小小運動家官方 LINE</div>
+              </div>
+            </div>
+
+            <button onclick="downloadInvoice()" class="save-btn" style="width:100%;justify-content:center;margin-top:14px;margin-bottom:0;">
+              ⬇ 下載收費單圖片
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- ── 報名名單 ── -->
     <div class="panel active" id="panel-registrations">
@@ -527,10 +668,11 @@ function doLogout() {
 
 function switchTab(tab) {
   document.querySelectorAll('.admin-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['registrations','pricing','settings'][i] === tab);
+    t.classList.toggle('active', ['registrations','invoice','pricing','settings'][i] === tab);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'invoice') initInvoice();
 }
 
 // ── CONFIG ──
@@ -729,6 +871,186 @@ function downloadGasCode() {
 }
 
 window.addEventListener('storage', () => {});
+
+// ── 收費單邏輯 ──
+let customRows = [];
+let currentStudent = null;
+
+function initInvoice() {
+  const sel = document.getElementById('inv-student');
+  sel.innerHTML = '<option value="">── 請選擇學員 ──</option>';
+  allRegs.forEach((r, i) => {
+    if (r.name) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = r.name + '（' + (r.sessions||'').substring(0,10) + '…）';
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function loadStudentData() {
+  const idx = document.getElementById('inv-student').value;
+  if (idx === '') { currentStudent = null; updatePreview(); return; }
+  currentStudent = allRegs[idx];
+  document.getElementById('inv-info-card').style.display = 'block';
+  document.getElementById('inv-student-info').innerHTML = `
+    <div><span style="color:var(--ink-light)">姓名：</span>${currentStudent.name}</div>
+    <div><span style="color:var(--ink-light)">報名期數：</span>${currentStudent.sessions}</div>
+    <div><span style="color:var(--ink-light)">總費用：</span>$${(currentStudent.totalFee||0).toLocaleString()}</div>
+    <div><span style="color:var(--ink-light)">已繳訂金：</span><span style="color:var(--green-soft);font-weight:500;">$${(currentStudent.deposit||0).toLocaleString()}</span></div>
+    <div><span style="color:var(--ink-light)">訂金狀態：</span>${currentStudent.depositStatus === 'paid' ? '✅ 已繳' : currentStudent.depositStatus === 'cancel' ? '❌ 取消' : '⏳ 待繳'}</div>
+  `;
+  renderInvBaseRows();
+  updatePreview();
+}
+
+function renderInvBaseRows() {
+  if (!currentStudent) return;
+  const paid = currentStudent.depositStatus === 'paid' ? (currentStudent.deposit||0) : 0;
+  const remain = (currentStudent.totalFee||0) - paid;
+  document.getElementById('inv-base-rows').innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--ink-light);letter-spacing:1px;margin-bottom:8px;">課程費用</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="color:var(--ink-mid);">${currentStudent.sessions}</span>
+      <span style="font-weight:500;">$${(currentStudent.totalFee||0).toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="color:var(--green-soft);">已繳訂金</span>
+      <span style="color:var(--green-soft);font-weight:500;">－$${paid.toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;font-weight:700;">
+      <span>尚待繳納</span>
+      <span style="color:var(--red-soft);">$${remain.toLocaleString()}</span>
+    </div>
+  `;
+  updateTotals();
+}
+
+function addCustomRow() {
+  const id = Date.now();
+  customRows.push({ id, name: '', amount: 0 });
+  renderCustomRows();
+}
+
+function renderCustomRows() {
+  document.getElementById('inv-custom-rows').innerHTML = customRows.map(row => `
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;" id="crow-${row.id}">
+      <input type="text" placeholder="項目名稱" value="${row.name}"
+        style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--cream);color:var(--ink);outline:none;"
+        oninput="updateCustomRow(${row.id},'name',this.value)">
+      <input type="number" placeholder="金額" value="${row.amount||''}"
+        style="width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--cream);color:var(--ink);outline:none;"
+        oninput="updateCustomRow(${row.id},'amount',this.value)">
+      <button onclick="removeCustomRow(${row.id})"
+        style="padding:6px 10px;border:1px solid #f5c6cb;border-radius:8px;background:#fff5f5;color:var(--red-soft);cursor:pointer;font-size:13px;">✕</button>
+    </div>
+  `).join('');
+  updateTotals();
+  updatePreview();
+}
+
+function updateCustomRow(id, field, val) {
+  const row = customRows.find(r => r.id === id);
+  if (row) {
+    row[field] = field === 'amount' ? (parseFloat(val)||0) : val;
+    updateTotals();
+    updatePreview();
+  }
+}
+
+function removeCustomRow(id) {
+  customRows = customRows.filter(r => r.id !== id);
+  renderCustomRows();
+}
+
+function updateTotals() {
+  const courseTotal = currentStudent ? (currentStudent.totalFee||0) : 0;
+  const paid = (currentStudent && currentStudent.depositStatus === 'paid') ? (currentStudent.deposit||0) : 0;
+  const extraTotal = customRows.reduce((s, r) => s + (r.amount||0), 0);
+  const grandTotal = (courseTotal - paid) + extraTotal;
+
+  document.getElementById('inv-course-total').textContent = '$' + (courseTotal - paid).toLocaleString();
+  document.getElementById('inv-extra-total').textContent = '$' + extraTotal.toLocaleString();
+  document.getElementById('inv-extra-row').style.display = extraTotal > 0 ? 'flex' : 'none';
+  document.getElementById('inv-grand-total').textContent = '$' + grandTotal.toLocaleString();
+  updatePreview();
+}
+
+function updatePreview() {
+  if (!currentStudent) {
+    document.getElementById('prev-name').textContent = '──';
+    document.getElementById('prev-sessions').textContent = '尚未選擇學員';
+    document.getElementById('prev-paid').textContent = '$0';
+    document.getElementById('prev-remain').textContent = '$0';
+    document.getElementById('prev-items').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('prev-name').textContent = currentStudent.name;
+  document.getElementById('prev-sessions').textContent = currentStudent.sessions;
+
+  const paid = (currentStudent.depositStatus === 'paid') ? (currentStudent.deposit||0) : 0;
+  const extraTotal = customRows.reduce((s, r) => s + (r.amount||0), 0);
+  const remain = (currentStudent.totalFee||0) - paid + extraTotal;
+
+  document.getElementById('prev-paid').textContent = '$' + paid.toLocaleString();
+  document.getElementById('prev-remain').textContent = '$' + remain.toLocaleString();
+
+  // 費用明細
+  let itemsHtml = `<div style="background:white;border-radius:8px;padding:12px 14px;border:1px solid var(--border);margin-bottom:14px;">`;
+  itemsHtml += `<div style="font-size:11px;font-weight:700;color:var(--ink-light);letter-spacing:1px;margin-bottom:8px;">費用明細</div>`;
+  itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span style="color:var(--ink-light);">課程費用</span><span>$${(currentStudent.totalFee||0).toLocaleString()}</span></div>`;
+  customRows.filter(r => r.name && r.amount).forEach(r => {
+    itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span style="color:var(--ink-light);">${r.name}</span><span>$${r.amount.toLocaleString()}</span></div>`;
+  });
+  if (paid > 0) {
+    itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px dashed var(--border);margin-top:4px;"><span style="color:var(--green-soft);">已繳訂金</span><span style="color:var(--green-soft);">－$${paid.toLocaleString()}</span></div>`;
+  }
+  itemsHtml += `</div>`;
+  document.getElementById('prev-items').innerHTML = itemsHtml;
+
+  // 繳費方式、截止日
+  document.getElementById('prev-method').textContent = document.getElementById('inv-method').value;
+  const due = document.getElementById('inv-due').value;
+  document.getElementById('prev-due').textContent = due ? due.replace(/-/g,'/') : '──';
+
+  // 備註
+  const note = document.getElementById('inv-note').value.trim();
+  const noteBlock = document.getElementById('prev-note-block');
+  if (note) {
+    noteBlock.style.display = 'block';
+    document.getElementById('prev-note').textContent = note;
+  } else {
+    noteBlock.style.display = 'none';
+  }
+}
+
+function downloadInvoice() {
+  if (!currentStudent) { alert('請先選擇學員'); return; }
+  const el = document.getElementById('invoice-preview');
+  // 用 html2canvas 截圖
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  script.onload = () => {
+    html2canvas(el, { scale: 3, backgroundColor: '#FAF7F2', useCORS: true }).then(canvas => {
+      const a = document.createElement('a');
+      a.download = `武樂收費單_${currentStudent.name}_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  };
+  if (!window.html2canvas) {
+    document.head.appendChild(script);
+  } else {
+    html2canvas(el, { scale: 3, backgroundColor: '#FAF7F2', useCORS: true }).then(canvas => {
+      const a = document.createElement('a');
+      a.download = `武樂收費單_${currentStudent.name}_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  }
+}
 </script>
 </body>
 </html>
