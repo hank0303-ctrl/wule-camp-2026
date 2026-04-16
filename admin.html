@@ -514,6 +514,7 @@
       <div class="card">
         <div class="toolbar">
           <input type="text" class="search-input" id="searchInput" placeholder="搜尋學員姓名、家長、電話…" oninput="renderTable()">
+          <button class="export-btn" onclick="syncFromSheet()" style="border-color:var(--gold);color:var(--gold);">↻ 同步雲端資料</button>
           <button class="export-btn" onclick="exportCSV()">⬇ 匯出 CSV</button>
           <button class="export-btn" onclick="clearAll()" style="border-color:#f5c6cb;color:var(--red-soft);">清除全部</button>
         </div>
@@ -736,12 +737,29 @@ function showOk(id) {
 
 // ── REGISTRATIONS ──
 // GAS 網址（讀取試算表用）
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
+// GAS URL 統一從 localStorage 讀取（設定頁填寫的那個）
+function getGasUrl() {
+  return localStorage.getItem('wule_gas_url') || 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
+}
 
-let allRegs = []; // 從試算表讀取的資料
-let statusOverride = {}; // 本地訂金狀態覆蓋
+let allRegs = [];
+let statusOverride = {};
 
-function loadRegsFromSheet() {
+function syncFromSheet() {
+  statusOverride = {}; // 清除本地覆蓋，重新從雲端載入
+  loadRegsFromSheet(true);
+}
+
+function loadRegsFromSheet(showToast = false) {
+  const GAS_URL = getGasUrl();
+  if (!GAS_URL) {
+    document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">請先在「系統設定」填寫 GAS 網址</div></td></tr>';
+    return;
+  }
+
+  const syncBtn = document.querySelector('[onclick="syncFromSheet()"]');
+  if (syncBtn) { syncBtn.textContent = '↻ 同步中…'; syncBtn.disabled = true; }
+
   document.getElementById('statsGrid').innerHTML = '<div style="color:var(--ink-faint);font-size:13px;padding:12px;">載入中…</div>';
   document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">資料載入中…</div></td></tr>';
 
@@ -751,6 +769,7 @@ function loadRegsFromSheet() {
       const rows = json.data || [];
       allRegs = rows.map((r, i) => ({
         _id: i,
+        rowNum: i + 2, // 試算表第2列開始（第1列是標題）
         timestamp:    r['報名時間'] || '',
         name:         r['學員姓名'] || '',
         gender:       r['性別'] || '',
@@ -769,11 +788,32 @@ function loadRegsFromSheet() {
       }));
       renderStats();
       renderTable();
+      if (showToast) showSyncToast('✓ 已同步最新資料');
     })
     .catch(err => {
       console.error(err);
-      document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">載入失敗，請重新整理</div></td></tr>';
+      document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">載入失敗，請確認 GAS 網址並重試</div></td></tr>';
+      if (showToast) showSyncToast('✗ 同步失敗，請重試', true);
+    })
+    .finally(() => {
+      if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
     });
+}
+
+function showSyncToast(msg, isErr = false) {
+  let toast = document.getElementById('sync-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sync-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transition:opacity 0.3s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = isErr ? '#C0392B' : '#2E7D32';
+  toast.style.color = '#fff';
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
 }
 
 function getRegs() {
@@ -841,6 +881,19 @@ function updateStatus(id, val) {
   statusOverride[id] = val;
   allRegs[id].depositStatus = val;
   renderStats();
+
+  // 同步更新到試算表
+  const GAS_URL = getGasUrl();
+  const reg = allRegs[id];
+  const statusLabel = val === 'paid' ? '已繳' : val === 'cancel' ? '取消' : '待繳';
+  const params = new URLSearchParams({
+    action: 'updateStatus',
+    rowNum: reg.rowNum,
+    status: statusLabel,
+  });
+  fetch(GAS_URL + '?' + params.toString())
+    .then(() => showSyncToast('✓ 狀態已同步'))
+    .catch(() => showSyncToast('✗ 同步失敗，狀態已在本機更新', true));
 }
 
 function clearAll() {
@@ -1028,28 +1081,169 @@ function updatePreview() {
 
 function downloadInvoice() {
   if (!currentStudent) { alert('請先選擇學員'); return; }
-  const el = document.getElementById('invoice-preview');
-  // 用 html2canvas 截圖
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-  script.onload = () => {
-    html2canvas(el, { scale: 3, backgroundColor: '#FAF7F2', useCORS: true }).then(canvas => {
-      const a = document.createElement('a');
-      a.download = `武樂收費單_${currentStudent.name}_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    });
+
+  const btn = document.querySelector('[onclick="downloadInvoice()"]');
+  if (btn) { btn.textContent = '⏳ 生成中…'; btn.disabled = true; }
+
+  // 用 Canvas 直接繪製（完全相容 Safari / iOS）
+  const canvas = document.createElement('canvas');
+  const W = 600, scale = 2;
+  canvas.width = W * scale;
+
+  // 先收集資料
+  const name = currentStudent.name;
+  const sessions = currentStudent.sessions;
+  const totalFee = currentStudent.totalFee || 0;
+  const paid = currentStudent.depositStatus === 'paid' ? (currentStudent.deposit || 0) : 0;
+  const extraTotal = customRows.reduce((s, r) => s + (r.amount || 0), 0);
+  const remain = totalFee - paid + extraTotal;
+  const method = document.getElementById('inv-method').value;
+  const due = document.getElementById('inv-due').value.replace(/-/g, '/') || '──';
+  const note = document.getElementById('inv-note').value.trim();
+  const dateStr = new Date().toLocaleDateString('zh-TW');
+
+  // 計算高度
+  const customCount = customRows.filter(r => r.name && r.amount).length;
+  const H = 580 + customCount * 28 + (note ? 50 : 0);
+  canvas.height = H * scale;
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // 背景
+  ctx.fillStyle = '#FAF7F2';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header
+  ctx.fillStyle = '#1A1610';
+  ctx.fillRect(0, 0, W, 72);
+  ctx.font = 'bold 20px serif';
+  ctx.fillStyle = '#E8C97A';
+  ctx.fillText('武樂小小運動家', 24, 40);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('2026 SUMMER CAMP', 24, 58);
+
+  let y = 96;
+
+  // 收費通知單標題
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillStyle = '#C9973A';
+  ctx.fillText('收費通知單', 24, y);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#C4B9A8';
+  ctx.fillText(dateStr, W - 24 - ctx.measureText(dateStr).width, y);
+  y += 20;
+
+  // 學員資訊卡
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, 16, y, W - 32, 68, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#E2D9CA';
+  ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W - 32, 68, 8);
+  ctx.stroke();
+  ctx.font = '11px sans-serif'; ctx.fillStyle = '#7A6E5F';
+  ctx.fillText('學員姓名', 30, y + 18);
+  ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#1A1610';
+  ctx.fillText(name, 30, y + 38);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = '#7A6E5F';
+  const sessShort = sessions.length > 40 ? sessions.substring(0, 40) + '…' : sessions;
+  ctx.fillText(sessShort, 30, y + 56);
+  y += 82;
+
+  // 費用明細卡
+  const itemCount = 2 + customCount + (paid > 0 ? 1 : 0);
+  const detailH = 36 + itemCount * 26 + 10;
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, 16, y, W - 32, detailH, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W - 32, detailH, 8); ctx.stroke();
+  ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#C4B9A8';
+  ctx.fillText('費用明細', 30, y + 18);
+  let dy = y + 34;
+  const drawItem = (label, amount, color = '#3D3628') => {
+    ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F';
+    ctx.fillText(label, 30, dy);
+    ctx.fillStyle = color; ctx.font = color !== '#3D3628' ? 'bold 12px sans-serif' : '12px sans-serif';
+    const amtStr = amount;
+    ctx.fillText(amtStr, W - 30 - ctx.measureText(amtStr).width, dy);
+    dy += 26;
   };
-  if (!window.html2canvas) {
-    document.head.appendChild(script);
-  } else {
-    html2canvas(el, { scale: 3, backgroundColor: '#FAF7F2', useCORS: true }).then(canvas => {
-      const a = document.createElement('a');
-      a.download = `武樂收費單_${currentStudent.name}_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    });
+  drawItem('課程費用', '$' + totalFee.toLocaleString());
+  customRows.filter(r => r.name && r.amount).forEach(r => drawItem(r.name, '$' + r.amount.toLocaleString()));
+  if (paid > 0) drawItem('已繳訂金', '－$' + paid.toLocaleString(), '#2E7D32');
+  y += detailH + 12;
+
+  // 繳費資訊卡
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, 16, y, W - 32, 110, 8); ctx.fill();
+  ctx.strokeStyle = '#E2D9CA'; roundRect(ctx, 16, y, W - 32, 110, 8); ctx.stroke();
+  // 待繳
+  ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F'; ctx.fillText('尚待繳納', 30, y + 22);
+  ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#C0392B';
+  ctx.fillText('$' + remain.toLocaleString(), W - 30 - ctx.measureText('$' + remain.toLocaleString()).width, y + 26);
+  // 分隔線
+  ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(30, y + 36); ctx.lineTo(W - 30, y + 36); ctx.stroke();
+  // 方式、截止
+  ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F';
+  ctx.fillText('繳費方式', 30, y + 56);
+  ctx.fillStyle = '#3D3628'; ctx.fillText(method, W - 30 - ctx.measureText(method).width, y + 56);
+  ctx.fillStyle = '#7A6E5F'; ctx.fillText('繳費截止', 30, y + 80);
+  ctx.fillStyle = '#C0392B'; ctx.font = 'bold 12px sans-serif';
+  ctx.fillText(due, W - 30 - ctx.measureText(due).width, y + 80);
+  y += 122;
+
+  // 銀行資訊
+  ctx.fillStyle = '#1A1610';
+  roundRect(ctx, 16, y, W - 32, 76, 8); ctx.fill();
+  ctx.font = '10px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('銀行轉帳資訊', 30, y + 18);
+  ctx.font = '12px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText('台北富邦銀行 中壢分行（012）  戶名：運武樂有限公司', 30, y + 38);
+  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#E8C97A';
+  ctx.fillText('82120000015649', 30, y + 60);
+  y += 88;
+
+  // 備註
+  if (note) {
+    ctx.fillStyle = '#FBF5E8';
+    roundRect(ctx, 16, y, W - 32, 40, 8); ctx.fill();
+    ctx.strokeStyle = '#E8C97A'; roundRect(ctx, 16, y, W - 32, 40, 8); ctx.stroke();
+    ctx.font = '12px sans-serif'; ctx.fillStyle = '#3D3628';
+    ctx.fillText('📌 ' + note, 30, y + 24);
+    y += 52;
   }
+
+  // 底部說明
+  ctx.font = '11px sans-serif'; ctx.fillStyle = '#C4B9A8';
+  const footTxt = '匯款完成後請截圖傳至武樂小小運動家官方 LINE';
+  ctx.fillText(footTxt, W / 2 - ctx.measureText(footTxt).width / 2, y + 20);
+
+  // 輸出
+  const dataUrl = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.download = `武樂收費單_${name}_${dateStr.replace(/\//g,'-')}.png`;
+  a.href = dataUrl;
+  a.click();
+
+  if (btn) { btn.textContent = '⬇ 下載收費單圖片'; btn.disabled = false; }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 </script>
 </body>
