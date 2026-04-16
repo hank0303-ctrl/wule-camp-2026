@@ -22,6 +22,7 @@
     --shadow: 0 2px 20px rgba(26,22,16,0.08);
   }
 
+  html { scroll-behavior: smooth; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -727,7 +728,7 @@
         <input type="number" class="form-input" id="f-age" placeholder="填寫出生年月日後自動帶入" min="1" max="20" style="max-width:160px;" readonly>
         <div class="error-msg" id="err-age">請填寫出生年月日</div>
         <div id="age-warning" style="display:none;margin-top:8px;background:#FFF3CD;border:1px solid #FFC107;border-radius:8px;padding:10px 14px;font-size:13px;color:#856404;">
-          ⚠️ 本營隊適合年齡為 <strong>5–10 歲</strong>，如需確認是否可參加，請私訊
+          ⚠️ 本營隊適合年齡為 <strong>6–12 歲</strong>，如需確認是否可參加，請私訊
           <a href="https://lin.ee/VRxOt0n" target="_blank" style="color:#C9973A;font-weight:700;">武樂小小運動家官方 LINE</a>。
         </div>
       </div>
@@ -1083,7 +1084,7 @@ function calcAge() {
   document.getElementById('err-age').classList.remove('show');
   // 顯示警語
   const warn = document.getElementById('age-warning');
-  if (age < 5 || age > 10) {
+  if (age < 6 || age > 12) {
     warn.style.display = 'block';
   } else {
     warn.style.display = 'none';
@@ -1380,6 +1381,25 @@ function validate() {
     document.getElementById('err-session').classList.add('show');
     ok = false;
   }
+
+  // 手機格式檢查
+  const phoneEl = document.getElementById('f-phone');
+  if (phoneEl.value.trim() && !/^09\d{8}$/.test(phoneEl.value.trim())) {
+    const errPhone = document.getElementById('err-phone');
+    errPhone.textContent = '請填寫正確的手機格式（09xxxxxxxx）';
+    errPhone.classList.add('show');
+    phoneEl.classList.add('error');
+    ok = false;
+  }
+
+  // 年齡強制檢查（6–12 歲）
+  const age = parseInt(document.getElementById('f-age').value);
+  if (!isNaN(age) && (age < 6 || age > 12)) {
+    document.getElementById('age-warning').style.display = 'block';
+    document.getElementById('f-dob').classList.add('error');
+    ok = false;
+  }
+
   return ok;
 }
 
