@@ -176,7 +176,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
 .pillar-emoji{font-size:18px;margin-bottom:2px;line-height:1;}
 
 /* ── FAB NAVIGATION ── */
-.fab-wrap{position:fixed;bottom:24px;right:20px;z-index:999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.fab-wrap{position:fixed;bottom:80px;right:20px;z-index:999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+/* Bottom CTA Bar */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:1000;background:var(--teal);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.2);}
+.bottom-bar-text{color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;line-height:1.4;}
+.bottom-bar-text strong{color:#fff;display:block;font-size:15px;}
+.bottom-bar-btn{background:#fff;color:var(--teal);font-weight:900;font-size:15px;padding:10px 24px;border-radius:50px;text-decoration:none;white-space:nowrap;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:all 0.2s;}
+.bottom-bar-btn:hover{background:var(--yellow);color:var(--dark);}
+body{padding-bottom:64px;}
 .fab-menu{display:flex;flex-direction:column;gap:6px;align-items:flex-end;transition:all 0.3s;}
 .fab-menu.hidden{opacity:0;pointer-events:none;transform:translateY(12px);}
 .fab-item{
@@ -581,26 +588,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
         </div>
       </div>
       <div class="price-rows">
-        <!-- 第一期 W1（7/1–7/3）-->
-        <div class="price-row">
-          <div class="price-cell">
-            <div style="font-size:11px;color:#999;margin-bottom:4px;">W1（7/1–7/3，僅3天）</div>
-            <div class="price-amt">$4,050</div>
-            <div class="price-unit">/ 期</div>
-          </div>
-          <div class="price-cell" style="background:#FFFBF0;">
-            <div class="price-amt" style="color:#B8690A;">$4,050</div>
-            <div class="price-unit">/ 期</div>
-          </div>
-          <div class="price-cell" style="background:#FFF8E0;">
-            <div class="price-amt" style="color:#A85C00;">$4,050</div>
-            <div class="price-unit">/ 期</div>
-          </div>
-        </div>
         <!-- 一般週（W2–W7）-->
         <div class="price-row">
           <div class="price-cell">
-            <div style="font-size:11px;color:#999;margin-bottom:4px;">W2–W7 各週（5天）</div>
+            <div style="font-size:11px;color:#333;margin-bottom:4px;">W2–W7 各週（5天）</div>
             <div class="price-amt">$7,390</div>
             <div class="price-unit">/ 週</div>
           </div>
@@ -622,11 +613,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
       </div>
     </div>
 
-    <!-- Notes -->
-    <div class="price-notes">
-      <div class="price-note">報名以「一週」為單位計算，可單週報名，彈性選擇。</div>
-      <div class="price-note">單日請假無退費；若病假請假達三日以上，提出診斷證明依比例退費。</div>
-      <div class="price-note">因個人因素請假，恕不補課。</div>
+    <!-- W1 獨立卡片 -->
+    <div style="max-width:700px;margin:12px auto 0;background:#FFF8E6;border:1.5px solid #E8D9B0;border-radius:14px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:12px;color:#999;margin-bottom:2px;">第一期・夏日啟動</div>
+        <div style="font-weight:900;color:#5C4A1E;font-size:15px;">W1｜7/1–7/3（僅3天）</div>
+        
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:26px;font-weight:900;color:#C4870A;">$4,050</div>
+        <div style="font-size:11px;color:#999;">/ 期</div>
+      </div>
+    </div>
     </div>
 
     <!-- 多週報名折扣 -->
@@ -656,6 +654,13 @@ body{font-family:'Noto Sans TC',sans-serif;background:#fff;color:var(--text);ove
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="price-notes">
+      <div class="price-note">報名以「一週」為單位計算，可單週報名，彈性選擇。</div>
+      <div class="price-note">單日請假無退費；若病假請假達三日以上，提出診斷證明依比例退費。</div>
+      <div class="price-note">因個人因素請假，恕不補課。</div>
     </div>
   </div>
 </section>
@@ -983,6 +988,15 @@ document.addEventListener('click', e => {
   if(!document.getElementById('fabWrap').contains(e.target)) closeFab();
 });
 </script>
+
+<!-- Bottom CTA Bar -->
+<div class="bottom-bar">
+  <div class="bottom-bar-text">
+    <strong>2026 全能運動挑戰營</strong>
+    可單週報名・名額有限
+  </div>
+  <a href="./index.html" class="bottom-bar-btn">立即報名 →</a>
+</div>
 
 </body>
 </html>
