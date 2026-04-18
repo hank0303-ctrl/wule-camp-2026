@@ -362,7 +362,6 @@
   <div class="admin-tabs">
     <div class="admin-tab active" onclick="switchTab('registrations')">報名名單</div>
     <div class="admin-tab" onclick="switchTab('invoice')">收費單</div>
-    <div class="admin-tab" onclick="switchTab('pricing')">費用設定</div>
     <div class="admin-tab" onclick="switchTab('settings')">系統設定</div>
   </div>
 
@@ -545,54 +544,30 @@
       </div>
     </div>
 
-    <!-- ── 費用設定 ── -->
-    <div class="panel" id="panel-pricing">
-      <h2 class="panel-title">費用設定</h2>
-      <p class="panel-sub">設定各類型期數的報名費用，儲存後立即套用於報名表。</p>
-
-      <div class="card">
-        <div class="card-title">課程費用</div>
-        <div class="price-grid">
-          <div class="price-field">
-            <label>單日費用（7/1、7/2、7/3）</label>
-            <input type="number" id="cfg-single" placeholder="例：1200" min="0">
-            <div class="price-hint">每位學員每天</div>
-          </div>
-          <div class="price-field">
-            <label>整週費用（每梯次）</label>
-            <input type="number" id="cfg-week" placeholder="例：5500" min="0">
-            <div class="price-hint">每位學員每整週（7/6–8/28）</div>
-          </div>
-        </div>
-        <button class="save-btn" onclick="savePricing()">儲存費用設定</button>
-        <span class="save-ok" id="save-ok-pricing">✓ 已儲存</span>
-      </div>
+    <!-- ── 系統設定 ── -->
+    <div class="panel" id="panel-settings">
+      <h2 class="panel-title">系統設定</h2>
+      <p class="panel-sub">設定 Google Apps Script 串接網址與管理密碼。</p>
 
       <div class="card">
         <div class="card-title">匯款資訊</div>
         <div class="price-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="price-field">
             <label>銀行名稱</label>
-            <input type="text" id="cfg-bankName" placeholder="例：玉山銀行 808" class="text-input">
+            <input type="text" id="cfg-bankName" placeholder="例：台北富邦銀行 012" class="text-input">
           </div>
           <div class="price-field">
             <label>匯款帳號</label>
-            <input type="text" id="cfg-bankAcct" placeholder="例：0000-000-000000" class="text-input">
+            <input type="text" id="cfg-bankAcct" placeholder="例：82120000015649" class="text-input">
           </div>
           <div class="price-field">
             <label>戶名</label>
-            <input type="text" id="cfg-bankHolder" placeholder="例：武樂文化有限公司" class="text-input">
+            <input type="text" id="cfg-bankHolder" placeholder="例：運武樂有限公司" class="text-input">
           </div>
         </div>
         <button class="save-btn" onclick="saveBankInfo()">儲存匯款資訊</button>
         <span class="save-ok" id="save-ok-bank">✓ 已儲存</span>
       </div>
-    </div>
-
-    <!-- ── 系統設定 ── -->
-    <div class="panel" id="panel-settings">
-      <h2 class="panel-title">系統設定</h2>
-      <p class="panel-sub">設定 Google Apps Script 串接網址與管理密碼。</p>
 
       <div class="card">
         <div class="card-title">Google 試算表串接</div>
@@ -669,7 +644,7 @@ function doLogout() {
 
 function switchTab(tab) {
   document.querySelectorAll('.admin-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['registrations','invoice','pricing','settings'][i] === tab);
+    t.classList.toggle('active', ['registrations','invoice','settings'][i] === tab);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
@@ -684,21 +659,12 @@ function getConfig() {
 
 function loadConfig() {
   const cfg = getConfig();
-  document.getElementById('cfg-single').value = cfg.single;
-  document.getElementById('cfg-week').value = cfg.week;
   document.getElementById('cfg-bankName').value = cfg.bankName || '';
   document.getElementById('cfg-bankAcct').value = cfg.bankAcct || '';
   document.getElementById('cfg-bankHolder').value = cfg.bankHolder || '';
   document.getElementById('cfg-gasUrl').value = localStorage.getItem('wule_gas_url') || '';
 }
 
-function savePricing() {
-  const cfg = getConfig();
-  cfg.single = parseInt(document.getElementById('cfg-single').value) || cfg.single;
-  cfg.week = parseInt(document.getElementById('cfg-week').value) || cfg.week;
-  localStorage.setItem('wule_config', JSON.stringify(cfg));
-  showOk('save-ok-pricing');
-}
 
 function saveBankInfo() {
   const cfg = getConfig();

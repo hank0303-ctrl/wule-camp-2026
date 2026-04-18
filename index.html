@@ -745,8 +745,8 @@
           <input type="checkbox" value="week-w1">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第一週（W1）</div>
-            <div class="session-date">7/1 – 7/3（三天）</div>
+            <div class="session-name">第一期</div>
+            <div class="session-date">7/1 – 7/3 &nbsp;🔥 夏日啟動</div>
           </div>
           <div class="session-price" id="price-w1-display">$—</div>
         </div>
@@ -754,8 +754,8 @@
           <input type="checkbox" value="week-7/6">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第二週（W2）</div>
-            <div class="session-date">7/6 – 7/10</div>
+            <div class="session-name">第二期</div>
+            <div class="session-date">7/6 – 7/10 &nbsp;⚡ 武動覺醒</div>
           </div>
           <div class="session-price" id="price-week-display">$—</div>
         </div>
@@ -763,8 +763,8 @@
           <input type="checkbox" value="week-7/13">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第三週（W3）</div>
-            <div class="session-date">7/13 – 7/17</div>
+            <div class="session-name">第三期</div>
+            <div class="session-date">7/13 – 7/17 &nbsp;🥊 熱血出擊</div>
           </div>
           <div class="session-price" id="price-week-display2">$—</div>
         </div>
@@ -772,8 +772,8 @@
           <input type="checkbox" value="week-7/20">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第四週（W4）</div>
-            <div class="session-date">7/20 – 7/24</div>
+            <div class="session-name">第四期</div>
+            <div class="session-date">7/20 – 7/24 &nbsp;🪃 極限翻轉</div>
           </div>
           <div class="session-price" id="price-week-display3">$—</div>
         </div>
@@ -781,8 +781,8 @@
           <input type="checkbox" value="week-8/10">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第五週（W5）</div>
-            <div class="session-date">8/10 – 8/14</div>
+            <div class="session-name">第五期</div>
+            <div class="session-date">8/10 – 8/14 &nbsp;💪 武動進階</div>
           </div>
           <div class="session-price" id="price-week-display4">$—</div>
         </div>
@@ -790,8 +790,8 @@
           <input type="checkbox" value="week-8/17">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第六週（W6）</div>
-            <div class="session-date">8/17 – 8/21</div>
+            <div class="session-name">第六期</div>
+            <div class="session-date">8/17 – 8/21 &nbsp;🎶 節奏登場</div>
           </div>
           <div class="session-price" id="price-week-display5">$—</div>
         </div>
@@ -799,13 +799,49 @@
           <input type="checkbox" value="week-8/24">
           <div class="session-check">✓</div>
           <div class="session-info">
-            <div class="session-name">第七週（W7）</div>
-            <div class="session-date">8/24 – 8/28</div>
+            <div class="session-name">第七期</div>
+            <div class="session-date">8/24 – 8/28 &nbsp;🏆 拳力對決</div>
           </div>
           <div class="session-price" id="price-week-display6">$—</div>
         </div>
       </div>
       <div class="error-msg" id="err-session" style="margin-top:10px;">請至少選擇一個期數</div>
+
+      <!-- 裝備購買區塊（第三期或第七期才顯示） -->
+      <div id="equipment-section" style="display:none;margin-top:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:16px;">
+        <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:4px;">🥊 裝備購買</div>
+        <div style="font-size:12px;color:var(--ink-light);margin-bottom:14px;">拳擊課需要準備手綁帶及拳套，請問是否需要由教室代購？</div>
+        <div style="display:flex;gap:10px;margin-bottom:4px;">
+          <div class="radio-item" id="eq-no" onclick="selectEquipment(this,'no')" style="flex:1;text-align:center;">自行準備</div>
+          <div class="radio-item" id="eq-yes" onclick="selectEquipment(this,'yes')" style="flex:1;text-align:center;">需要代購</div>
+        </div>
+        <!-- 代購選項 -->
+        <div id="equipment-options" style="display:none;margin-top:14px;">
+          <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">請選擇裝備規格：</div>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+            <input type="checkbox" id="eq-glove-a" style="accent-color:var(--gold);width:16px;height:16px;">
+            <div>
+              <span style="font-size:13px;color:var(--ink);">初階拳套 $375</span>
+              <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">適合初學者，輕量耐用好上手</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+            <input type="checkbox" id="eq-glove-b" style="accent-color:var(--gold);width:16px;height:16px;">
+            <div>
+              <span style="font-size:13px;color:var(--ink);">進階拳套 $790</span>
+              <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">加強防護，適合有基礎的學員</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+            <input type="checkbox" id="eq-bandage" style="accent-color:var(--gold);width:16px;height:16px;">
+            <span style="font-size:13px;color:var(--ink);">綁手帶 $180</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="eq-self" style="accent-color:var(--gold);width:16px;height:16px;">
+            <span style="font-size:13px;color:var(--ink);">自行準備（不代購）</span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <!-- 費用小計 -->
@@ -843,6 +879,7 @@
       <div class="fee-summary-title">費用計算</div>
       <div id="fee-items"><div class="fee-empty">尚未選擇期數</div></div>
       <div id="aftercare-fee-rows"></div>
+      <div id="equipment-fee-rows"></div>
       <div class="fee-row total" id="fee-total" style="display:none;">
         <span>總費用</span>
         <span class="fee-amount" id="fee-total-num">$0</span>
@@ -1041,14 +1078,17 @@ function getConfig() {
 
 // ── SESSIONS ──
 const SESSIONS = [
-  { id: 'week-w1',   name: '第一週 W1 (7/1–7/3)',   type: 'w1' },
-  { id: 'week-7/6',  name: '第二週 W2 (7/6–7/10)',  type: 'week' },
-  { id: 'week-7/13', name: '第三週 W3 (7/13–7/17)', type: 'week' },
-  { id: 'week-7/20', name: '第四週 W4 (7/20–7/24)', type: 'week' },
-  { id: 'week-8/10', name: '第五週 W5 (8/10–8/14)', type: 'week' },
-  { id: 'week-8/17', name: '第六週 W6 (8/17–8/21)', type: 'week' },
-  { id: 'week-8/24', name: '第七週 W7 (8/24–8/28)', type: 'week' },
+  { id: 'week-w1',   name: '第一期（7/1–7/3 夏日啟動）',    type: 'w1' },
+  { id: 'week-7/6',  name: '第二期（7/6–7/10 武動覺醒）',   type: 'week' },
+  { id: 'week-7/13', name: '第三期（7/13–7/17 熱血出擊）',  type: 'week' },
+  { id: 'week-7/20', name: '第四期（7/20–7/24 極限翻轉）',  type: 'week' },
+  { id: 'week-8/10', name: '第五期（8/10–8/14 武動進階）',  type: 'week' },
+  { id: 'week-8/17', name: '第六期（8/17–8/21 節奏登場）',  type: 'week' },
+  { id: 'week-8/24', name: '第七期（8/24–8/28 拳力對決）',  type: 'week' },
 ];
+
+// 需要拳擊裝備的期數
+const BOXING_SESSIONS = ['week-7/13', 'week-8/24'];
 
 let agreed = false;
 let selectedSessions = [];
@@ -1189,8 +1229,24 @@ function calcAftercareFee() {
 let baseCourseTotal = 0;
 
 function updateTotalWithAftercare(aftercareTotal) {
-  const total = baseCourseTotal + aftercareTotal;
+  const equipTotal = getEquipmentTotal();
+  const total = baseCourseTotal + aftercareTotal + equipTotal;
   const deposit = Math.ceil(total * 0.25);
+
+  // 裝備費用列
+  const equipRows = document.getElementById('equipment-fee-rows');
+  if (equipRows) {
+    if (equipTotal > 0) {
+      let html = `<div class="fee-row" style="padding-top:10px;border-top:1px solid rgba(255,255,255,0.15);margin-top:4px;font-size:12px;color:var(--gold-light);font-weight:500;"><span>── 裝備費用 ──</span></div>`;
+      if (document.getElementById('eq-glove-a')?.checked) html += `<div class="fee-row" style="font-size:12px;"><span>初階拳套</span><span class="fee-amount">$375</span></div>`;
+      if (document.getElementById('eq-glove-b')?.checked) html += `<div class="fee-row" style="font-size:12px;"><span>進階拳套</span><span class="fee-amount">$790</span></div>`;
+      if (document.getElementById('eq-bandage')?.checked) html += `<div class="fee-row" style="font-size:12px;"><span>綁手帶</span><span class="fee-amount">$180</span></div>`;
+      equipRows.innerHTML = html;
+    } else {
+      equipRows.innerHTML = '';
+    }
+  }
+
   if (total > 0) {
     document.getElementById('fee-total-num').textContent = '$' + total.toLocaleString();
     document.getElementById('fee-deposit-num').textContent = '$' + deposit.toLocaleString();
@@ -1275,6 +1331,72 @@ function toggleSession(el) {
   }
   updateFee();
   document.getElementById('err-session').classList.remove('show');
+  checkEquipmentSection();
+}
+
+function checkEquipmentSection() {
+  const needsBoxing = BOXING_SESSIONS.some(s => selectedSessions.includes(s));
+  const section = document.getElementById('equipment-section');
+  if (!section) return;
+  if (needsBoxing) {
+    section.style.display = 'block';
+  } else {
+    section.style.display = 'none';
+    // 重置裝備選項
+    equipmentVal = 'none';
+    document.getElementById('eq-no')?.classList.remove('selected');
+    document.getElementById('eq-yes')?.classList.remove('selected');
+    document.getElementById('equipment-options').style.display = 'none';
+  }
+}
+
+let equipmentVal = 'none'; // none / self / buy
+
+function selectEquipment(el, val) {
+  equipmentVal = val;
+  ['eq-no','eq-yes'].forEach(id => document.getElementById(id)?.classList.remove('selected'));
+  el.classList.add('selected');
+  const opts = document.getElementById('equipment-options');
+  if (val === 'yes') {
+    opts.style.display = 'block';
+  } else {
+    opts.style.display = 'none';
+    ['eq-glove-a','eq-glove-b','eq-bandage','eq-self'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = false;
+    });
+  }
+  calcAftercareFee(); // 重新計算含裝備的總費用
+}
+
+// 裝備 checkbox 變動時重算
+document.addEventListener('change', function(e) {
+  if (['eq-glove-a','eq-glove-b','eq-bandage','eq-self'].includes(e.target.id)) {
+    calcAftercareFee();
+  }
+});
+
+
+
+function getEquipmentTotal() {
+  if (equipmentVal !== 'yes') return 0;
+  let total = 0;
+  if (document.getElementById('eq-glove-a')?.checked) total += 375;
+  if (document.getElementById('eq-glove-b')?.checked) total += 790;
+  if (document.getElementById('eq-bandage')?.checked) total += 180;
+  return total;
+}
+
+function getEquipmentSummary() {
+  if (!BOXING_SESSIONS.some(s => selectedSessions.includes(s))) return '';
+  if (equipmentVal === 'none') return '';
+  if (equipmentVal === 'self') return '裝備：自行準備';
+  const items = [];
+  if (document.getElementById('eq-glove-a')?.checked) items.push('初階拳套$375');
+  if (document.getElementById('eq-glove-b')?.checked) items.push('進階拳套$790');
+  if (document.getElementById('eq-bandage')?.checked) items.push('綁手帶$180');
+  if (document.getElementById('eq-self')?.checked) items.push('部分自行準備');
+  return items.length ? '裝備代購：' + items.join('、') : '裝備：需代購（未選規格）';
 }
 
 function updateFee() {
@@ -1326,6 +1448,8 @@ function updateFee() {
     else if (weekCount >= 5) discountMsg = '🎁 報名 5 週折扣';
     else discountMsg = '🎁 報名 4 週折扣';
     total -= discount;
+  const equipFee = getEquipmentTotal();
+  total += equipFee;
     html += `<div class="fee-row" style="color:var(--gold-light);"><span>${discountMsg}</span><span class="fee-amount">−$${discount.toLocaleString()}</span></div>`;
   }
 
@@ -1420,6 +1544,8 @@ function submitForm() {
     return s.name;
   });
   total -= discount;
+  const equipFee = getEquipmentTotal();
+  total += equipFee;
   const deposit = Math.ceil(total * 0.25);
   const isCard = paymentVal.includes('信用卡');
   const depositWithFee = isCard ? Math.ceil(deposit * 1.03) : deposit;
@@ -1441,6 +1567,7 @@ function submitForm() {
     phone: document.getElementById('f-phone').value.trim(),
     bank: document.getElementById('f-bank').value.trim(),
     aftercare: getAftercareSummary(),
+    equipment: getEquipmentSummary(),
   };
 
   // 存入 localStorage（後台讀取用）
@@ -1476,6 +1603,7 @@ function submitForm() {
       '聯絡電話': formData.phone,
       '匯款帳號後5碼': formData.bank,
       '延托服務': formData.aftercare,
+      '裝備': formData.equipment || '',
     }),
   })
   .catch(() => {})
