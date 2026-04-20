@@ -1137,32 +1137,20 @@ function getQuota() {
   return def;
 }
 
-function getSessionCounts() {
-  // 從 admin 同步後存入的 localStorage 讀取各期已報名人數
-  const saved = localStorage.getItem('wule_session_counts');
-  if (saved) return JSON.parse(saved);
-  const def = {};
-  ['week-w1','week-7/6','week-7/13','week-7/20','week-8/10','week-8/17','week-8/24'].forEach(id => { def[id] = 0; });
-  return def;
-}
-
-function applyQuotaToUI() {
+function applyQuotaToUI(counts) {
   const quota = getQuota();
-  const counts = getSessionCounts();
   document.querySelectorAll('#session-week .session-item').forEach(el => {
     const val = el.querySelector('input')?.value;
     if (!val) return;
     const limit = quota[val] ?? 0;
-    const count = counts[val] ?? 0;
+    const count = (counts && counts[val]) ? counts[val] : 0;
     const isFull = limit > 0 && count >= limit;
 
     el.classList.remove('full');
-    // 移除舊的額滿徽章和候補按鈕
     el.querySelectorAll('.full-badge, .waitlist-btn').forEach(e => e.remove());
 
     if (isFull) {
       el.classList.add('full');
-      // 取消選取（若之前已選）
       el.classList.remove('selected');
       el.querySelector('input').checked = false;
       const info = el.querySelector('.session-info');
@@ -1172,11 +1160,29 @@ function applyQuotaToUI() {
           <a class="waitlist-btn" href="${LINE_URL}" target="_blank">💬 詢問候補</a>`;
         info.appendChild(badge);
       }
-      // 從 selectedSessions 移除（如果之前已選）
       selectedSessions = selectedSessions.filter(s => s !== val);
     }
   });
   updateFee();
+}
+
+function fetchCountsAndApply() {
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
+  const cbName = 'countsCb_' + Date.now();
+  const script = document.createElement('script');
+  const timer = setTimeout(() => {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    applyQuotaToUI({}); // 讀取失敗就不鎖
+  }, 8000);
+  window[cbName] = function(json) {
+    clearTimeout(timer);
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    applyQuotaToUI(json.counts || {});
+  };
+  script.src = GAS_URL + '?action=getCounts&callback=' + cbName;
+  document.body.appendChild(script);
 }
 
 
@@ -1744,7 +1750,7 @@ function showThanks(d, deposit) {
 
 // init
 initPrices();
-applyQuotaToUI();
+fetchCountsAndApply(); // 從 GAS 即時查詢各期人數，額滿自動鎖定
 </script>
 </body>
 </html>
