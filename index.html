@@ -340,6 +340,41 @@
   }
   .session-item:hover { border-color: var(--gold); }
   .session-item.selected { border-color: var(--gold); background: var(--gold-pale); }
+  .session-item.full {
+    opacity: 0.55;
+    pointer-events: none;
+    border-color: #ccc;
+    background: rgba(0,0,0,0.03);
+    cursor: not-allowed;
+  }
+  .session-item.full .session-price { color: #bbb; }
+  .full-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #C0392B;
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-top: 3px;
+    display: inline-block;
+  }
+  .waitlist-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    pointer-events: all;
+    text-decoration: none;
+  }
+  .waitlist-btn:hover { background: var(--gold-pale); }
   .session-item input { display: none; }
   .session-check {
     width: 16px; height: 16px;
@@ -1090,6 +1125,62 @@ const SESSIONS = [
 // 需要拳擊裝備的期數
 const BOXING_SESSIONS = ['week-7/13', 'week-8/24'];
 
+// ── 名額檢查 ──
+const LINE_URL = 'https://lin.ee/VRxOt0n';
+
+function getQuota() {
+  const saved = localStorage.getItem('wule_quota');
+  if (saved) return JSON.parse(saved);
+  // 預設全部 18 人
+  const def = {};
+  ['week-w1','week-7/6','week-7/13','week-7/20','week-8/10','week-8/17','week-8/24'].forEach(id => { def[id] = 18; });
+  return def;
+}
+
+function getSessionCounts() {
+  // 從 admin 同步後存入的 localStorage 讀取各期已報名人數
+  const saved = localStorage.getItem('wule_session_counts');
+  if (saved) return JSON.parse(saved);
+  const def = {};
+  ['week-w1','week-7/6','week-7/13','week-7/20','week-8/10','week-8/17','week-8/24'].forEach(id => { def[id] = 0; });
+  return def;
+}
+
+function applyQuotaToUI() {
+  const quota = getQuota();
+  const counts = getSessionCounts();
+  document.querySelectorAll('#session-week .session-item').forEach(el => {
+    const val = el.querySelector('input')?.value;
+    if (!val) return;
+    const limit = quota[val] ?? 0;
+    const count = counts[val] ?? 0;
+    const isFull = limit > 0 && count >= limit;
+
+    el.classList.remove('full');
+    // 移除舊的額滿徽章和候補按鈕
+    el.querySelectorAll('.full-badge, .waitlist-btn').forEach(e => e.remove());
+
+    if (isFull) {
+      el.classList.add('full');
+      // 取消選取（若之前已選）
+      el.classList.remove('selected');
+      el.querySelector('input').checked = false;
+      const info = el.querySelector('.session-info');
+      if (info) {
+        const badge = document.createElement('div');
+        badge.innerHTML = `<span class="full-badge">額滿</span>
+          <a class="waitlist-btn" href="${LINE_URL}" target="_blank">💬 詢問候補</a>`;
+        info.appendChild(badge);
+      }
+      // 從 selectedSessions 移除（如果之前已選）
+      selectedSessions = selectedSessions.filter(s => s !== val);
+    }
+  });
+  updateFee();
+}
+
+
+
 let agreed = false;
 let selectedSessions = [];
 let genderVal = '';
@@ -1322,6 +1413,7 @@ function selectPayment(el, val) {
 }
 
 function toggleSession(el) {
+  if (el.classList.contains('full')) return; // 額滿不可點
   el.classList.toggle('selected');
   const val = el.querySelector('input').value;
   if (el.classList.contains('selected')) {
@@ -1652,6 +1744,7 @@ function showThanks(d, deposit) {
 
 // init
 initPrices();
+applyQuotaToUI();
 </script>
 </body>
 </html>

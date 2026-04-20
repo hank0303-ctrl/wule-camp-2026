@@ -550,6 +550,19 @@
       <p class="panel-sub">設定 Google Apps Script 串接網址與管理密碼。</p>
 
       <div class="card">
+        <div class="card-title">各期名額管理</div>
+        <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;line-height:1.7;">
+          設定每期招生上限人數。報名頁面會自動比對已報名人數，額滿時顯示候補提示。<br>
+          設為 <strong>0</strong> 表示該期<strong>不限制</strong>人數。
+        </p>
+        <div id="quota-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <!-- 由 JS 動態產生 -->
+        </div>
+        <button class="save-btn" onclick="saveQuota()">儲存名額設定</button>
+        <span class="save-ok" id="save-ok-quota">✓ 已儲存</span>
+      </div>
+
+      <div class="card">
         <div class="card-title">匯款資訊</div>
         <div class="price-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="price-field">
@@ -649,6 +662,7 @@ function switchTab(tab) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'invoice') initInvoice();
+  if (tab === 'settings') renderQuotaGrid();
 }
 
 // ── CONFIG ──
@@ -659,12 +673,70 @@ function getConfig() {
 
 function loadConfig() {
   const cfg = getConfig();
+  renderQuotaGrid();
   document.getElementById('cfg-bankName').value = cfg.bankName || '';
   document.getElementById('cfg-bankAcct').value = cfg.bankAcct || '';
   document.getElementById('cfg-bankHolder').value = cfg.bankHolder || '';
   document.getElementById('cfg-gasUrl').value = localStorage.getItem('wule_gas_url') || '';
 }
 
+
+
+// ── 名額管理 ──
+const QUOTA_SESSIONS = [
+  { id: 'week-w1',   label: '第一期（7/1–7/3）' },
+  { id: 'week-7/6',  label: '第二期（7/6–7/10）' },
+  { id: 'week-7/13', label: '第三期（7/13–7/17）' },
+  { id: 'week-7/20', label: '第四期（7/20–7/24）' },
+  { id: 'week-8/10', label: '第五期（8/10–8/14）' },
+  { id: 'week-8/17', label: '第六期（8/17–8/21）' },
+  { id: 'week-8/24', label: '第七期（8/24–8/28）' },
+];
+
+function getQuota() {
+  const saved = localStorage.getItem('wule_quota');
+  if (saved) return JSON.parse(saved);
+  // 預設全部 18 人
+  const def = {};
+  QUOTA_SESSIONS.forEach(s => { def[s.id] = 18; });
+  return def;
+}
+
+function renderQuotaGrid() {
+  const quota = getQuota();
+  const grid = document.getElementById('quota-grid');
+  if (!grid) return;
+  const savedCounts = JSON.parse(localStorage.getItem('wule_session_counts') || '{}');
+  grid.innerHTML = QUOTA_SESSIONS.map(s => {
+    const limit = quota[s.id] ?? 18;
+    const count = savedCounts[s.id] ?? 0;
+    const isFull = limit > 0 && count >= limit;
+    const statusColor = isFull ? '#C0392B' : '#2E7D32';
+    const statusText = limit > 0 ? `${count} / ${limit} 人` : `${count} 人（不限額）`;
+    return `
+    <div style="background:var(--cream);border:1px solid ${isFull ? '#C0392B' : 'var(--border)'};border-radius:8px;padding:12px;">
+      <div style="font-size:12px;font-weight:600;color:var(--ink-mid);margin-bottom:4px;">${s.label}</div>
+      <div style="font-size:12px;color:${statusColor};font-weight:600;margin-bottom:8px;">${statusText}${isFull ? ' 🔴 額滿' : ''}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-size:11px;color:var(--ink-light);">上限</label>
+        <input type="number" id="quota-${s.id.replace('/','-')}"
+          value="${limit}" min="0" max="99"
+          style="width:65px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;text-align:center;">
+        <span style="font-size:11px;color:var(--ink-light);">人（0 = 不限）</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveQuota() {
+  const quota = {};
+  QUOTA_SESSIONS.forEach(s => {
+    const el = document.getElementById('quota-' + s.id.replace('/','-'));
+    quota[s.id] = el ? parseInt(el.value) || 0 : 0;
+  });
+  localStorage.setItem('wule_quota', JSON.stringify(quota));
+  showOk('save-ok-quota');
+}
 
 function saveBankInfo() {
   const cfg = getConfig();
@@ -765,6 +837,20 @@ function loadRegsFromSheet(showToast = false) {
     }));
     renderStats();
     renderTable();
+    // 統計各期人數，存入 localStorage 供報名頁面讀取
+    const SESSION_NAME_MAP = {
+      'week-w1':'第一期','week-7/6':'第二期','week-7/13':'第三期',
+      'week-7/20':'第四期','week-8/10':'第五期','week-8/17':'第六期','week-8/24':'第七期'
+    };
+    const counts = {};
+    Object.keys(SESSION_NAME_MAP).forEach(id => { counts[id] = 0; });
+    allRegs.forEach(r => {
+      if (!r.sessions) return;
+      Object.entries(SESSION_NAME_MAP).forEach(([id, name]) => {
+        if (r.sessions.includes(name)) counts[id] = (counts[id] || 0) + 1;
+      });
+    });
+    localStorage.setItem('wule_session_counts', JSON.stringify(counts));
     if (showToast) showSyncToast('✓ 已同步最新資料');
     if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
   };
