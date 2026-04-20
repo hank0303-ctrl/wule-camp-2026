@@ -1146,20 +1146,16 @@ const BOXING_SESSIONS = ['week-7/13', 'week-8/24'];
 // ── 名額檢查 ──
 const LINE_URL = 'https://lin.ee/VRxOt0n';
 
-// ── 名額上限（直接寫在這裡，所有家長都適用）──
-// 若要修改名額，直接改這裡的數字，0 = 不限制
-const QUOTA_LIMITS = {
-  'week-w1':   18,  // 第一期
-  'week-7/6':  18,  // 第二期
-  'week-7/13': 18,  // 第三期
-  'week-7/20': 18,  // 第四期
-  'week-8/10': 18,  // 第五期
-  'week-8/17': 18,  // 第六期
-  'week-8/24': 18,  // 第七期
-};
+// ── 名額上限（從 GAS 即時讀取，fallback 為 18 人）──
+const DEFAULT_QUOTA_LIMIT = 18;
+let cachedQuota = null; // 從 GAS 抓到後快取
 
 function getQuota() {
-  return QUOTA_LIMITS;
+  if (cachedQuota) return cachedQuota;
+  // fallback：全部預設 18 人
+  const def = {};
+  ['week-w1','week-7/6','week-7/13','week-7/20','week-8/10','week-8/17','week-8/24'].forEach(id => { def[id] = DEFAULT_QUOTA_LIMIT; });
+  return def;
 }
 
 function applyQuotaToUI(counts) {
@@ -1203,22 +1199,53 @@ function applyQuotaToUI(counts) {
 
 function fetchCountsAndApply() {
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
-  const cbName = 'countsCb_' + Date.now();
-  const script = document.createElement('script');
-  const timer = setTimeout(() => {
-    delete window[cbName];
-    if (document.body.contains(script)) document.body.removeChild(script);
-    applyQuotaToUI({}); // 讀取失敗就不鎖
+  let quotaResult = null;
+  let countsResult = null;
+
+  function tryApply() {
+    if (quotaResult !== null && countsResult !== null) {
+      cachedQuota = quotaResult;
+      applyQuotaToUI(countsResult);
+    }
+  }
+
+  // 抓名額上限
+  const cbQ = 'quotaCb_' + Date.now();
+  const sQ = document.createElement('script');
+  const timerQ = setTimeout(() => {
+    delete window[cbQ];
+    if (document.body.contains(sQ)) document.body.removeChild(sQ);
+    quotaResult = getQuota(); // fallback 預設值
+    tryApply();
   }, 8000);
-  window[cbName] = function(json) {
-    clearTimeout(timer);
-    delete window[cbName];
-    if (document.body.contains(script)) document.body.removeChild(script);
-    console.log('[武樂] GAS 回傳人數:', json.counts);
-    applyQuotaToUI(json.counts || {});
+  window[cbQ] = function(json) {
+    clearTimeout(timerQ);
+    delete window[cbQ];
+    if (document.body.contains(sQ)) document.body.removeChild(sQ);
+    quotaResult = json.quota || getQuota();
+    tryApply();
   };
-  script.src = GAS_URL + '?action=getCounts&callback=' + cbName;
-  document.body.appendChild(script);
+  sQ.src = GAS_URL + '?action=getQuota&callback=' + cbQ;
+  document.body.appendChild(sQ);
+
+  // 抓已報名人數
+  const cbC = 'countsCb_' + Date.now();
+  const sC = document.createElement('script');
+  const timerC = setTimeout(() => {
+    delete window[cbC];
+    if (document.body.contains(sC)) document.body.removeChild(sC);
+    countsResult = {};
+    tryApply();
+  }, 8000);
+  window[cbC] = function(json) {
+    clearTimeout(timerC);
+    delete window[cbC];
+    if (document.body.contains(sC)) document.body.removeChild(sC);
+    countsResult = json.counts || {};
+    tryApply();
+  };
+  sC.src = GAS_URL + '?action=getCounts&callback=' + cbC;
+  document.body.appendChild(sC);
 }
 
 

@@ -662,7 +662,7 @@ function switchTab(tab) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'invoice') initInvoice();
-  if (tab === 'settings') renderQuotaGrid();
+  if (tab === 'settings') fetchQuotaAndRender();
 }
 
 // ── CONFIG ──
@@ -673,7 +673,7 @@ function getConfig() {
 
 function loadConfig() {
   const cfg = getConfig();
-  renderQuotaGrid();
+  fetchQuotaAndRender();
   document.getElementById('cfg-bankName').value = cfg.bankName || '';
   document.getElementById('cfg-bankAcct').value = cfg.bankAcct || '';
   document.getElementById('cfg-bankHolder').value = cfg.bankHolder || '';
@@ -702,14 +702,14 @@ function getQuota() {
   return def;
 }
 
-function renderQuotaGrid() {
-  const quota = getQuota();
+function renderQuotaGrid(quota, counts) {
   const grid = document.getElementById('quota-grid');
   if (!grid) return;
-  const savedCounts = JSON.parse(localStorage.getItem('wule_session_counts') || '{}');
+  quota = quota || {};
+  counts = counts || JSON.parse(localStorage.getItem('wule_session_counts') || '{}');
   grid.innerHTML = QUOTA_SESSIONS.map(s => {
     const limit = quota[s.id] ?? 18;
-    const count = savedCounts[s.id] ?? 0;
+    const count = counts[s.id] ?? 0;
     const isFull = limit > 0 && count >= limit;
     const statusColor = isFull ? '#C0392B' : '#2E7D32';
     const statusText = limit > 0 ? `${count} / ${limit} 人` : `${count} 人（不限額）`;
@@ -728,14 +728,52 @@ function renderQuotaGrid() {
   }).join('');
 }
 
+function fetchQuotaAndRender() {
+  const GAS_URL = getGasUrl();
+  const cbName = 'quotaCb_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(json) {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    const quota = json.quota || {};
+    // 同時也存一份到 localStorage 備用
+    localStorage.setItem('wule_quota', JSON.stringify(quota));
+    const counts = JSON.parse(localStorage.getItem('wule_session_counts') || '{}');
+    renderQuotaGrid(quota, counts);
+  };
+  script.onerror = function() {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    // GAS 失敗就用 localStorage 的值
+    renderQuotaGrid(JSON.parse(localStorage.getItem('wule_quota') || '{}'));
+  };
+  script.src = GAS_URL + '?action=getQuota&callback=' + cbName;
+  document.body.appendChild(script);
+}
+
 function saveQuota() {
   const quota = {};
   QUOTA_SESSIONS.forEach(s => {
     const el = document.getElementById('quota-' + s.id.replace('/','-'));
     quota[s.id] = el ? parseInt(el.value) || 0 : 0;
   });
+  // 同時存到 localStorage 和 GAS
   localStorage.setItem('wule_quota', JSON.stringify(quota));
-  showOk('save-ok-quota');
+  const GAS_URL = getGasUrl();
+  const cbName = 'saveQuotaCb_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(json) {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    showOk('save-ok-quota');
+  };
+  script.onerror = function() {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    showOk('save-ok-quota'); // localStorage 已存，還是顯示成功
+  };
+  script.src = GAS_URL + '?action=saveQuota&quota=' + encodeURIComponent(JSON.stringify(quota)) + '&callback=' + cbName;
+  document.body.appendChild(script);
 }
 
 function saveBankInfo() {
