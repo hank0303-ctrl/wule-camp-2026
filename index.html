@@ -375,6 +375,24 @@
     text-decoration: none;
   }
   .waitlist-btn:hover { background: var(--gold-pale); }
+  .almost-full-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #92400E;
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-top: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    animation: pulse-badge 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
   .session-item input { display: none; }
   .session-check {
     width: 16px; height: 16px;
@@ -1139,15 +1157,18 @@ function getQuota() {
 
 function applyQuotaToUI(counts) {
   const quota = getQuota();
+  const ALMOST_FULL_THRESHOLD = 5; // 剩餘幾位以下顯示即將額滿
   document.querySelectorAll('#session-week .session-item').forEach(el => {
     const val = el.querySelector('input')?.value;
     if (!val) return;
     const limit = quota[val] ?? 0;
     const count = (counts && counts[val]) ? counts[val] : 0;
+    const remaining = limit > 0 ? limit - count : 999;
     const isFull = limit > 0 && count >= limit;
+    const isAlmostFull = !isFull && limit > 0 && remaining <= ALMOST_FULL_THRESHOLD;
 
     el.classList.remove('full');
-    el.querySelectorAll('.full-badge, .waitlist-btn').forEach(e => e.remove());
+    el.querySelectorAll('.full-badge, .almost-full-badge, .waitlist-btn').forEach(e => e.remove());
 
     if (isFull) {
       el.classList.add('full');
@@ -1161,6 +1182,13 @@ function applyQuotaToUI(counts) {
         info.appendChild(badge);
       }
       selectedSessions = selectedSessions.filter(s => s !== val);
+    } else if (isAlmostFull) {
+      const info = el.querySelector('.session-info');
+      if (info) {
+        const badge = document.createElement('div');
+        badge.innerHTML = `<span class="almost-full-badge">⚡ 即將額滿，最後 ${remaining} 位</span>`;
+        info.appendChild(badge);
+      }
     }
   });
   updateFee();
