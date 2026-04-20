@@ -1146,13 +1146,20 @@ const BOXING_SESSIONS = ['week-7/13', 'week-8/24'];
 // ── 名額檢查 ──
 const LINE_URL = 'https://lin.ee/VRxOt0n';
 
+// ── 名額上限（直接寫在這裡，所有家長都適用）──
+// 若要修改名額，直接改這裡的數字，0 = 不限制
+const QUOTA_LIMITS = {
+  'week-w1':   18,  // 第一期
+  'week-7/6':  18,  // 第二期
+  'week-7/13': 18,  // 第三期
+  'week-7/20': 18,  // 第四期
+  'week-8/10': 18,  // 第五期
+  'week-8/17': 18,  // 第六期
+  'week-8/24': 18,  // 第七期
+};
+
 function getQuota() {
-  const saved = localStorage.getItem('wule_quota');
-  if (saved) return JSON.parse(saved);
-  // 預設全部 18 人
-  const def = {};
-  ['week-w1','week-7/6','week-7/13','week-7/20','week-8/10','week-8/17','week-8/24'].forEach(id => { def[id] = 18; });
-  return def;
+  return QUOTA_LIMITS;
 }
 
 function applyQuotaToUI(counts) {
@@ -1207,6 +1214,7 @@ function fetchCountsAndApply() {
     clearTimeout(timer);
     delete window[cbName];
     if (document.body.contains(script)) document.body.removeChild(script);
+    console.log('[武樂] GAS 回傳人數:', json.counts);
     applyQuotaToUI(json.counts || {});
   };
   script.src = GAS_URL + '?action=getCounts&callback=' + cbName;
