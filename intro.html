@@ -4,7 +4,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>2026 武動暑假｜全能運動挑戰營</title>
-<meta name="description" content="2026武樂夏令營，七週全能運動挑戰營，武術、拳擊、翻滾、舞蹈、戶外探索，適合6-12歲。">
+<meta name="description" content="2026武樂夏令營，六週全能運動挑戰營，武術、拳擊、翻滾、舞蹈、戶外探索，適合6-12歲。">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SEM57GKKQV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-SEM57GKKQV', {
+    send_page_view: true
+  });
+
+  // 追蹤各區塊停留時間
+  document.addEventListener('DOMContentLoaded', function() {
+    const sections = [
+      { id: 'sec-about',    name: '關於營隊' },
+      { id: 'sec-weeks',    name: '六週冒險地圖' },
+      { id: 'sec-schedule', name: '週課表' },
+      { id: 'sec-outdoor',  name: '戶外教學' },
+      { id: 'sec-pricing',  name: '費用說明' },
+      { id: 'sec-faq',      name: '常見問題' },
+      { id: 'sec-gallery',  name: '營隊花絮' },
+      { id: 'sec-cta',      name: '立即報名' },
+    ];
+
+    let currentSection = null;
+    let enterTime = null;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const sec = sections.find(s => s.id === entry.target.id);
+        if (!sec) return;
+        if (entry.isIntersecting) {
+          currentSection = sec;
+          enterTime = Date.now();
+        } else {
+          if (currentSection && currentSection.id === sec.id && enterTime) {
+            const seconds = Math.round((Date.now() - enterTime) / 1000);
+            if (seconds >= 2) {
+              gtag('event', 'section_view', {
+                section_name: sec.name,
+                time_spent_seconds: seconds
+              });
+            }
+            enterTime = null;
+          }
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+
+    // 追蹤離開時送出當前區塊
+    window.addEventListener('beforeunload', function() {
+      if (currentSection && enterTime) {
+        const seconds = Math.round((Date.now() - enterTime) / 1000);
+        if (seconds >= 2) {
+          gtag('event', 'section_view', {
+            section_name: currentSection.name,
+            time_spent_seconds: seconds
+          });
+        }
+      }
+    });
+  });
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
@@ -578,7 +645,7 @@ body{padding-bottom:64px;}
 <tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr>
 <tr><td class="row-label">上午</td><td>手作實驗室</td><td>游泳小英雄</td><td>小小神射手</td><td>香帥蛋糕製所</td><td>羽球課</td></tr>
 <tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐/午休</td></tr>
-<tr><td class="row-label">下午</td><td>武術養成課</td><td>武術養成課</td><td>武術養成課</td><td>南港秘境探險</td><td>武術養成課</td></tr>
+<tr><td class="row-label">下午</td><td>武術養成課</td><td>武術養成課</td><td>武術養成課</td><td>香帥蛋糕製所</td><td>武術養成課</td></tr>
 <tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">點心時間</td></tr>
 <tr><td class="row-label">16:30–17:00</td><td colspan="5" class="sch-merged">快樂回家趣</td></tr>
 </tbody></table></div></div>
@@ -612,7 +679,7 @@ body{padding-bottom:64px;}
 
 <div class="sch-panel " id="sch-5"><div class="sch-scroll"><table class="sch-table"><thead><tr><th style="background:#C4A200">時間</th><th style="background:#C4A200">8/17 (一)</th><th style="background:#C4A200">8/18 (二)</th><th style="background:#C4A200">8/19 (三)</th><th style="background:#C4A200">8/20 (四)</th><th style="background:#C4A200">8/21 (五)</th></tr></thead><tbody>
 <tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr>
-<tr><td class="row-label">上午</td><td>手作實驗室</td><td>昆蟲課</td><td>羽球</td><td>淡水文化巡禮</td><td>綜合球類</td></tr>
+<tr><td class="row-label">上午</td><td>手作實驗室</td><td>昆蟲課</td><td>羽球</td><td>十三行博物館</td><td>綜合球類</td></tr>
 <tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐/午休</td></tr>
 <tr><td class="row-label">下午</td><td>節奏律動舞蹈課</td><td>節奏律動舞蹈課</td><td>節奏律動舞蹈課</td><td>十三行博物館</td><td>節奏律動舞蹈課</td></tr>
 <tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">點心時間</td></tr>
@@ -621,7 +688,7 @@ body{padding-bottom:64px;}
 
 <div class="sch-panel " id="sch-6"><div class="sch-scroll"><table class="sch-table"><thead><tr><th style="background:#1A8FD1">時間</th><th style="background:#1A8FD1">8/24 (一)</th><th style="background:#1A8FD1">8/25 (二)</th><th style="background:#1A8FD1">8/26 (三)</th><th style="background:#1A8FD1">8/27 (四)</th><th style="background:#1A8FD1">8/28 (五)</th></tr></thead><tbody>
 <tr><td class="row-label">7:30–9:00</td><td colspan="5" class="sch-merged">快樂練功趣</td></tr>
-<tr><td class="row-label">上午</td><td>手作實驗室</td><td>游泳小英雄</td><td>綜合球類</td><td>潮境公園健走</td><td>羽球課</td></tr>
+<tr><td class="row-label">上午</td><td>手作實驗室</td><td>游泳小英雄</td><td>綜合球類</td><td>基隆海科館</td><td>羽球課</td></tr>
 <tr><td class="row-label">中午</td><td colspan="5" class="sch-merged">午餐/午休</td></tr>
 <tr><td class="row-label">下午</td><td>拳擊訓練</td><td>拳擊訓練</td><td>拳擊訓練</td><td>基隆海科館</td><td>拳擊訓練</td></tr>
 <tr><td class="row-label">點心</td><td colspan="5" class="sch-merged">點心時間</td></tr>
