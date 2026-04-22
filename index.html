@@ -750,8 +750,12 @@
       <div class="field-group">
         <label class="field-label">姓名 <span class="req">*</span>
         <div class="field-hint">小朋友姓名</div>
-        <input type="text" class="form-input" id="f-name" placeholder="請填入文字">
+        <input type="text" class="form-input" id="f-name" placeholder="請填入文字" onblur="checkBlacklist()">
         <div class="error-msg" id="err-name">此欄位為必填</div>
+        <div class="error-msg" id="err-blacklist" style="background:#C0392B;color:#fff;padding:10px 14px;border-radius:8px;margin-top:8px;font-size:13px;line-height:1.6;display:none;">
+          ⚠️ 很抱歉，此學員無法透過線上系統報名。<br>如有疑問請私訊
+          <a href="https://lin.ee/VRxOt0n" target="_blank" style="color:#FFD700;font-weight:700;">武樂官方 LINE</a> 洽詢。
+        </div>
       </div>
 
       <div class="field-group">
@@ -1197,6 +1201,52 @@ function applyQuotaToUI(counts) {
   updateFee();
 }
 
+
+// ── 黑名單檢查 ──
+const GAS_URL_CONST = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
+let cachedBlacklist = null;
+
+function fetchBlacklist(callback) {
+  if (cachedBlacklist !== null) { callback(cachedBlacklist); return; }
+  const cbName = 'blCb_' + Date.now();
+  const script = document.createElement('script');
+  const timer = setTimeout(() => {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    cachedBlacklist = [];
+    callback([]);
+  }, 6000);
+  window[cbName] = function(json) {
+    clearTimeout(timer);
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    cachedBlacklist = json.blacklist || [];
+    callback(cachedBlacklist);
+  };
+  script.src = GAS_URL_CONST + '?action=getBlacklist&callback=' + cbName;
+  document.body.appendChild(script);
+}
+
+function checkBlacklist() {
+  const name = document.getElementById('f-name')?.value.trim();
+  if (!name) return;
+  fetchBlacklist(function(list) {
+    const blocked = list.some(n => n.trim() === name);
+    const errEl = document.getElementById('err-blacklist');
+    const nameInput = document.getElementById('f-name');
+    const submitBtn = document.getElementById('btnSubmit');
+    if (blocked) {
+      if (errEl) errEl.style.display = 'block';
+      if (nameInput) nameInput.style.borderColor = '#C0392B';
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.5'; }
+    } else {
+      if (errEl) errEl.style.display = 'none';
+      if (nameInput) nameInput.style.borderColor = '';
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
+    }
+  });
+}
+
 function fetchCountsAndApply() {
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
   let quotaResult = null;
@@ -1631,6 +1681,13 @@ function updateFee() {
 
 function validate() {
   let ok = true;
+  // 黑名單二次確認
+  const nameVal = document.getElementById('f-name')?.value.trim();
+  if (nameVal && cachedBlacklist && cachedBlacklist.some(n => n.trim() === nameVal)) {
+    document.getElementById('err-blacklist').style.display = 'block';
+    document.getElementById('f-name').classList.add('error');
+    ok = false;
+  }
   const required = [
     { id: 'f-name', err: 'err-name' },
     { id: 'f-age', err: 'err-age' },

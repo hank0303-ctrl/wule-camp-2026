@@ -610,6 +610,21 @@
       </div>
 
       <div class="card">
+      <div class="card">
+        <div class="card-title">黑名單管理</div>
+        <p style="font-size:13px;color:var(--ink-light);margin-bottom:14px;line-height:1.7;">
+          加入黑名單的姓名，在報名頁填寫時會被直接阻擋，無法送出報名。<br>
+          每行一個姓名，支援學員姓名或家長姓名。
+        </p>
+        <textarea id="cfg-blacklist"
+          placeholder="每行一個姓名，例如：&#10;王小明&#10;李大華"
+          style="width:100%;height:120px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+          <button class="save-btn" onclick="saveBlacklist()">儲存黑名單</button>
+          <span class="save-ok" id="save-ok-blacklist">✓ 已儲存</span>
+        </div>
+      </div>
+
         <div class="card-title">修改管理密碼</div>
         <div class="price-grid" style="grid-template-columns:1fr 1fr;">
           <div class="price-field">
@@ -662,7 +677,7 @@ function switchTab(tab) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'invoice') initInvoice();
-  if (tab === 'settings') fetchQuotaAndRender();
+  if (tab === 'settings') { fetchQuotaAndRender(); loadBlacklist(); }
 }
 
 // ── CONFIG ──
@@ -674,6 +689,7 @@ function getConfig() {
 function loadConfig() {
   const cfg = getConfig();
   fetchQuotaAndRender();
+  loadBlacklist();
   document.getElementById('cfg-bankName').value = cfg.bankName || '';
   document.getElementById('cfg-bankAcct').value = cfg.bankAcct || '';
   document.getElementById('cfg-bankHolder').value = cfg.bankHolder || '';
@@ -773,6 +789,46 @@ function saveQuota() {
     showOk('save-ok-quota'); // localStorage 已存，還是顯示成功
   };
   script.src = GAS_URL + '?action=saveQuota&quota=' + encodeURIComponent(JSON.stringify(quota)) + '&callback=' + cbName;
+  document.body.appendChild(script);
+}
+
+
+// ── 黑名單管理 ──
+function loadBlacklist() {
+  const GAS_URL = getGasUrl();
+  const cbName = 'blCb_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(json) {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    const list = json.blacklist || [];
+    document.getElementById('cfg-blacklist').value = list.join('\n');
+  };
+  script.onerror = function() {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+  };
+  script.src = GAS_URL + '?action=getBlacklist&callback=' + cbName;
+  document.body.appendChild(script);
+}
+
+function saveBlacklist() {
+  const raw = document.getElementById('cfg-blacklist').value;
+  const list = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+  const GAS_URL = getGasUrl();
+  const cbName = 'blSaveCb_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(json) {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    showOk('save-ok-blacklist');
+  };
+  script.onerror = function() {
+    delete window[cbName];
+    if (document.body.contains(script)) document.body.removeChild(script);
+    showOk('save-ok-blacklist');
+  };
+  script.src = GAS_URL + '?action=saveBlacklist&list=' + encodeURIComponent(JSON.stringify(list)) + '&callback=' + cbName;
   document.body.appendChild(script);
 }
 
