@@ -363,7 +363,7 @@
     <div class="admin-tab active" onclick="switchTab('registrations')">報名名單</div>
     <div class="admin-tab" onclick="switchTab('invoice')">收費單</div>
     <div class="admin-tab" onclick="switchTab('settings')">系統設定</div>
-    <div class="admin-tab" onclick="switchTab('stats')">📊 統計圖表</div>
+    <div class="admin-tab" onclick="switchTab('stats')">統計圖表</div>
   </div>
 
   <div class="admin-content">
@@ -964,9 +964,25 @@ function renderStatsChart() {
     if (count >= FULL) { statusText = '🔴 額滿'; statusStyle = 'background:#FDECEA;color:#C0392B;'; }
     else if (count >= TARGET_MIN) { statusText = '✅ 達標'; statusStyle = 'background:#E8F5E9;color:#2E7D32;'; }
 
+    // 取得該期名單
+    const regs = getRegs();
+    const sessionRegs = regs.filter(r => r.sessions && r.sessions.includes(s.name));
+    const nameListHtml = sessionRegs.length > 0
+      ? sessionRegs.map((r, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 12px;background:${i%2===0?'#fff':'#F8F6F2'};border-radius:6px;margin-bottom:4px;">
+            <span style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i+1}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--ink);min-width:60px;">${r.name}</span>
+            <span style="font-size:12px;color:var(--ink-light);">${r.gender || ''} · ${r.age || ''}歲</span>
+            <span style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:10px;${r.depositStatus==='paid'?'background:#E8F5E9;color:#2E7D32;':r.depositStatus==='cancel'?'background:#eee;color:#999;':'background:#FEF3C7;color:#92400E;'}">${r.depositStatus==='paid'?'已繳':r.depositStatus==='cancel'?'取消':'待繳'}</span>
+          </div>`)
+        .join('')
+      : '<div style="color:var(--ink-light);font-size:13px;padding:8px;">尚無報名學員</div>';
+
     tbodyHtml += `
-      <tr style="border-top:1px solid var(--border);${idx % 2 === 0 ? 'background:#FAFAF8;' : ''}">
-        <td style="padding:12px 16px;font-weight:600;font-size:13px;">${s.name}</td>
+      <tr class="stats-session-row" style="border-top:1px solid var(--border);${idx % 2 === 0 ? 'background:#FAFAF8;' : ''}cursor:pointer;" onclick="toggleSessionDetail('detail-${s.id}', this)">
+        <td style="padding:12px 16px;font-weight:600;font-size:13px;">
+          <span id="arrow-${s.id}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;">▶</span>${s.name}
+        </td>
         <td style="padding:12px 16px;font-size:12px;color:var(--ink-light);">${s.date}</td>
         <td style="padding:12px 16px;text-align:center;font-size:16px;font-weight:700;color:${color};">${count}</td>
         <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--ink-light);">${toTarget > 0 ? '還差 ' + toTarget + ' 人' : '—'}</td>
@@ -978,6 +994,12 @@ function renderStatsChart() {
         </td>
         <td style="padding:12px 16px;text-align:center;">
           <span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;${statusStyle}">${statusText}</span>
+        </td>
+      </tr>
+      <tr id="detail-${s.id}" style="display:none;background:#F5F3EF;">
+        <td colspan="6" style="padding:12px 20px;">
+          <div style="font-size:12px;font-weight:600;color:var(--ink-light);margin-bottom:8px;">報名學員名單（共 ${count} 人）</div>
+          ${nameListHtml}
         </td>
       </tr>
     `;
@@ -993,6 +1015,22 @@ function renderStatsChart() {
     </tr>
   `;
   tbodyEl.innerHTML = tbodyHtml;
+}
+
+
+function toggleSessionDetail(id, row) {
+  const detail = document.getElementById(id);
+  if (!detail) return;
+  const isOpen = detail.style.display !== 'none';
+  // 關閉所有展開的
+  document.querySelectorAll('[id^="detail-"]').forEach(el => { el.style.display = 'none'; });
+  document.querySelectorAll('[id^="arrow-"]').forEach(el => { el.style.transform = ''; });
+  if (!isOpen) {
+    detail.style.display = 'table-row';
+    const sessionId = id.replace('detail-', '');
+    const arrow = document.getElementById('arrow-' + sessionId);
+    if (arrow) arrow.style.transform = 'rotate(90deg)';
+  }
 }
 
 function exportStatsImg() {
