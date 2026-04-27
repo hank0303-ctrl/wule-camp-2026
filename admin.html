@@ -607,9 +607,13 @@
                       <span id="dep-prev-total" style="font-weight:600;">──</span>
                     </div>
                     <div id="dep-prev-extras"></div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:6px;border-top:1px dashed var(--border);">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:6px;border-top:1px dashed var(--border);margin-bottom:4px;">
                       <span style="color:#2E7D32;">已收訂金</span>
                       <span id="dep-prev-deposit" style="color:#2E7D32;font-weight:700;">──</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 10px;background:#FFF0F0;border-radius:6px;margin-top:4px;">
+                      <span style="color:#C0392B;font-weight:600;">剩餘尾款</span>
+                      <span id="dep-prev-remain" style="color:#C0392B;font-weight:700;font-size:15px;">──</span>
                     </div>
                   </div>
 
@@ -1698,6 +1702,8 @@ function updateDepositPreview() {
     document.getElementById('dep-prev-sessions').textContent = '──';
     document.getElementById('dep-prev-total').textContent = '──';
     document.getElementById('dep-prev-deposit').textContent = '──';
+    const remainEl2 = document.getElementById('dep-prev-remain');
+    if (remainEl2) remainEl2.textContent = '──';
     document.getElementById('dep-prev-amount').textContent = '$──';
     document.getElementById('dep-prev-note-block').style.display = 'none';
     return;
@@ -1728,6 +1734,14 @@ function updateDepositPreview() {
   }
   document.getElementById('dep-prev-total').textContent = '$' + (r.totalFee||0).toLocaleString();
   document.getElementById('dep-prev-deposit').textContent = amount > 0 ? '$' + amount.toLocaleString() : '──';
+
+  // 剩餘尾款 = 總費用 ＋ 額外費用 － 優惠 － 已收訂金
+  const extraTotal = depExtras.filter(e => e.amount).reduce((sum, e) => {
+    return sum + (e.type === 'discount' ? -(e.amount||0) : (e.amount||0));
+  }, 0);
+  const remain = (r.totalFee||0) + extraTotal - amount;
+  const remainEl = document.getElementById('dep-prev-remain');
+  if (remainEl) remainEl.textContent = remain > 0 ? '$' + remain.toLocaleString() : remain === 0 ? '已結清 ✅' : '多付 $' + Math.abs(remain).toLocaleString();
   document.getElementById('dep-prev-amount').textContent = amount > 0 ? '$' + amount.toLocaleString() : '$──';
 
   const noteBlock = document.getElementById('dep-prev-note-block');
@@ -1808,9 +1822,11 @@ function downloadDepositReceipt() {
   y += 90;
   ctx.textAlign = 'left';
 
-  // 報名明細區
+  // 報名明細區：先計算期數，再決定框高度
+  const sessions = (r.sessions || '').split('、').filter(s => s.trim());
+  const actualSessionRows = sessions.length;
+  const detailH = 20 + 30 + 20 + actualSessionRows * 26 + 20 + 60 + extraLines * 20;
   ctx.fillStyle = '#FFFFFF';
-  const detailH = 40 + sessionLines * 20 + 60;
   roundRect(ctx, 16, y, W-32, detailH, 8); ctx.fill();
   ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 1;
   roundRect(ctx, 16, y, W-32, detailH, 8); ctx.stroke();
@@ -1832,9 +1848,8 @@ function downloadDepositReceipt() {
   // 報名期數（每期一行，帶序號圓點）
   ctx.font = '11px sans-serif';
   ctx.fillStyle = '#999';
-  ctx.fillText('報名期數', 30, y + 54);
-  const sessions = (r.sessions || '').split('、').filter(s => s.trim());
-  let sy2 = y + 72;
+  ctx.fillText('報名期數', 30, y + 56);
+  let sy2 = y + 76;
   sessions.forEach((s, i) => {
     // 序號圓圈
     ctx.beginPath();
@@ -1850,9 +1865,9 @@ function downloadDepositReceipt() {
     ctx.font = '12px sans-serif';
     ctx.fillStyle = '#3D3628';
     ctx.fillText(s.trim(), 56, sy2);
-    sy2 += 22;
+    sy2 += 26;
   });
-  y = sy2 + 8;
+  y = sy2 + 16;
 
   // 分隔線
   ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 0.8;
@@ -1889,7 +1904,24 @@ function downloadDepositReceipt() {
   ctx.textAlign = 'right';
   ctx.fillText('$' + amount.toLocaleString(), W-30, y);
   ctx.textAlign = 'left';
-  y += 30;
+  y += 22;
+
+  // 剩餘尾款（紅底框）
+  const extraSum = depExtras.filter(e => e.amount).reduce((s, e) => s + (e.type==='discount' ? -(e.amount||0) : (e.amount||0)), 0);
+  const remain = (r.totalFee||0) + extraSum - amount;
+  const remainText = remain > 0 ? '$' + remain.toLocaleString() : remain === 0 ? '已結清' : '多付 $' + Math.abs(remain).toLocaleString();
+  ctx.fillStyle = '#FFF0F0';
+  roundRect(ctx, 16, y, W-32, 36, 6); ctx.fill();
+  ctx.strokeStyle = '#F5B7B1'; ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W-32, 36, 6); ctx.stroke();
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillStyle = '#C0392B';
+  ctx.fillText('剩餘尾款', 30, y + 22);
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText(remainText, W-30, y + 24);
+  ctx.textAlign = 'left';
+  y += 48;
 
   // 提醒區（金色）
   ctx.fillStyle = '#FBF5E8';
