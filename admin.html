@@ -511,43 +511,37 @@
       <h2 class="panel-title">各期報名統計</h2>
       <p class="panel-sub">即時顯示每期報名人數，目標 12–15 人，滿班 20 人。</p>
 
-      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:6px;font-size:13px;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#4CAF50;"></div><span>已達目標（12人以上）</span>
+      <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:12px;height:12px;border-radius:3px;background:#4CAF50;"></div><span>已達目標（12人以上）</span></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:12px;height:12px;border-radius:3px;background:#E8C97A;"></div><span>招生中（未達目標）</span></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:12px;height:12px;border-radius:3px;background:#C0392B;"></div><span>額滿（20人）</span></div>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+          <button onclick="exportRosterImg()" style="padding:8px 16px;background:var(--ink);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">📋 匯出名單表</button>
+          <button onclick="exportStatsImg()" style="padding:8px 16px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">⬇ 匯出圖表</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:13px;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#E8C97A;"></div><span>招生中（未達目標）</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:13px;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#C0392B;"></div><span>額滿（20人）</span>
-        </div>
-        <button onclick="exportStatsImg()" style="margin-left:auto;padding:8px 18px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-          ⬇ 匯出圖表
-        </button>
       </div>
 
-      <!-- 圖表區 -->
-      <div id="stats-chart-wrap" style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:28px 24px;overflow-x:auto;">
+      <!-- 長條圖 -->
+      <div id="stats-chart-wrap" style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:28px 24px 20px;overflow-x:auto;margin-bottom:20px;">
         <div id="stats-chart" style="min-width:560px;">
           <div style="text-align:center;color:var(--ink-light);padding:40px;">載入中...</div>
         </div>
       </div>
 
-      <!-- 數字表格 -->
-      <div style="margin-top:20px;background:#fff;border-radius:16px;border:1px solid var(--border);overflow:hidden;">
+      <!-- 數字表格（可點擊展開） -->
+      <div style="background:#fff;border-radius:16px;border:1px solid var(--border);overflow:hidden;">
         <table style="width:100%;border-collapse:collapse;" id="stats-table">
           <thead>
             <tr style="background:var(--ink);color:#fff;">
               <th style="padding:12px 16px;text-align:left;font-size:13px;">期數</th>
               <th style="padding:12px 16px;text-align:left;font-size:13px;">日期</th>
-              <th style="padding:12px 16px;text-align:center;font-size:13px;">報名人數</th>
+              <th style="padding:12px 16px;text-align:center;font-size:13px;">人數</th>
               <th style="padding:12px 16px;text-align:center;font-size:13px;">距目標</th>
               <th style="padding:12px 16px;text-align:center;font-size:13px;">進度</th>
               <th style="padding:12px 16px;text-align:center;font-size:13px;">狀態</th>
             </tr>
           </thead>
-          <tbody id="stats-tbody">
-          </tbody>
+          <tbody id="stats-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -895,8 +889,15 @@ const STATS_SESSIONS = [
 const TARGET_MIN = 12;
 const TARGET_MAX = 15;
 const FULL = 20;
+const BAR_HEIGHT = 200; // 長條圖總高度（px），對應 FULL 人數
 
-function getSessionCounts_() {
+function getBarColor(count) {
+  if (count >= FULL) return '#C0392B';
+  if (count >= TARGET_MIN) return '#4CAF50';
+  return '#E8C97A';
+}
+
+function calcSessionCounts() {
   const regs = getRegs();
   const counts = {};
   STATS_SESSIONS.forEach(s => { counts[s.id] = 0; });
@@ -909,62 +910,54 @@ function getSessionCounts_() {
   return counts;
 }
 
-function getBarColor(count) {
-  if (count >= FULL) return '#C0392B';
-  if (count >= TARGET_MIN) return '#4CAF50';
-  return '#E8C97A';
-}
-
 function renderStatsChart() {
-  const counts = getSessionCounts_();
+  const counts = calcSessionCounts();
   const chartEl = document.getElementById('stats-chart');
   const tbodyEl = document.getElementById('stats-tbody');
   if (!chartEl || !tbodyEl) return;
 
-  const maxVal = Math.max(FULL, ...Object.values(counts));
+  // 修正：固定以 FULL(20) 為最大值計算比例，確保參考線位置正確
+  const scaleMax = FULL;
 
-  // ── 長條圖 ──
-  let chartHtml = `
-    <div style="display:flex;align-items:flex-end;gap:10px;height:220px;padding-bottom:36px;position:relative;">
-      <!-- 參考線 -->
-      <div style="position:absolute;left:0;right:0;bottom:${36 + (TARGET_MIN/maxVal*180)}px;border-top:2px dashed #4CAF50;opacity:0.5;z-index:1;">
-        <span style="position:absolute;right:4px;top:-18px;font-size:10px;color:#4CAF50;font-weight:600;">目標 ${TARGET_MIN}</span>
-      </div>
-      <div style="position:absolute;left:0;right:0;bottom:${36 + (FULL/maxVal*180)}px;border-top:2px dashed #C0392B;opacity:0.5;z-index:1;">
-        <span style="position:absolute;right:4px;top:-18px;font-size:10px;color:#C0392B;font-weight:600;">滿班 ${FULL}</span>
-      </div>
-  `;
+  function toH(val) { return Math.round((val / scaleMax) * BAR_HEIGHT); }
+
+  const targetLineBottom = 36 + toH(TARGET_MIN);
+  const fullLineBottom   = 36 + toH(FULL);
+
+  let chartHtml = `<div style="display:flex;align-items:flex-end;gap:10px;height:${BAR_HEIGHT + 60}px;padding-bottom:36px;position:relative;">
+    <div style="position:absolute;left:0;right:0;bottom:${targetLineBottom}px;border-top:2px dashed #4CAF50;opacity:0.6;z-index:1;">
+      <span style="position:absolute;right:4px;top:-16px;font-size:10px;color:#4CAF50;font-weight:700;background:#fff;padding:0 3px;">目標 ${TARGET_MIN}</span>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:${fullLineBottom}px;border-top:2px dashed #C0392B;opacity:0.6;z-index:1;">
+      <span style="position:absolute;right:4px;top:-16px;font-size:10px;color:#C0392B;font-weight:700;background:#fff;padding:0 3px;">滿班 ${FULL}</span>
+    </div>`;
 
   STATS_SESSIONS.forEach(s => {
     const count = counts[s.id] || 0;
-    const barH = Math.max(count > 0 ? 8 : 2, Math.round(count / maxVal * 180));
+    const barH = count > 0 ? Math.max(4, toH(count)) : 2;
     const color = getBarColor(count);
     chartHtml += `
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;z-index:2;">
         <div style="font-size:15px;font-weight:700;color:${color};margin-bottom:4px;">${count}</div>
-        <div style="width:100%;height:${barH}px;background:${color};border-radius:6px 6px 0 0;transition:height 0.3s;position:relative;min-height:3px;">
-        </div>
+        <div style="width:100%;height:${barH}px;background:${color};border-radius:6px 6px 0 0;min-height:2px;"></div>
         <div style="margin-top:8px;font-size:11px;font-weight:600;color:var(--ink);text-align:center;line-height:1.3;">${s.name}</div>
         <div style="font-size:10px;color:var(--ink-light);text-align:center;">${s.date}</div>
-      </div>
-    `;
+      </div>`;
   });
   chartHtml += '</div>';
   chartEl.innerHTML = chartHtml;
 
-  // ── 數字表格 ──
+  // 數字表格
   let tbodyHtml = '';
   STATS_SESSIONS.forEach((s, idx) => {
     const count = counts[s.id] || 0;
     const toTarget = Math.max(0, TARGET_MIN - count);
     const pct = Math.min(100, Math.round(count / FULL * 100));
     const color = getBarColor(count);
-    let statusText = '招生中';
-    let statusStyle = 'background:#FEF3C7;color:#92400E;';
-    if (count >= FULL) { statusText = '🔴 額滿'; statusStyle = 'background:#FDECEA;color:#C0392B;'; }
+    let statusText = '招生中', statusStyle = 'background:#FEF3C7;color:#92400E;';
+    if (count >= FULL)       { statusText = '🔴 額滿'; statusStyle = 'background:#FDECEA;color:#C0392B;'; }
     else if (count >= TARGET_MIN) { statusText = '✅ 達標'; statusStyle = 'background:#E8F5E9;color:#2E7D32;'; }
 
-    // 取得該期名單
     const regs = getRegs();
     const sessionRegs = regs.filter(r => r.sessions && r.sessions.includes(s.name));
     const nameListHtml = sessionRegs.length > 0
@@ -972,23 +965,22 @@ function renderStatsChart() {
           <div style="display:flex;align-items:center;gap:10px;padding:7px 12px;background:${i%2===0?'#fff':'#F8F6F2'};border-radius:6px;margin-bottom:4px;">
             <span style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i+1}</span>
             <span style="font-size:13px;font-weight:600;color:var(--ink);min-width:60px;">${r.name}</span>
-            <span style="font-size:12px;color:var(--ink-light);">${r.gender || ''} · ${r.age || ''}歲</span>
+            <span style="font-size:12px;color:var(--ink-light);">${r.gender||''} · ${r.age||''}歲</span>
             <span style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:10px;${r.depositStatus==='paid'?'background:#E8F5E9;color:#2E7D32;':r.depositStatus==='cancel'?'background:#eee;color:#999;':'background:#FEF3C7;color:#92400E;'}">${r.depositStatus==='paid'?'已繳':r.depositStatus==='cancel'?'取消':'待繳'}</span>
-          </div>`)
-        .join('')
+          </div>`).join('')
       : '<div style="color:var(--ink-light);font-size:13px;padding:8px;">尚無報名學員</div>';
 
     tbodyHtml += `
-      <tr class="stats-session-row" style="border-top:1px solid var(--border);${idx % 2 === 0 ? 'background:#FAFAF8;' : ''}cursor:pointer;" onclick="toggleSessionDetail('detail-${s.id}', this)">
+      <tr style="border-top:1px solid var(--border);${idx%2===0?'background:#FAFAF8;':''}cursor:pointer;" onclick="toggleSessionDetail('detail-${s.id}','arrow-${s.id}')">
         <td style="padding:12px 16px;font-weight:600;font-size:13px;">
-          <span id="arrow-${s.id}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;">▶</span>${s.name}
+          <span id="arrow-${s.id}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:10px;">▶</span>${s.name}
         </td>
         <td style="padding:12px 16px;font-size:12px;color:var(--ink-light);">${s.date}</td>
         <td style="padding:12px 16px;text-align:center;font-size:16px;font-weight:700;color:${color};">${count}</td>
-        <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--ink-light);">${toTarget > 0 ? '還差 ' + toTarget + ' 人' : '—'}</td>
+        <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--ink-light);">${toTarget>0?'還差 '+toTarget+' 人':'—'}</td>
         <td style="padding:12px 16px;">
           <div style="background:#eee;border-radius:20px;height:8px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${color};border-radius:20px;transition:width 0.3s;"></div>
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:20px;"></div>
           </div>
           <div style="text-align:center;font-size:10px;color:var(--ink-light);margin-top:2px;">${pct}%</div>
         </td>
@@ -998,65 +990,200 @@ function renderStatsChart() {
       </tr>
       <tr id="detail-${s.id}" style="display:none;background:#F5F3EF;">
         <td colspan="6" style="padding:12px 20px;">
-          <div style="font-size:12px;font-weight:600;color:var(--ink-light);margin-bottom:8px;">報名學員名單（共 ${count} 人）</div>
+          <div style="font-size:12px;font-weight:600;color:var(--ink-light);margin-bottom:8px;">▌ ${s.name} 報名學員（共 ${count} 人）</div>
           ${nameListHtml}
         </td>
-      </tr>
-    `;
+      </tr>`;
   });
 
-  // 合計列
-  const total = STATS_SESSIONS.reduce((s, sess) => s + (counts[sess.id] || 0), 0);
+  const total = STATS_SESSIONS.reduce((s, sess) => s + (counts[sess.id]||0), 0);
   tbodyHtml += `
     <tr style="border-top:2px solid var(--gold);background:var(--cream);">
       <td colspan="2" style="padding:12px 16px;font-weight:700;font-size:13px;">合計</td>
       <td style="padding:12px 16px;text-align:center;font-size:16px;font-weight:700;color:var(--gold);">${total}</td>
-      <td colspan="3" style="padding:12px 16px;font-size:12px;color:var(--ink-light);">總報名人次（同一學員報多期各計一次）</td>
-    </tr>
-  `;
+      <td colspan="3" style="padding:12px 16px;font-size:12px;color:var(--ink-light);">總報名人次</td>
+    </tr>`;
   tbodyEl.innerHTML = tbodyHtml;
 }
 
-
-function toggleSessionDetail(id, row) {
-  const detail = document.getElementById(id);
+function toggleSessionDetail(detailId, arrowId) {
+  const detail = document.getElementById(detailId);
   if (!detail) return;
   const isOpen = detail.style.display !== 'none';
-  // 關閉所有展開的
-  document.querySelectorAll('[id^="detail-"]').forEach(el => { el.style.display = 'none'; });
-  document.querySelectorAll('[id^="arrow-"]').forEach(el => { el.style.transform = ''; });
+  document.querySelectorAll('[id^="detail-week"]').forEach(el => { el.style.display = 'none'; });
+  document.querySelectorAll('[id^="arrow-week"]').forEach(el => { el.style.transform = ''; });
   if (!isOpen) {
     detail.style.display = 'table-row';
-    const sessionId = id.replace('detail-', '');
-    const arrow = document.getElementById('arrow-' + sessionId);
+    const arrow = document.getElementById(arrowId);
     if (arrow) arrow.style.transform = 'rotate(90deg)';
   }
 }
 
-function exportStatsImg() {
-  const wrap = document.getElementById('stats-chart-wrap');
-  const table = document.getElementById('stats-table');
+// ── 匯出名單表（Canvas 繪製，類似圖二） ──
+function exportRosterImg() {
+  const counts = calcSessionCounts();
+  const regs = getRegs();
 
-  // 用 html2canvas 截圖
+  // 取得各期名單
+  const rosters = STATS_SESSIONS.map(s => ({
+    ...s,
+    people: regs.filter(r => r.sessions && r.sessions.includes(s.name))
+  }));
+
+  const maxRows = Math.max(...rosters.map(r => r.people.length), 1);
+  const COL_W = 140, HEAD_H = 72, ROW_H = 32, PAD = 20;
+  const COLS = STATS_SESSIONS.length;
+  const W = PAD * 2 + COL_W * COLS + 80; // +80 for 序號列
+  const H = PAD * 2 + HEAD_H + ROW_H * (maxRows + 1) + 60;
+  const scale = 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * scale;
+  canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // 背景
+  ctx.fillStyle = '#FAF7F2';
+  ctx.fillRect(0, 0, W, H);
+
+  // 標題
+  ctx.fillStyle = '#1A1610';
+  ctx.fillRect(0, 0, W, 48);
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillStyle = '#E8C97A';
+  ctx.fillText('武樂營隊 2026 — 各期報名名單', PAD, 30);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('匯出時間：' + new Date().toLocaleString('zh-TW'), PAD, 44);
+
+  let startY = 56;
+  const numColW = 40;
+  const colW = COL_W;
+
+  // 表頭背景
+  ctx.fillStyle = '#C9973A';
+  ctx.fillRect(PAD, startY, numColW, HEAD_H);
+  STATS_SESSIONS.forEach((s, i) => {
+    ctx.fillStyle = i % 2 === 0 ? '#C9973A' : '#B8862F';
+    ctx.fillRect(PAD + numColW + i * colW, startY, colW, HEAD_H);
+  });
+
+  // 表頭文字
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.fillText('序', PAD + numColW / 2, startY + 22);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('人數', PAD + numColW / 2, startY + 40);
+
+  STATS_SESSIONS.forEach((s, i) => {
+    const cx = PAD + numColW + i * colW + colW / 2;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(s.name, cx, startY + 20);
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(s.date, cx, startY + 36);
+    // 人數
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(rosters[i].people.length + ' 人', cx, startY + 56);
+  });
+
+  // 資料列
+  ctx.textAlign = 'center';
+  for (let row = 0; row < maxRows; row++) {
+    const y = startY + HEAD_H + row * ROW_H;
+    const isEven = row % 2 === 0;
+
+    // 序號欄
+    ctx.fillStyle = isEven ? '#F5F0E8' : '#EDE8DF';
+    ctx.fillRect(PAD, y, numColW, ROW_H);
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.fillText(row + 1, PAD + numColW / 2, y + ROW_H / 2 + 4);
+
+    // 各期
+    rosters.forEach((s, col) => {
+      const x = PAD + numColW + col * colW;
+      const person = s.people[row];
+
+      // 背景
+      ctx.fillStyle = isEven ? '#FAF7F2' : '#F3EFE8';
+      ctx.fillRect(x, y, colW, ROW_H);
+
+      // 分隔線
+      ctx.strokeStyle = '#E2D9CA';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x, y + ROW_H);
+      ctx.lineTo(x + colW, y + ROW_H);
+      ctx.stroke();
+
+      if (person) {
+        // 名字
+        ctx.font = '13px sans-serif';
+        ctx.fillStyle = '#3D3628';
+        ctx.fillText(person.name, x + colW / 2, y + ROW_H / 2 + 4);
+      }
+    });
+
+    // 序號列右邊框線
+    ctx.strokeStyle = '#E2D9CA';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(PAD + numColW, y);
+    ctx.lineTo(PAD + numColW, y + ROW_H);
+    ctx.stroke();
+  }
+
+  // 外框
+  ctx.strokeStyle = '#C9973A';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(PAD, startY, numColW + colW * COLS, HEAD_H + ROW_H * maxRows);
+
+  // 垂直分隔線
+  for (let i = 1; i <= COLS; i++) {
+    ctx.strokeStyle = '#D4C9B0';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(PAD + numColW + i * colW, startY);
+    ctx.lineTo(PAD + numColW + i * colW, startY + HEAD_H + ROW_H * maxRows);
+    ctx.stroke();
+  }
+
+  // 底部
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#C4B9A8';
+  ctx.textAlign = 'center';
+  ctx.fillText('武樂小小運動家 2026 暑期營隊', W / 2, H - 10);
+
+  const a = document.createElement('a');
+  a.download = '武樂營隊_各期名單_' + new Date().toLocaleDateString('zh-TW').replace(/\//g, '-') + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function exportStatsImg() {
   const script = document.createElement('script');
   script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
   script.onload = function() {
-    // 建立一個臨時容器包圖表和表格
+    const wrap = document.getElementById('stats-chart-wrap');
+    const table = document.getElementById('stats-table');
     const container = document.createElement('div');
-    container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#FAF7F2;padding:24px;width:700px;font-family:Noto Sans TC,sans-serif;';
-    container.innerHTML = `
-      <div style="font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">武樂營隊 2026 各期報名統計</div>
-      <div style="font-size:12px;color:#888;margin-bottom:20px;">匯出時間：${new Date().toLocaleString('zh-TW')}</div>
-      ${wrap.outerHTML}
-      <div style="margin-top:16px;">${table.outerHTML}</div>
-    `;
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#FAF7F2;padding:24px;width:700px;font-family:sans-serif;';
+    container.innerHTML = '<div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">武樂營隊 2026 各期報名統計</div>'
+      + '<div style="font-size:11px;color:#888;margin-bottom:16px;">匯出：' + new Date().toLocaleString('zh-TW') + '</div>'
+      + wrap.outerHTML + '<div style="margin-top:16px;">' + table.outerHTML + '</div>';
     document.body.appendChild(container);
     html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#FAF7F2' }).then(canvas => {
       document.body.removeChild(container);
-      const link = document.createElement('a');
-      link.download = '武樂營隊_報名統計_' + new Date().toLocaleDateString('zh-TW').replace(/\//g,'-') + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      const a = document.createElement('a');
+      a.download = '武樂營隊_統計圖表_' + new Date().toLocaleDateString('zh-TW').replace(/\//g,'-') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
     });
   };
   document.head.appendChild(script);
@@ -1161,7 +1288,6 @@ function loadRegsFromSheet(showToast = false) {
     }));
     renderStats();
     renderTable();
-    if (document.getElementById('panel-stats')?.classList.contains('active')) renderStatsChart();
     // 統計各期人數，存入 localStorage 供報名頁面讀取
     const SESSION_NAME_MAP = {
       'week-w1':'第一期','week-7/6':'第二期','week-7/13':'第三期',
