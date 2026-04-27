@@ -371,7 +371,22 @@
     <!-- ── 收費單 ── -->
     <div class="panel" id="panel-invoice">
       <h2 class="panel-title">收費單產生器</h2>
-      <p class="panel-sub">選擇學員後自動帶入費用資料，可新增細項，生成收費圖片直接傳給家長。</p>
+
+      <!-- Sub tabs -->
+      <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border);">
+        <div id="sub-tab-invoice" onclick="switchInvoiceTab('invoice')"
+          style="padding:8px 20px;font-size:14px;font-weight:500;cursor:pointer;border-bottom:2px solid var(--gold);margin-bottom:-2px;color:var(--gold);">
+          收費單
+        </div>
+        <div id="sub-tab-deposit" onclick="switchInvoiceTab('deposit')"
+          style="padding:8px 20px;font-size:14px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--ink-light);">
+          訂金確認單
+        </div>
+      </div>
+
+      <!-- 收費單內容 -->
+      <div id="sub-panel-invoice">
+      <p class="panel-sub" style="margin-top:-12px;">選擇學員後自動帶入費用資料，可新增細項，生成收費圖片直接傳給家長。</p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="invoice-grid">
 
@@ -502,6 +517,118 @@
           </div>
         </div>
       </div>
+      </div><!-- end sub-panel-invoice -->
+
+      <!-- ── 訂金確認單 ── -->
+      <div id="sub-panel-deposit" style="display:none;">
+        <p class="panel-sub" style="margin-top:-12px;">確認收到訂金後，生成確認單圖片傳給家長，讓家長知道報名已成立。</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="invoice-grid">
+          <!-- 左側設定 -->
+          <div>
+            <div class="card">
+              <div class="card-title">選擇學員</div>
+              <select id="dep-student" onchange="loadDepositData()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:var(--cream);color:var(--ink);outline:none;">
+                <option value="">── 請選擇學員 ──</option>
+              </select>
+            </div>
+
+            <div class="card" id="dep-info-card" style="display:none;">
+              <div class="card-title">報名資訊</div>
+              <div id="dep-student-info" style="font-size:13px;line-height:2;color:var(--ink-mid);"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">確認單設定</div>
+              <div style="display:grid;gap:12px;">
+                <div class="price-field">
+                  <label>已收訂金金額</label>
+                  <input type="number" id="dep-amount" class="text-input" placeholder="例：2000" oninput="updateDepositPreview()">
+                </div>
+                <div class="price-field">
+                  <label>備註（選填）</label>
+                  <textarea id="dep-note" class="text-input" rows="3"
+                    placeholder="例：尾款請於課程開始前兩週繳清"
+                    style="resize:vertical;font-family:inherit;"
+                    oninput="updateDepositPreview()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右側預覽 -->
+          <div>
+            <div class="card" style="position:sticky;top:20px;">
+              <div class="card-title">確認單預覽</div>
+              <div id="deposit-preview" style="background:#FAF7F2;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+
+                <!-- Header -->
+                <div style="background:#1A1610;padding:20px 24px;">
+                  <div style="font-family:'Noto Serif TC',serif;font-size:18px;color:#E8C97A;letter-spacing:3px;margin-bottom:4px;">武樂小小運動家</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;">2026 SUMMER CAMP</div>
+                </div>
+
+                <div style="padding:20px 24px;">
+                  <!-- 確認標題 -->
+                  <div style="text-align:center;margin-bottom:16px;">
+                    <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">✅ 訂金確認單</div>
+                    <div id="dep-prev-date" style="font-size:11px;color:var(--ink-light);"></div>
+                  </div>
+
+                  <!-- 確認訊息 -->
+                  <div style="background:#F0FAF0;border:1px solid #A5D6A7;border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:center;">
+                    <div style="font-size:13px;color:#2E7D32;font-weight:600;line-height:1.8;">
+                      已確認收到 <span id="dep-prev-name" style="color:#1B5E20;font-weight:700;">──</span> 的報名資料與訂金
+                      <div style="font-size:22px;font-weight:700;color:#1B5E20;margin-top:4px;"><span id="dep-prev-amount">$──</span> 🎉</div>
+                    </div>
+                  </div>
+
+                  <!-- 報名明細 -->
+                  <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border);margin-bottom:14px;">
+                    <div style="font-size:11px;font-weight:700;color:var(--ink-light);letter-spacing:1px;margin-bottom:8px;">報名明細</div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+                      <span style="color:var(--ink-light);">學員姓名</span>
+                      <span id="dep-prev-name2" style="font-weight:600;">──</span>
+                    </div>
+                    <div style="font-size:12px;margin-bottom:4px;">
+                      <span style="color:var(--ink-light);">報名期數</span>
+                    </div>
+                    <div id="dep-prev-sessions" style="font-size:12px;color:var(--ink-mid);line-height:1.7;padding:6px 10px;background:var(--cream);border-radius:6px;margin-bottom:6px;">──</div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                      <span style="color:var(--ink-light);">課程總費用</span>
+                      <span id="dep-prev-total" style="font-weight:600;">──</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:6px;border-top:1px dashed var(--border);">
+                      <span style="color:#2E7D32;">已收訂金</span>
+                      <span id="dep-prev-deposit" style="color:#2E7D32;font-weight:700;">──</span>
+                    </div>
+                  </div>
+
+                  <!-- 提醒訊息 -->
+                  <div style="background:#FBF5E8;border-radius:8px;padding:12px 14px;border:1px solid #E8C97A;margin-bottom:14px;">
+                    <div style="font-size:12px;color:var(--ink-mid);line-height:1.8;">
+                      報名資訊我們已為您登記完成，會在課程開始前一週透過官方 LINE 告知營隊注意事項，請再留意訊息唷 😊
+                    </div>
+                  </div>
+
+                  <!-- 備註 -->
+                  <div id="dep-prev-note-block" style="display:none;background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border);margin-bottom:14px;">
+                    <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">📌 備註</div>
+                    <div id="dep-prev-note" style="font-size:12px;color:var(--ink-mid);line-height:1.7;"></div>
+                  </div>
+
+                  <div style="font-size:11px;color:var(--ink-light);text-align:center;">如有任何問題請私訊武樂小小運動家官方 LINE</div>
+                </div>
+              </div>
+
+              <button onclick="downloadDepositReceipt()" class="save-btn" style="width:100%;justify-content:center;margin-top:14px;margin-bottom:0;">
+                ⬇ 下載訂金確認單
+              </button>
+            </div>
+          </div>
+        </div>
+      </div><!-- end sub-panel-deposit -->
+
     </div>
 
     <!-- ── 報名名單 ── -->
@@ -1462,6 +1589,269 @@ window.addEventListener('storage', () => {});
 // ── 收費單邏輯 ──
 let customRows = [];
 let currentStudent = null;
+
+
+// ── 訂金確認單 ──
+function switchInvoiceTab(tab) {
+  ['invoice','deposit'].forEach(t => {
+    document.getElementById('sub-panel-' + t).style.display = t === tab ? 'block' : 'none';
+    const el = document.getElementById('sub-tab-' + t);
+    if (t === tab) {
+      el.style.color = 'var(--gold)';
+      el.style.borderBottomColor = 'var(--gold)';
+    } else {
+      el.style.color = 'var(--ink-light)';
+      el.style.borderBottomColor = 'transparent';
+    }
+  });
+  if (tab === 'deposit') initDepositForm();
+}
+
+function initDepositForm() {
+  const sel = document.getElementById('dep-student');
+  sel.innerHTML = '<option value="">── 請選擇學員 ──</option>';
+  allRegs.forEach((r, i) => {
+    if (r.name) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = r.name + '（' + (r.sessions||'').substring(0,12) + '…）';
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function loadDepositData() {
+  const idx = document.getElementById('dep-student').value;
+  const card = document.getElementById('dep-info-card');
+  if (idx === '') { card.style.display = 'none'; updateDepositPreview(); return; }
+  const r = allRegs[idx];
+  card.style.display = 'block';
+  document.getElementById('dep-student-info').innerHTML = `
+    <div><span style="color:var(--ink-light)">姓名：</span>${r.name}</div>
+    <div><span style="color:var(--ink-light)">期數：</span>${r.sessions}</div>
+    <div><span style="color:var(--ink-light)">總費用：</span>$${(r.totalFee||0).toLocaleString()}</div>
+    <div><span style="color:var(--ink-light)">應付訂金：</span>$${(r.deposit||0).toLocaleString()}</div>
+  `;
+  // 自動帶入訂金金額
+  document.getElementById('dep-amount').value = r.deposit || '';
+  updateDepositPreview();
+}
+
+function updateDepositPreview() {
+  const idx = document.getElementById('dep-student').value;
+  const amount = parseInt(document.getElementById('dep-amount').value) || 0;
+  const note = document.getElementById('dep-note').value.trim();
+
+  document.getElementById('dep-prev-date').textContent = new Date().toLocaleDateString('zh-TW', {year:'numeric',month:'long',day:'numeric'});
+
+  if (idx === '') {
+    document.getElementById('dep-prev-name').textContent = '──';
+    document.getElementById('dep-prev-name2').textContent = '──';
+    document.getElementById('dep-prev-sessions').textContent = '──';
+    document.getElementById('dep-prev-total').textContent = '──';
+    document.getElementById('dep-prev-deposit').textContent = '──';
+    document.getElementById('dep-prev-amount').textContent = '$──';
+    document.getElementById('dep-prev-note-block').style.display = 'none';
+    return;
+  }
+
+  const r = allRegs[idx];
+  document.getElementById('dep-prev-name').textContent = r.name;
+  document.getElementById('dep-prev-name2').textContent = r.name;
+  document.getElementById('dep-prev-sessions').textContent = r.sessions || '──';
+  document.getElementById('dep-prev-total').textContent = '$' + (r.totalFee||0).toLocaleString();
+  document.getElementById('dep-prev-deposit').textContent = amount > 0 ? '$' + amount.toLocaleString() : '──';
+  document.getElementById('dep-prev-amount').textContent = amount > 0 ? '$' + amount.toLocaleString() : '$──';
+
+  const noteBlock = document.getElementById('dep-prev-note-block');
+  if (note) {
+    noteBlock.style.display = 'block';
+    document.getElementById('dep-prev-note').textContent = note;
+  } else {
+    noteBlock.style.display = 'none';
+  }
+}
+
+function downloadDepositReceipt() {
+  const idx = document.getElementById('dep-student').value;
+  if (!idx) { alert('請先選擇學員'); return; }
+  const r = allRegs[idx];
+  const amount = parseInt(document.getElementById('dep-amount').value) || 0;
+  const note = document.getElementById('dep-note').value.trim();
+  const dateStr = new Date().toLocaleDateString('zh-TW');
+
+  const btn = document.querySelector('[onclick="downloadDepositReceipt()"]');
+  if (btn) { btn.textContent = '⏳ 生成中…'; btn.disabled = true; }
+
+  const canvas = document.createElement('canvas');
+  const W = 600, scale = 2;
+  canvas.width = W * scale;
+
+  // 動態高度
+  const sessionLines = Math.ceil((r.sessions||'').length / 30);
+  const noteLines = note ? Math.ceil(note.length / 40) : 0;
+  const H = 580 + sessionLines * 20 + noteLines * 20;
+  canvas.height = H * scale;
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // 背景
+  ctx.fillStyle = '#FAF7F2';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header
+  ctx.fillStyle = '#1A1610';
+  ctx.fillRect(0, 0, W, 72);
+  ctx.font = 'bold 20px serif';
+  ctx.fillStyle = '#E8C97A';
+  ctx.fillText('武樂小小運動家', 24, 40);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('2026 SUMMER CAMP', 24, 58);
+
+  let y = 88;
+
+  // 標題
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillStyle = '#2E7D32';
+  ctx.textAlign = 'center';
+  ctx.fillText('✅  訂金確認單', W/2, y + 16);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.fillText(dateStr, W/2, y + 34);
+  y += 50;
+  ctx.textAlign = 'left';
+
+  // 確認訊息區（綠底）
+  ctx.fillStyle = '#F0FAF0';
+  roundRect(ctx, 16, y, W-32, 76, 8); ctx.fill();
+  ctx.strokeStyle = '#A5D6A7'; ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W-32, 76, 8); ctx.stroke();
+
+  ctx.font = '13px sans-serif';
+  ctx.fillStyle = '#2E7D32';
+  ctx.textAlign = 'center';
+  ctx.fillText('已確認收到 ' + r.name + ' 的報名資料與訂金', W/2, y + 26);
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillStyle = '#1B5E20';
+  ctx.fillText('$' + amount.toLocaleString() + '  🎉', W/2, y + 56);
+  y += 90;
+  ctx.textAlign = 'left';
+
+  // 報名明細區
+  ctx.fillStyle = '#FFFFFF';
+  const detailH = 40 + sessionLines * 20 + 60;
+  roundRect(ctx, 16, y, W-32, detailH, 8); ctx.fill();
+  ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W-32, detailH, 8); ctx.stroke();
+
+  ctx.font = 'bold 10px sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.fillText('報名明細', 30, y + 18);
+
+  // 學員姓名
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#7A6E5F';
+  ctx.fillText('學員姓名', 30, y + 36);
+  ctx.fillStyle = '#3D3628';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(r.name, W - 30, y + 36);
+  ctx.textAlign = 'left';
+
+  // 報名期數
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#7A6E5F';
+  ctx.fillText('報名期數', 30, y + 56);
+  const sessions = (r.sessions || '').split('、');
+  let sy = y + 56;
+  sessions.forEach((s, i) => {
+    ctx.fillStyle = '#3D3628';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(s.trim(), W - 30, sy + i * 20);
+    ctx.textAlign = 'left';
+  });
+  y += 56 + sessions.length * 20 + 8;
+
+  // 分隔線
+  ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(W-30, y); ctx.stroke();
+  y += 14;
+
+  // 費用
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#7A6E5F';
+  ctx.fillText('課程總費用', 30, y);
+  ctx.fillStyle = '#3D3628';
+  ctx.textAlign = 'right';
+  ctx.fillText('$' + (r.totalFee||0).toLocaleString(), W-30, y);
+  ctx.textAlign = 'left';
+  y += 22;
+
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillStyle = '#2E7D32';
+  ctx.fillText('已收訂金', 30, y);
+  ctx.textAlign = 'right';
+  ctx.fillText('$' + amount.toLocaleString(), W-30, y);
+  ctx.textAlign = 'left';
+  y += 30;
+
+  // 提醒區（金色）
+  ctx.fillStyle = '#FBF5E8';
+  roundRect(ctx, 16, y, W-32, 64, 8); ctx.fill();
+  ctx.strokeStyle = '#E8C97A'; ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W-32, 64, 8); ctx.stroke();
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#7A5C00';
+  wrapText(ctx, '報名資訊我們已為您登記完成，會在課程開始前一週透過官方 LINE 告知營隊注意事項，請再留意訊息唷 😊', 30, y + 20, W - 60, 20);
+  y += 76;
+
+  // 備註
+  if (note) {
+    ctx.fillStyle = '#fff';
+    const noteH = 30 + noteLines * 20;
+    roundRect(ctx, 16, y, W-32, noteH, 8); ctx.fill();
+    ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 1;
+    roundRect(ctx, 16, y, W-32, noteH, 8); ctx.stroke();
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.fillText('📌 備註', 30, y + 16);
+    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#3D3628';
+    wrapText(ctx, note, 30, y + 32, W - 60, 20);
+    y += noteH + 12;
+  }
+
+  // 底部
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#C4B9A8';
+  ctx.textAlign = 'center';
+  ctx.fillText('如有任何問題請私訊武樂小小運動家官方 LINE', W/2, y + 20);
+
+  const a = document.createElement('a');
+  a.download = '武樂訂金確認單_' + r.name + '_' + dateStr.replace(/\//g,'-') + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+
+  if (btn) { btn.textContent = '⬇ 下載訂金確認單'; btn.disabled = false; }
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  let line = '';
+  for (let i = 0; i < text.length; i++) {
+    const test = line + text[i];
+    if (ctx.measureText(test).width > maxW && i > 0) {
+      ctx.fillText(line, x, y);
+      line = text[i];
+      y += lineH;
+    } else {
+      line = test;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
 
 function initInvoice() {
   const sel = document.getElementById('inv-student');
