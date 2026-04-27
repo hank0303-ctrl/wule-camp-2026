@@ -921,30 +921,51 @@ function renderStatsChart() {
 
   function toH(val) { return Math.round((val / scaleMax) * BAR_HEIGHT); }
 
-  const targetLineBottom = 36 + toH(TARGET_MIN);
-  const fullLineBottom   = 36 + toH(FULL);
+  // 圖表尺寸
+  const LABEL_H = 48;  // 底部期數標籤高度
+  const NUM_H   = 24;  // 頂部數字高度
+  const TOTAL_H = BAR_HEIGHT + LABEL_H + NUM_H;
 
-  let chartHtml = `<div style="display:flex;align-items:flex-end;gap:10px;height:${BAR_HEIGHT + 60}px;padding-bottom:36px;position:relative;">
-    <div style="position:absolute;left:0;right:0;bottom:${targetLineBottom}px;border-top:2px dashed #4CAF50;opacity:0.6;z-index:1;">
+  // 參考線從底部（LABEL_H）往上算
+  const targetLineTop = NUM_H + BAR_HEIGHT - toH(TARGET_MIN);
+  const fullLineTop   = NUM_H + BAR_HEIGHT - toH(FULL);
+
+  let chartHtml = `<div style="position:relative;height:${TOTAL_H}px;min-width:560px;">
+    <!-- 參考線：目標 -->
+    <div style="position:absolute;left:0;right:0;top:${targetLineTop}px;border-top:2px dashed #4CAF50;opacity:0.7;z-index:1;">
       <span style="position:absolute;right:4px;top:-16px;font-size:10px;color:#4CAF50;font-weight:700;background:#fff;padding:0 3px;">目標 ${TARGET_MIN}</span>
     </div>
-    <div style="position:absolute;left:0;right:0;bottom:${fullLineBottom}px;border-top:2px dashed #C0392B;opacity:0.6;z-index:1;">
+    <!-- 參考線：滿班 -->
+    <div style="position:absolute;left:0;right:0;top:${fullLineTop}px;border-top:2px dashed #C0392B;opacity:0.7;z-index:1;">
       <span style="position:absolute;right:4px;top:-16px;font-size:10px;color:#C0392B;font-weight:700;background:#fff;padding:0 3px;">滿班 ${FULL}</span>
-    </div>`;
+    </div>
+    <!-- 長條圖區 -->
+    <div style="position:absolute;left:0;right:0;top:0;bottom:${LABEL_H}px;display:flex;align-items:flex-end;gap:6px;z-index:2;">`;
 
   STATS_SESSIONS.forEach(s => {
     const count = counts[s.id] || 0;
     const barH = count > 0 ? Math.max(4, toH(count)) : 2;
     const color = getBarColor(count);
     chartHtml += `
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;z-index:2;">
-        <div style="font-size:15px;font-weight:700;color:${color};margin-bottom:4px;">${count}</div>
-        <div style="width:100%;height:${barH}px;background:${color};border-radius:6px 6px 0 0;min-height:2px;"></div>
-        <div style="margin-top:8px;font-size:11px;font-weight:600;color:var(--ink);text-align:center;line-height:1.3;">${s.name}</div>
-        <div style="font-size:10px;color:var(--ink-light);text-align:center;">${s.date}</div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">
+        <div style="font-size:15px;font-weight:700;color:${color};margin-bottom:4px;line-height:1;">${count}</div>
+        <div style="width:100%;height:${barH}px;background:${color};border-radius:6px 6px 0 0;"></div>
       </div>`;
   });
-  chartHtml += '</div>';
+
+  chartHtml += `</div>
+    <!-- 標籤列 -->
+    <div style="position:absolute;left:0;right:0;bottom:0;height:${LABEL_H}px;display:flex;gap:6px;">`;
+
+  STATS_SESSIONS.forEach(s => {
+    chartHtml += `
+      <div style="flex:1;text-align:center;padding-top:8px;border-top:2px solid #eee;">
+        <div style="font-size:11px;font-weight:600;color:var(--ink);line-height:1.3;">${s.name}</div>
+        <div style="font-size:10px;color:var(--ink-light);">${s.date}</div>
+      </div>`;
+  });
+
+  chartHtml += '</div></div>';
   chartEl.innerHTML = chartHtml;
 
   // 數字表格
