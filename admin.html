@@ -364,6 +364,7 @@
     <div class="admin-tab" onclick="switchTab('invoice')">收費單</div>
     <div class="admin-tab" onclick="switchTab('settings')">系統設定</div>
     <div class="admin-tab" onclick="switchTab('stats')">統計圖表</div>
+    <div class="admin-tab" onclick="switchTab('ledger')">記帳</div>
   </div>
 
   <div class="admin-content">
@@ -646,6 +647,33 @@
 
     <!-- ── 報名名單 ── -->
 
+
+    <!-- ── 記帳 ── -->
+    <div class="panel" id="panel-ledger">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div>
+          <h2 class="panel-title" style="margin-bottom:2px;">營隊記帳</h2>
+          <p class="panel-sub">記錄每週花費，系統自動統計各分類小計、人均、毛利與盈利。</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="exportLedgerImg()" style="padding:8px 16px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">⬇ 匯出記帳表</button>
+        </div>
+      </div>
+
+      <!-- 週次切換 -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:13px;color:var(--ink-light);">選擇週次：</span>
+        <div id="ledger-week-tabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <button onclick="addLedgerWeek()" style="padding:6px 14px;border:1.5px dashed var(--border);border-radius:8px;background:transparent;color:var(--ink-light);font-size:12px;cursor:pointer;font-family:inherit;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-light)'">＋ 新增週次</button>
+      </div>
+
+      <!-- 週次內容 -->
+      <div id="ledger-week-content"></div>
+
+      <!-- 整體總覽 -->
+      <div id="ledger-overview" style="margin-top:24px;"></div>
+    </div>
+
     <!-- ── 統計圖表 ── -->
     <div class="panel" id="panel-stats">
       <h2 class="panel-title">各期報名統計</h2>
@@ -854,13 +882,14 @@ function doLogout() {
 
 function switchTab(tab) {
   document.querySelectorAll('.admin-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['registrations','invoice','settings','stats'][i] === tab);
+    t.classList.toggle('active', ['registrations','invoice','settings','stats','ledger'][i] === tab);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'invoice') initInvoice();
   if (tab === 'settings') { fetchQuotaAndRender(); loadBlacklist(); }
   if (tab === 'stats') renderStatsChart();
+  if (tab === 'ledger') initLedger();
 }
 
 // ── CONFIG ──
@@ -1015,6 +1044,458 @@ function saveBlacklist() {
   document.body.appendChild(script);
 }
 
+
+
+// ════════════════════════════════════════
+// ── 記帳系統 ──
+// ════════════════════════════════════════
+
+const LEDGER_SESSIONS = [
+  { id: 'week-w1',   name: '第一期', date: '7/1–7/3' },
+  { id: 'week-7/6',  name: '第二期', date: '7/6–7/10' },
+  { id: 'week-7/13', name: '第三期', date: '7/13–7/17' },
+  { id: 'week-7/20', name: '第四期', date: '7/20–7/24' },
+  { id: 'week-8/10', name: '第五期', date: '8/10–8/14' },
+  { id: 'week-8/17', name: '第六期', date: '8/17–8/21' },
+  { id: 'week-8/24', name: '第七期', date: '8/24–8/28' },
+];
+
+const DEFAULT_CATEGORIES = ['餐費','點心','羽球','戶外','雜費','職能課費','科學手作'];
+
+// ledgerData 結構：
+// {
+//   weeks: [{
+//     id, name,            // e.g. '第一期'
+//     rent: 0,             // 店租（固定費用）
+//     staff: 0,            // 人事費用
+//     income: 0,           // 單週收入（手動輸入，或自動抓）
+//     extraCategories: [], // 自訂分類
+//     entries: [{date, item, category, amount, note}]
+//   }],
+//   extraCategories: []    // 全域額外分類
+// }
+
+let ledgerData = { weeks: [], extraCategories: [] };
+let currentLedgerWeek = 0;
+
+function saveLedger() {
+  localStorage.setItem('wule_ledger', JSON.stringify(ledgerData));
+}
+
+function loadLedgerStorage() {
+  const saved = localStorage.getItem('wule_ledger');
+  if (saved) {
+    try { ledgerData = JSON.parse(saved); } catch(e) { ledgerData = { weeks: [], extraCategories: [] }; }
+  }
+}
+
+function initLedger() {
+  loadLedgerStorage();
+  // 若無資料，自動建立7週
+  if (ledgerData.weeks.length === 0) {
+    LEDGER_SESSIONS.forEach(s => {
+      ledgerData.weeks.push({
+        id: s.id, name: s.name, date: s.date,
+        rent: 0, staff: 0, income: 0,
+        extraCategories: [], entries: []
+      });
+    });
+    saveLedger();
+  }
+  currentLedgerWeek = 0;
+  renderLedgerTabs();
+  renderLedgerWeek();
+  renderLedgerOverview();
+}
+
+function addLedgerWeek() {
+  const name = prompt('新增週次名稱（例：第八期）');
+  if (!name) return;
+  ledgerData.weeks.push({ id: 'custom-' + Date.now(), name, date: '', rent: 0, staff: 0, income: 0, extraCategories: [], entries: [] });
+  saveLedger();
+  currentLedgerWeek = ledgerData.weeks.length - 1;
+  renderLedgerTabs();
+  renderLedgerWeek();
+  renderLedgerOverview();
+}
+
+function renderLedgerTabs() {
+  const el = document.getElementById('ledger-week-tabs');
+  el.innerHTML = ledgerData.weeks.map((w, i) => `
+    <button onclick="switchLedgerWeek(${i})" style="padding:6px 14px;border-radius:8px;border:1.5px solid ${i===currentLedgerWeek?'var(--gold)':'var(--border)'};background:${i===currentLedgerWeek?'var(--gold)':'transparent'};color:${i===currentLedgerWeek?'#fff':'var(--ink-light)'};font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+      ${w.name}
+    </button>`).join('');
+}
+
+function switchLedgerWeek(i) {
+  currentLedgerWeek = i;
+  renderLedgerTabs();
+  renderLedgerWeek();
+}
+
+function getAllCategories(w) {
+  return [...DEFAULT_CATEGORIES, ...(ledgerData.extraCategories||[]), ...(w.extraCategories||[])];
+}
+
+function getWeekStudentCount(w) {
+  const regs = getRegs();
+  return regs.filter(r => r.sessions && r.sessions.includes(w.name)).length;
+}
+
+function getWeekIncome(w) {
+  // 自動計算：抓該週學生的訂金+尾款總和
+  const regs = getRegs();
+  let total = 0;
+  regs.forEach(r => {
+    if (!r.sessions || !r.sessions.includes(w.name)) return;
+    // 按週平均分攤
+    const weekCount = LEDGER_SESSIONS.filter(s => r.sessions.includes(s.name)).length || 1;
+    const weekFee = (r.totalFee || 0) / weekCount;
+    total += weekFee;
+  });
+  return Math.round(total);
+}
+
+function calcWeekSummary(w) {
+  const cats = getAllCategories(w);
+  const summary = {};
+  cats.forEach(c => { summary[c] = 0; });
+  w.entries.forEach(e => {
+    if (summary[e.category] !== undefined) summary[e.category] += (e.amount||0);
+    else summary[e.category] = (e.amount||0);
+  });
+  const variableTotal = Object.values(summary).reduce((a,b) => a+b, 0);
+  const studentCount = getWeekStudentCount(w);
+  const autoIncome = getWeekIncome(w);
+  const income = w.income > 0 ? w.income : autoIncome;
+  const grossProfit = income - variableTotal - (w.rent||0) - (w.staff||0);
+  const netProfit = income - variableTotal - (w.rent||0) - (w.staff||0);
+  return { summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit };
+}
+
+function renderLedgerWeek() {
+  const el = document.getElementById('ledger-week-content');
+  if (!ledgerData.weeks.length) { el.innerHTML = ''; return; }
+  const w = ledgerData.weeks[currentLedgerWeek];
+  const cats = getAllCategories(w);
+  const { summary, variableTotal, studentCount, income, autoIncome, grossProfit } = calcWeekSummary(w);
+
+  el.innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- 左：明細輸入 -->
+    <div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="card-title" style="margin:0;">${w.name}（${w.date}）明細</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="addLedgerEntry()" style="padding:5px 12px;background:var(--gold);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;">＋ 新增</button>
+            <button onclick="addGlobalCategory()" style="padding:5px 12px;border:1.5px dashed var(--border);border-radius:6px;background:transparent;color:var(--ink-light);font-size:12px;cursor:pointer;font-family:inherit;">＋ 新增分類</button>
+          </div>
+        </div>
+
+        <!-- 明細表格 -->
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:var(--ink);color:#fff;">
+                <th style="padding:8px 10px;text-align:left;white-space:nowrap;">日期</th>
+                <th style="padding:8px 10px;text-align:left;">細項</th>
+                <th style="padding:8px 10px;text-align:left;">總類</th>
+                <th style="padding:8px 10px;text-align:right;white-space:nowrap;">金額</th>
+                <th style="padding:8px 10px;text-align:left;">備註</th>
+                <th style="padding:8px 4px;"></th>
+              </tr>
+            </thead>
+            <tbody id="ledger-entries-tbody">
+              ${w.entries.length === 0
+                ? '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--ink-light);font-size:12px;">尚無記錄，點「＋ 新增」開始記帳</td></tr>'
+                : w.entries.map((e, i) => renderEntryRow(e, i, cats)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 固定費用 -->
+      <div class="card">
+        <div class="card-title">固定費用設定</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="price-field">
+            <label>店租</label>
+            <input type="number" id="ledger-rent" value="${w.rent||''}" placeholder="例：12500"
+              class="text-input" oninput="updateLedgerFixed()">
+          </div>
+          <div class="price-field">
+            <label>人事費用</label>
+            <input type="number" id="ledger-staff" value="${w.staff||''}" placeholder="例：44965"
+              class="text-input" oninput="updateLedgerFixed()">
+          </div>
+        </div>
+        <div class="price-field" style="margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:8px;">
+            單週收入
+            <span style="font-size:11px;color:var(--ink-light);font-weight:400;">（自動計算：$${autoIncome.toLocaleString()}，或手動覆蓋）</span>
+          </label>
+          <input type="number" id="ledger-income" value="${w.income > 0 ? w.income : ''}" placeholder="留空 = 自動計算"
+            class="text-input" oninput="updateLedgerFixed()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：分類統計 -->
+    <div>
+      <div class="card" style="position:sticky;top:20px;">
+        <div class="card-title">${w.name} 週計</div>
+        <div style="font-size:12px;color:var(--ink-light);margin-bottom:12px;">學生人數：<strong style="color:var(--gold);">${studentCount}</strong> 人</div>
+
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--ink);color:#fff;">
+              <th style="padding:8px 12px;text-align:left;">總類</th>
+              <th style="padding:8px 12px;text-align:right;">金額</th>
+              <th style="padding:8px 12px;text-align:right;">人均</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cats.map((c, i) => `
+            <tr style="${i%2===0?'background:#FAFAF8;':''}border-top:1px solid var(--border);">
+              <td style="padding:8px 12px;">${c}</td>
+              <td style="padding:8px 12px;text-align:right;">$${(summary[c]||0).toLocaleString()}</td>
+              <td style="padding:8px 12px;text-align:right;color:var(--ink-light);">${studentCount>0?'$'+Math.round((summary[c]||0)/studentCount).toLocaleString():'—'}</td>
+            </tr>`).join('')}
+            <tr style="border-top:2px solid var(--border);font-weight:700;">
+              <td style="padding:8px 12px;">變動支出小計</td>
+              <td style="padding:8px 12px;text-align:right;">$${variableTotal.toLocaleString()}</td>
+              <td style="padding:8px 12px;text-align:right;color:var(--ink-light);">${studentCount>0?'$'+Math.round(variableTotal/studentCount).toLocaleString():'—'}</td>
+            </tr>
+            <tr style="border-top:1px solid var(--border);">
+              <td style="padding:8px 12px;color:var(--ink-light);">店租</td>
+              <td style="padding:8px 12px;text-align:right;">$${(w.rent||0).toLocaleString()}</td>
+              <td></td>
+            </tr>
+            <tr style="border-top:1px solid var(--border);">
+              <td style="padding:8px 12px;color:var(--ink-light);">人事費用</td>
+              <td style="padding:8px 12px;text-align:right;">$${(w.staff||0).toLocaleString()}</td>
+              <td></td>
+            </tr>
+            <tr style="border-top:1px solid var(--border);">
+              <td style="padding:8px 12px;color:var(--ink-light);">單週收入</td>
+              <td style="padding:8px 12px;text-align:right;color:var(--gold);font-weight:600;">$${income.toLocaleString()}</td>
+              <td></td>
+            </tr>
+            <tr style="border-top:2px solid #E8C97A;background:#FFF8E8;">
+              <td style="padding:10px 12px;font-weight:700;color:#7A5C00;">毛利</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:700;color:#7A5C00;">$${(income-variableTotal).toLocaleString()}</td>
+              <td style="padding:10px 12px;text-align:right;color:#7A5C00;">${income>0?Math.round((income-variableTotal)/income*100)+'%':'—'}</td>
+            </tr>
+            <tr style="border-top:1px solid #E8C97A;background:#FFF3CD;">
+              <td style="padding:10px 12px;font-weight:700;color:#5C4200;">盈利</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:700;color:#5C4200;">$${grossProfit.toLocaleString()}</td>
+              <td style="padding:10px 12px;text-align:right;color:#5C4200;">${income>0?Math.round(grossProfit/income*100)+'%':'—'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderEntryRow(e, i, cats) {
+  return `<tr style="${i%2===0?'background:#FAFAF8;':''}border-top:1px solid var(--border);">
+    <td style="padding:6px 8px;">
+      <input type="text" value="${e.date||''}" placeholder="7/1"
+        style="width:56px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--cream);"
+        oninput="updateEntry(${i},'date',this.value)">
+    </td>
+    <td style="padding:6px 8px;">
+      <input type="text" value="${e.item||''}" placeholder="午餐"
+        style="width:100%;min-width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--cream);"
+        oninput="updateEntry(${i},'item',this.value)">
+    </td>
+    <td style="padding:6px 8px;">
+      <select style="padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--cream);color:var(--ink);"
+        onchange="updateEntry(${i},'category',this.value)">
+        ${cats.map(c => `<option value="${c}" ${e.category===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </td>
+    <td style="padding:6px 8px;">
+      <input type="number" value="${e.amount||''}" placeholder="0"
+        style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--cream);text-align:right;"
+        oninput="updateEntry(${i},'amount',parseInt(this.value)||0)">
+    </td>
+    <td style="padding:6px 8px;">
+      <input type="text" value="${e.note||''}" placeholder=""
+        style="width:100%;min-width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--cream);"
+        oninput="updateEntry(${i},'note',this.value)">
+    </td>
+    <td style="padding:6px 4px;text-align:center;">
+      <button onclick="deleteEntry(${i})" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:16px;padding:0 4px;">×</button>
+    </td>
+  </tr>`;
+}
+
+function addLedgerEntry() {
+  const w = ledgerData.weeks[currentLedgerWeek];
+  const cats = getAllCategories(w);
+  w.entries.push({ date: '', item: '', category: cats[0], amount: 0, note: '' });
+  saveLedger();
+  renderLedgerWeek();
+  // 捲到最後一列
+  const tbody = document.getElementById('ledger-entries-tbody');
+  if (tbody) tbody.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function deleteEntry(i) {
+  const w = ledgerData.weeks[currentLedgerWeek];
+  w.entries.splice(i, 1);
+  saveLedger();
+  renderLedgerWeek();
+  renderLedgerOverview();
+}
+
+function updateEntry(i, field, val) {
+  const w = ledgerData.weeks[currentLedgerWeek];
+  w.entries[i][field] = val;
+  saveLedger();
+  // 只刷新統計（不重渲輸入框，避免游標跳掉）
+  refreshLedgerSummary();
+  renderLedgerOverview();
+}
+
+function updateLedgerFixed() {
+  const w = ledgerData.weeks[currentLedgerWeek];
+  w.rent   = parseInt(document.getElementById('ledger-rent')?.value) || 0;
+  w.staff  = parseInt(document.getElementById('ledger-staff')?.value) || 0;
+  w.income = parseInt(document.getElementById('ledger-income')?.value) || 0;
+  saveLedger();
+  refreshLedgerSummary();
+  renderLedgerOverview();
+}
+
+function addGlobalCategory() {
+  const name = prompt('新增分類名稱（例：交通）');
+  if (!name || DEFAULT_CATEGORIES.includes(name)) return;
+  if (!ledgerData.extraCategories) ledgerData.extraCategories = [];
+  if (!ledgerData.extraCategories.includes(name)) {
+    ledgerData.extraCategories.push(name);
+    saveLedger();
+    renderLedgerWeek();
+    renderLedgerOverview();
+  }
+}
+
+function refreshLedgerSummary() {
+  // 只重新渲染右側統計，不動左側輸入
+  const w = ledgerData.weeks[currentLedgerWeek];
+  const cats = getAllCategories(w);
+  const { summary, variableTotal, studentCount, income, autoIncome, grossProfit } = calcWeekSummary(w);
+
+  // 更新 tbody
+  const tbody = document.getElementById('ledger-entries-tbody');
+  if (!tbody) return;
+  const w2 = ledgerData.weeks[currentLedgerWeek];
+  tbody.innerHTML = w2.entries.length === 0
+    ? '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--ink-light);font-size:12px;">尚無記錄，點「＋ 新增」開始記帳</td></tr>'
+    : w2.entries.map((e, i) => renderEntryRow(e, i, cats)).join('');
+}
+
+function renderLedgerOverview() {
+  const el = document.getElementById('ledger-overview');
+  if (!el || !ledgerData.weeks.length) return;
+
+  const allCats = [...DEFAULT_CATEGORIES, ...(ledgerData.extraCategories||[])];
+  let totalIncome = 0, totalVariable = 0, totalRent = 0, totalStaff = 0;
+  const weekRows = ledgerData.weeks.map(w => {
+    const { summary, variableTotal, studentCount, income, grossProfit } = calcWeekSummary(w);
+    totalIncome += income;
+    totalVariable += variableTotal;
+    totalRent += (w.rent||0);
+    totalStaff += (w.staff||0);
+    return { w, summary, variableTotal, studentCount, income, grossProfit };
+  });
+  const totalGross = totalIncome - totalVariable;
+  const totalNet = totalIncome - totalVariable - totalRent - totalStaff;
+
+  el.innerHTML = `
+  <div class="card">
+    <div class="card-title">整體總覽</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px;">
+        <thead>
+          <tr style="background:var(--ink);color:#fff;">
+            <th style="padding:10px 12px;text-align:left;">分類</th>
+            ${ledgerData.weeks.map(w => `<th style="padding:10px 8px;text-align:right;">${w.name}</th>`).join('')}
+            <th style="padding:10px 12px;text-align:right;background:#2C2820;">合計</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allCats.map((c, ci) => {
+            const weekAmts = weekRows.map(r => r.summary[c]||0);
+            const total = weekAmts.reduce((a,b)=>a+b,0);
+            if (total === 0) return '';
+            return `<tr style="${ci%2===0?'background:#FAFAF8;':''}border-top:1px solid var(--border);">
+              <td style="padding:7px 12px;">${c}</td>
+              ${weekAmts.map(a => `<td style="padding:7px 8px;text-align:right;">${a>0?'$'+a.toLocaleString():'—'}</td>`).join('')}
+              <td style="padding:7px 12px;text-align:right;font-weight:600;">$${total.toLocaleString()}</td>
+            </tr>`;
+          }).join('')}
+          <tr style="border-top:2px solid var(--border);font-weight:700;background:#F5F3EF;">
+            <td style="padding:8px 12px;">變動支出</td>
+            ${weekRows.map(r => `<td style="padding:8px 8px;text-align:right;">$${r.variableTotal.toLocaleString()}</td>`).join('')}
+            <td style="padding:8px 12px;text-align:right;font-weight:700;">$${totalVariable.toLocaleString()}</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border);">
+            <td style="padding:7px 12px;color:var(--ink-light);">店租</td>
+            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--ink-light);">${(r.w.rent||0)>0?'$'+(r.w.rent||0).toLocaleString():'—'}</td>`).join('')}
+            <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${totalRent.toLocaleString()}</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border);">
+            <td style="padding:7px 12px;color:var(--ink-light);">人事費用</td>
+            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--ink-light);">${(r.w.staff||0)>0?'$'+(r.w.staff||0).toLocaleString():'—'}</td>`).join('')}
+            <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${totalStaff.toLocaleString()}</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border);background:#FFFDF5;">
+            <td style="padding:7px 12px;color:var(--gold);font-weight:600;">收入</td>
+            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--gold);font-weight:600;">$${r.income.toLocaleString()}</td>`).join('')}
+            <td style="padding:7px 12px;text-align:right;color:var(--gold);font-weight:700;">$${totalIncome.toLocaleString()}</td>
+          </tr>
+          <tr style="border-top:2px solid #E8C97A;background:#FFF8E8;">
+            <td style="padding:10px 12px;font-weight:700;color:#7A5C00;">毛利</td>
+            ${weekRows.map(r => `<td style="padding:10px 8px;text-align:right;font-weight:700;color:#7A5C00;">$${(r.income-r.variableTotal).toLocaleString()}<div style="font-size:10px;">${r.income>0?Math.round((r.income-r.variableTotal)/r.income*100)+'%':''}</div></td>`).join('')}
+            <td style="padding:10px 12px;text-align:right;font-weight:700;color:#7A5C00;">$${totalGross.toLocaleString()}<div style="font-size:10px;">${totalIncome>0?Math.round(totalGross/totalIncome*100)+'%':''}</div></td>
+          </tr>
+          <tr style="border-top:1px solid #E8C97A;background:#FFF3CD;">
+            <td style="padding:10px 12px;font-weight:700;color:#5C4200;">盈利</td>
+            ${weekRows.map(r => `<td style="padding:10px 8px;text-align:right;font-weight:700;color:#5C4200;">$${r.grossProfit.toLocaleString()}<div style="font-size:10px;">${r.income>0?Math.round(r.grossProfit/r.income*100)+'%':''}</div></td>`).join('')}
+            <td style="padding:10px 12px;text-align:right;font-weight:700;color:#5C4200;">$${totalNet.toLocaleString()}<div style="font-size:10px;">${totalIncome>0?Math.round(totalNet/totalIncome*100)+'%':''}</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function exportLedgerImg() {
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  script.onload = function() {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#FAF7F2;padding:24px;width:900px;font-family:sans-serif;';
+    container.innerHTML =
+      '<div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">武樂營隊 2026 記帳報表</div>'
+      + '<div style="font-size:11px;color:#888;margin-bottom:16px;">匯出：' + new Date().toLocaleString('zh-TW') + '</div>'
+      + document.getElementById('ledger-overview').innerHTML;
+    document.body.appendChild(container);
+    html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#FAF7F2' }).then(canvas => {
+      document.body.removeChild(container);
+      const a = document.createElement('a');
+      a.download = '武樂營隊_記帳報表_' + new Date().toLocaleDateString('zh-TW').replace(/\//g,'-') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  };
+  document.head.appendChild(script);
+}
 
 // ── 統計圖表 ──
 const STATS_SESSIONS = [
