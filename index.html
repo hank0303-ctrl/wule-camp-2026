@@ -1799,12 +1799,11 @@ function submitForm() {
   document.getElementById('btnSubmit').disabled = true;
   document.getElementById('btnSubmit').textContent = '送出中…';
 
-  // 用 Formspree 送出（任何裝置都可用）
-  const FORMSPREE_URL = 'https://formspree.io/f/mjgpdawo';
-
-  fetch(FORMSPREE_URL, {
+  // 直接 POST 到 GAS（寫入試算表 + 寄信通知）
+  fetch(GAS_URL_CONST, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
       '報名時間': formData.timestamp,
       '學員姓名': formData.name,
