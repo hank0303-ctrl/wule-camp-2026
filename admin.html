@@ -209,9 +209,12 @@
   /* ── STATS ── */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     margin-bottom: 20px;
+  }
+  .stats-grid .stat-card-full {
+    grid-column: 1 / -1;
   }
   .stat-card {
     background: var(--white);
@@ -220,6 +223,19 @@
     padding: 16px;
     text-align: center;
   }
+  .stat-card-full {
+    background: var(--white);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .stat-card-full .stat-item { text-align: center; }
+  .stat-card-full .stat-divider { width: 1px; height: 40px; background: var(--border); }
   .stat-num { font-size: 26px; font-weight: 700; color: var(--gold); }
   .stat-label { font-size: 12px; color: var(--ink-light); margin-top: 4px; }
 
@@ -1993,15 +2009,66 @@ function getRegs() {
 
 function renderStats() {
   const regs = getRegs();
-  const paid = regs.filter(r => r.depositStatus === 'paid').length;
-  const pending = regs.filter(r => r.depositStatus !== 'paid' && r.depositStatus !== 'cancel').length;
-  const totalRevenue = regs.filter(r => r.depositStatus === 'paid').reduce((s, r) => s + (r.totalFee || 0), 0);
+  const totalCount = regs.filter(r => r.depositStatus !== 'cancel').length;
+  const paidCount  = regs.filter(r => r.depositStatus === 'paid').length;
+  const pendingCount = regs.filter(r => r.depositStatus !== 'paid' && r.depositStatus !== 'cancel').length;
+
+  // 已收訂金金額（已繳訂金人的 deposit 加總）
+  const paidDepositAmt = regs
+    .filter(r => r.depositStatus === 'paid')
+    .reduce((s, r) => s + (r.deposit || 0), 0);
+
+  // 待收尾款 = 已繳訂金的人的（總費用 - 訂金）
+  const remainAmt = regs
+    .filter(r => r.depositStatus === 'paid')
+    .reduce((s, r) => s + Math.max(0, (r.totalFee || 0) - (r.deposit || 0)), 0);
+
+  // 總課程費用（所有已繳訂金者）
+  const totalRevenue = regs
+    .filter(r => r.depositStatus === 'paid')
+    .reduce((s, r) => s + (r.totalFee || 0), 0);
 
   document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card"><div class="stat-num">${regs.length}</div><div class="stat-label">總報名人數</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--green-soft)">${paid}</div><div class="stat-label">已繳訂金</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#856404">${pending}</div><div class="stat-label">待繳訂金</div></div>
-    <div class="stat-card"><div class="stat-num">$${totalRevenue.toLocaleString()}</div><div class="stat-label">已確認總收入</div></div>
+    <div class="stat-card">
+      <div class="stat-num">${totalCount}</div>
+      <div class="stat-label">總報名人數</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green-soft)">${paidCount}</div>
+      <div class="stat-label">已繳訂金</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#856404">${pendingCount}</div>
+      <div class="stat-label">待繳訂金</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green-soft)">$${paidDepositAmt.toLocaleString()}</div>
+      <div class="stat-label">已收訂金金額</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#C0392B">$${remainAmt.toLocaleString()}</div>
+      <div class="stat-label">待收尾款</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--gold)">$${totalRevenue.toLocaleString()}</div>
+      <div class="stat-label">確認總課程費</div>
+    </div>
+    <div class="stat-card-full">
+      <div class="stat-item">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">已收訂金</div>
+        <div style="font-size:20px;font-weight:700;color:var(--green-soft);">$${paidDepositAmt.toLocaleString()}</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">待收尾款</div>
+        <div style="font-size:20px;font-weight:700;color:#C0392B;">$${remainAmt.toLocaleString()}</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">合計總收入</div>
+        <div style="font-size:24px;font-weight:700;color:var(--gold);">$${totalRevenue.toLocaleString()}</div>
+      </div>
+    </div>
   `;
 }
 
