@@ -2035,38 +2035,26 @@ function renderStats() {
     </div>
     <div class="stat-card">
       <div class="stat-num" style="color:var(--green-soft)">${paidCount}</div>
-      <div class="stat-label">已繳訂金</div>
+      <div class="stat-label">已繳訂金（人）</div>
     </div>
     <div class="stat-card">
       <div class="stat-num" style="color:#856404">${pendingCount}</div>
-      <div class="stat-label">待繳訂金</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--green-soft)">$${paidDepositAmt.toLocaleString()}</div>
-      <div class="stat-label">已收訂金金額</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:#C0392B">$${remainAmt.toLocaleString()}</div>
-      <div class="stat-label">待收尾款</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--gold)">$${totalRevenue.toLocaleString()}</div>
-      <div class="stat-label">確認總課程費</div>
+      <div class="stat-label">待繳訂金（人）</div>
     </div>
     <div class="stat-card-full">
       <div class="stat-item">
-        <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">已收訂金</div>
-        <div style="font-size:20px;font-weight:700;color:var(--green-soft);">$${paidDepositAmt.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">已收訂金</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-soft);">$${paidDepositAmt.toLocaleString()}</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">待收尾款</div>
-        <div style="font-size:20px;font-weight:700;color:#C0392B;">$${remainAmt.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">待收尾款</div>
+        <div style="font-size:22px;font-weight:700;color:#C0392B;">$${remainAmt.toLocaleString()}</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">合計總收入</div>
-        <div style="font-size:24px;font-weight:700;color:var(--gold);">$${totalRevenue.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">合計總收入</div>
+        <div style="font-size:26px;font-weight:700;color:var(--gold);">$${totalRevenue.toLocaleString()}</div>
       </div>
     </div>
   `;
