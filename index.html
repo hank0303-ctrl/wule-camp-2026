@@ -1403,6 +1403,28 @@ function calcAftercareCost(endTime) {
   return costMap[endTime] || 0;
 }
 
+function getSessionDayCount(session) {
+  if (!session) return 0;
+  if (session.type === 'w1') return 3;
+  if (session.type === 'week') return 5;
+  return 0;
+}
+
+function getAftercareTotal() {
+  if (aftercareVal !== 'yes') return 0;
+  const sel = document.getElementById('ac-time-global');
+  if (!sel || !sel.value) return 0;
+
+  const unitCost = calcAftercareCost(sel.value);
+  return selectedSessions.reduce((sum, sid) => {
+    const s = SESSIONS.find(x => x.id === sid);
+    if (!s) return sum;
+    const days = getSessionDayCount(s);
+    const dayCost = s.type === 'week' ? Math.round(unitCost * 0.8) : unitCost;
+    return sum + dayCost * days;
+  }, 0);
+}
+
 function calcAftercareFee() {
   if (aftercareVal !== 'yes') {
     document.getElementById('aftercare-fee-rows').innerHTML = '';
@@ -1422,7 +1444,7 @@ function calcAftercareFee() {
     const s = SESSIONS.find(x => x.id === sid);
     if (!s) return;
     const isWeek = s.type === 'week';
-    const days = isWeek ? 5 : 1;
+    const days = getSessionDayCount(s);
     const dayCost = isWeek ? Math.round(unitCost * 0.8) : unitCost;
     const periodCost = dayCost * days;
     aftercareTotal += periodCost;
@@ -1463,6 +1485,10 @@ function updateTotalWithAftercare(aftercareTotal) {
     document.getElementById('fee-total').style.display = 'flex';
     document.getElementById('fee-deposit').style.display = 'flex';
   }
+}
+
+function renderFeeTotals() {
+  updateTotalWithAftercare(getAftercareTotal());
 }
 
 function getAftercareSummary() {
@@ -1534,15 +1560,17 @@ function selectPayment(el, val) {
 function toggleSession(el) {
   if (el.classList.contains('full')) return; // 額滿不可點
   el.classList.toggle('selected');
-  const val = el.querySelector('input').value;
+  const input = el.querySelector('input');
+  const val = input.value;
+  input.checked = el.classList.contains('selected');
   if (el.classList.contains('selected')) {
     if (!selectedSessions.includes(val)) selectedSessions.push(val);
   } else {
     selectedSessions = selectedSessions.filter(s => s !== val);
   }
+  checkEquipmentSection();
   updateFee();
   document.getElementById('err-session').classList.remove('show');
-  checkEquipmentSection();
 }
 
 function checkEquipmentSection() {
@@ -1620,6 +1648,8 @@ function updateFee() {
 
   if (selectedSessions.length === 0) {
     items.innerHTML = '<div class="fee-empty">尚未選擇期數</div>';
+    document.getElementById('aftercare-fee-rows').innerHTML = '';
+    document.getElementById('equipment-fee-rows').innerHTML = '';
     totalEl.style.display = 'none';
     depositEl.style.display = 'none';
     return;
@@ -1659,22 +1689,18 @@ function updateFee() {
     else if (weekCount >= 5) discountMsg = '🎁 報名 5 週折扣';
     else discountMsg = '🎁 報名 4 週折扣';
     total -= discount;
-  const equipFee = getEquipmentTotal();
-  total += equipFee;
     html += `<div class="fee-row" style="color:var(--gold-light);"><span>${discountMsg}</span><span class="fee-amount">−$${discount.toLocaleString()}</span></div>`;
   }
 
   items.innerHTML = html;
   baseCourseTotal = total;
-  const deposit = Math.ceil(total * 0.25);
-  document.getElementById('fee-total-num').textContent = '$' + total.toLocaleString();
-  document.getElementById('fee-deposit-num').textContent = '$' + deposit.toLocaleString();
-  totalEl.style.display = 'flex';
-  depositEl.style.display = 'flex';
+  renderFeeTotals();
 
   // 若已選延托，重建延托天數並重算
   if (aftercareVal === 'yes') {
     buildAftercareDays();
+    calcAftercareFee();
+  } else {
     calcAftercareFee();
   }
 }
@@ -1763,7 +1789,8 @@ function submitForm() {
   });
   total -= discount;
   const equipFee = getEquipmentTotal();
-  total += equipFee;
+  const aftercareFee = getAftercareTotal();
+  total += equipFee + aftercareFee;
   const deposit = Math.ceil(total * 0.25);
   const isCard = paymentVal.includes('信用卡');
   const depositWithFee = isCard ? Math.ceil(deposit * 1.03) : deposit;
