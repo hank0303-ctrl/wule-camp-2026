@@ -1136,8 +1136,8 @@ function getPriceTier() {
 
 function getPriceTierLabel(fullText = false) {
   const tier = getPriceTier();
-  if (tier === 'superEarly') return fullText ? '⚡ 超早鳥價 $6,790（5/15止）' : '⚡ 超早鳥價（5/15止）';
-  if (tier === 'early') return fullText ? '🐣 早鳥價 $6,990（6/15止）' : '🐣 早鳥價（6/15止）';
+  if (tier === 'superEarly') return fullText ? '⚡ 超早鳥價 $6,790（5/15以前）' : '⚡ 超早鳥價（5/15以前）';
+  if (tier === 'early') return fullText ? '🐣 早鳥價 $6,990（6/15以前）' : '🐣 早鳥價（6/15以前）';
   return fullText ? '原價 $7,390' : '';
 }
 
