@@ -1113,12 +1113,32 @@ const DEFAULT_PRICES = {
 };
 
 function getWeekPrice(cfg) {
-  const today = new Date();
-  const superEarlyDeadline = new Date('2026-05-15');
-  const earlyDeadline = new Date('2026-06-15');
-  if (today <= superEarlyDeadline) return cfg.weekSuperEarly || DEFAULT_PRICES.weekSuperEarly;
-  if (today <= earlyDeadline) return cfg.weekEarly || DEFAULT_PRICES.weekEarly;
+  const tier = getPriceTier();
+  if (tier === 'superEarly') return cfg.weekSuperEarly || DEFAULT_PRICES.weekSuperEarly;
+  if (tier === 'early') return cfg.weekEarly || DEFAULT_PRICES.weekEarly;
   return cfg.weekNormal || DEFAULT_PRICES.weekNormal;
+}
+
+function getTodayDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getPriceTier() {
+  const today = getTodayDateKey();
+  if (today <= '2026-05-15') return 'superEarly';
+  if (today <= '2026-06-15') return 'early';
+  return 'normal';
+}
+
+function getPriceTierLabel(fullText = false) {
+  const tier = getPriceTier();
+  if (tier === 'superEarly') return fullText ? '⚡ 超早鳥價 $6,790（5/15止）' : '⚡ 超早鳥價（5/15止）';
+  if (tier === 'early') return fullText ? '🐣 早鳥價 $6,990（6/15止）' : '🐣 早鳥價（6/15止）';
+  return fullText ? '原價 $7,390' : '';
 }
 
 function getMultiDiscount(weekCount) {
@@ -1316,10 +1336,7 @@ function initPrices() {
   // 顯示早鳥標籤
   const tierLabel = document.getElementById('price-tier-label');
   if (tierLabel) {
-    const today2 = new Date();
-    if (today2 <= new Date('2026-05-15')) tierLabel.textContent = '⚡ 超早鳥價 $6,790（5/15前）';
-    else if (today2 <= new Date('2026-06-15')) tierLabel.textContent = '🐣 早鳥價 $6,990（6/15前）';
-    else tierLabel.textContent = '原價 $7,390';
+    tierLabel.textContent = getPriceTierLabel(true);
   }
   document.getElementById('bank-name-display').textContent = cfg.bankName;
   document.getElementById('bank-acct-display').textContent = cfg.bankAcct;
@@ -1659,13 +1676,7 @@ function updateFee() {
   const hasW1 = selectedSessions.includes('week-w1');
   const discount = getMultiDiscount(weekCount);
 
-  // 早鳥提示
-  const today = new Date();
-  const superEarlyDeadline = new Date('2026-05-15');
-  const earlyDeadline = new Date('2026-06-15');
-  let priceTierLabel = '';
-  if (today <= superEarlyDeadline) priceTierLabel = '⚡ 超早鳥價（5/15前）';
-  else if (today <= earlyDeadline) priceTierLabel = '🐣 早鳥價（6/15前）';
+  const priceTierLabel = getPriceTierLabel();
 
   let total = 0;
   let html = '';
@@ -1861,10 +1872,7 @@ function showThanks(d, deposit) {
   // 顯示早鳥標籤
   const tierLabel = document.getElementById('price-tier-label');
   if (tierLabel) {
-    const today2 = new Date();
-    if (today2 <= new Date('2026-05-15')) tierLabel.textContent = '⚡ 超早鳥價 $6,790（5/15前）';
-    else if (today2 <= new Date('2026-06-15')) tierLabel.textContent = '🐣 早鳥價 $6,990（6/15前）';
-    else tierLabel.textContent = '原價 $7,390';
+    tierLabel.textContent = getPriceTierLabel(true);
   }
   document.getElementById('bank-name-display').textContent = cfg.bankName;
   document.getElementById('bank-acct-display').textContent = cfg.bankAcct;
