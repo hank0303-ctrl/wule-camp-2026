@@ -1544,6 +1544,7 @@ const STATS_SESSIONS = [
 ];
 const TARGET_MIN = 12;
 const TARGET_MAX = 15;
+const TOTAL_REG_TARGET = 100;
 const FULL = 20;
 const BAR_HEIGHT = 200; // 長條圖總高度（px），對應 FULL 人數
 
@@ -1674,11 +1675,16 @@ function renderStatsChart() {
   });
 
   const total = STATS_SESSIONS.reduce((s, sess) => s + (counts[sess.id]||0), 0);
+  const totalPct = Math.round(total / TOTAL_REG_TARGET * 100);
   tbodyHtml += `
     <tr style="border-top:2px solid var(--gold);background:var(--cream);">
       <td colspan="2" style="padding:12px 16px;font-weight:700;font-size:13px;">合計</td>
       <td style="padding:12px 16px;text-align:center;font-size:16px;font-weight:700;color:var(--gold);">${total}</td>
-      <td colspan="3" style="padding:12px 16px;font-size:12px;color:var(--ink-light);">總報名人次</td>
+      <td colspan="3" style="padding:12px 16px;font-size:12px;color:var(--ink-light);">
+        總報名人次
+        <span style="margin-left:8px;color:var(--gold);font-weight:700;">${totalPct}%</span>
+        <span style="margin-left:4px;">/ 目標 ${TOTAL_REG_TARGET} 人</span>
+      </td>
     </tr>`;
   tbodyEl.innerHTML = tbodyHtml;
 }
