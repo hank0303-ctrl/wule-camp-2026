@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 武樂營隊｜保險資料確認表</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9973A;
+    --gold-light: #E8C97A;
+    --gold-pale: #FBF5E8;
+    --ink: #1A1610;
+    --ink-mid: #3D3628;
+    --ink-light: #786D5E;
+    --cream: #FAF7F2;
+    --white: #FFFFFF;
+    --green: #2E7D32;
+    --red: #B54032;
+    --border: #E2D9CA;
+    --shadow: 0 16px 42px rgba(26, 22, 16, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .site-header {
+    background: var(--ink);
+    color: var(--gold-light);
+    padding: 18px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .brand {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+
+  .year {
+    color: #BFB6A6;
+    font-size: 12px;
+    letter-spacing: 3px;
+  }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 18px 56px;
+  }
+
+  .intro {
+    margin-bottom: 20px;
+  }
+
+  .eyebrow {
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 30px;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+
+  .lead {
+    color: var(--ink-light);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-top: 18px;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif TC', serif;
+    color: var(--gold);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: 12px;
+  }
+
+  label {
+    display: block;
+    color: var(--ink-mid);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 7px;
+  }
+
+  input, textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: #FFFEFC;
+    color: var(--ink);
+    font: inherit;
+    font-size: 16px;
+    padding: 12px 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201, 151, 58, 0.14);
+  }
+
+  textarea {
+    min-height: 92px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--gold-light);
+    cursor: pointer;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 13px 18px;
+    min-height: 50px;
+    transition: transform 0.18s, opacity 0.18s;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+  .btn.full { width: 100%; margin-top: 14px; }
+
+  .notice {
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    display: none;
+  }
+
+  .notice.show { display: block; }
+  .notice.error { background: #FCEDEA; color: var(--red); border: 1px solid #E7B8AF; }
+  .notice.ok { background: #EEF8EF; color: var(--green); border: 1px solid #B8DDBB; }
+  .notice.info { background: var(--gold-pale); color: var(--ink-mid); border: 1px solid var(--border); }
+
+  .summary-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+  }
+
+  .student-name {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .status-pill {
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .status-paid { background: #EAF7EB; color: var(--green); }
+  .status-pending { background: #FFF1D8; color: #9B6B14; }
+
+  .info-list {
+    display: grid;
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .info-row {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 12px;
+    background: #FFFEFC;
+    padding: 12px 14px;
+  }
+
+  .info-row strong {
+    color: var(--ink-light);
+    font-weight: 700;
+  }
+
+  .info-row span {
+    color: var(--ink);
+    font-weight: 700;
+    line-height: 1.55;
+    word-break: break-word;
+  }
+
+  .money-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .money-box {
+    background: var(--gold-pale);
+    border: 1px solid #E9D2A0;
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .money-box .label {
+    color: var(--ink-light);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .money-box .value {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.15;
+  }
+
+  .deadline {
+    background: var(--ink);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .deadline strong {
+    color: var(--gold-light);
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+    color: var(--ink-mid);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .confirm input {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    flex: 0 0 auto;
+  }
+
+  .hidden { display: none; }
+
+  @media (max-width: 640px) {
+    .site-header { padding: 16px 18px; }
+    .brand { font-size: 17px; letter-spacing: 2px; }
+    main { padding: 24px 14px 44px; }
+    h1 { font-size: 26px; }
+    .card { padding: 17px; border-radius: 10px; }
+    .field-grid, .money-grid { grid-template-columns: 1fr; }
+    .summary-head { display: block; }
+    .status-pill { display: inline-block; margin-top: 10px; }
+    .info-row { grid-template-columns: 108px 1fr; padding: 11px 12px; }
+    .deadline { display: block; }
+    .deadline strong { display: block; margin-top: 5px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">武樂營隊</div>
+    <div class="year">2026</div>
+  </div>
+</header>
+
+<main>
+  <section class="intro">
+    <div class="eyebrow">保險資料確認</div>
+    <h1>夏令營保險資料表</h1>
+    <p class="lead">
+      請先輸入孩子姓名與家長電話後 4 碼，系統會帶出已報名的營隊資訊與費用狀態。確認無誤後，再補上保險需要的身分證字號、監護人與聯絡地址。
+    </p>
+  </section>
+
+  <section class="card">
+    <div class="section-title">查詢報名資料</div>
+    <div class="field-grid">
+      <div>
+        <label for="studentName">小朋友姓名</label>
+        <input id="studentName" autocomplete="name" placeholder="請輸入報名時的小朋友姓名">
+      </div>
+      <div>
+        <label for="phoneLast4">家長電話後 4 碼</label>
+        <input id="phoneLast4" inputmode="numeric" maxlength="4" placeholder="例如 1307">
+      </div>
+    </div>
+    <button class="btn full" id="lookupBtn" type="button">查詢並確認資料</button>
+    <div class="notice error" id="lookupMsg"></div>
+  </section>
+
+  <section class="card hidden" id="summaryCard">
+    <div class="summary-head">
+      <div>
+        <div class="section-title" style="margin-bottom:6px;">報名資訊確認</div>
+        <div class="student-name" id="sumName">--</div>
+      </div>
+      <div class="status-pill" id="sumStatus">--</div>
+    </div>
+
+    <div class="info-list">
+      <div class="info-row"><strong>報名期數</strong><span id="sumSessions">--</span></div>
+      <div class="info-row"><strong>付款方式</strong><span id="sumPayment">--</span></div>
+      <div class="info-row"><strong>家長電話</strong><span id="sumPhone">--</span></div>
+      <div class="info-row"><strong>延托服務</strong><span id="sumAftercare">--</span></div>
+      <div class="info-row"><strong>裝備需求</strong><span id="sumEquipment">--</span></div>
+    </div>
+
+    <div class="money-grid">
+      <div class="money-box">
+        <div class="label">報名總費用</div>
+        <div class="value" id="sumTotal">$0</div>
+      </div>
+      <div class="money-box">
+        <div class="label">目前已付</div>
+        <div class="value" id="sumPaid">$0</div>
+      </div>
+      <div class="money-box">
+        <div class="label">剩餘尾款</div>
+        <div class="value" id="sumRemain">$0</div>
+      </div>
+    </div>
+
+    <div class="deadline">
+      <span>尾款繳費期限</span>
+      <strong>2026/6/23 以前</strong>
+    </div>
+    <div class="notice info show" id="paymentNote"></div>
+  </section>
+
+  <section class="card hidden" id="insuranceCard">
+    <div class="section-title">補填保險資料</div>
+    <div class="field-grid">
+      <div>
+        <label for="childId">小朋友身分證字號</label>
+        <input id="childId" autocomplete="off" placeholder="例如 A123456789">
+      </div>
+      <div>
+        <label for="guardian">監護人姓名</label>
+        <input id="guardian" autocomplete="name" placeholder="請填監護人姓名">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label for="address">聯絡地址</label>
+      <input id="address" autocomplete="street-address" placeholder="請填可聯繫或保險資料使用的地址">
+    </div>
+    <div style="margin-top:12px;">
+      <label for="note">備註</label>
+      <textarea id="note" placeholder="若有需要補充的資訊可以填在這裡，沒有可留空"></textarea>
+    </div>
+    <label class="confirm">
+      <input type="checkbox" id="confirmed">
+      <span>我已確認上方報名資訊與繳費狀態正確，並同意提供以上資料作為本次營隊保險使用。</span>
+    </label>
+    <button class="btn full" id="submitBtn" type="button">送出保險資料</button>
+    <div class="notice" id="submitMsg"></div>
+  </section>
+</main>
+
+<script>
+const READ_GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
+const INSURANCE_GAS_URL = 'https://script.google.com/macros/s/AKfycbyAVs4xw_T4PTW45gkCGlX7tPlYGnuCWIK-lA9etM830KkyGHHzNpwyMmiXWItKNSXZRw/exec';
+const DEADLINE_TEXT = '2026/6/23 以前';
+
+let currentRegistration = null;
+let insuranceApiReady = false;
+
+const $ = id => document.getElementById(id);
+
+function normalizeText(value) {
+  return String(value || '').replace(/\s+/g, '').trim();
+}
+
+function parseMoney(value) {
+  const num = Number(String(value || '').replace(/[^0-9.-]/g, ''));
+  return Number.isFinite(num) ? num : 0;
+}
+
+function formatMoney(value) {
+  return '$' + Number(value || 0).toLocaleString();
+}
+
+function maskPhone(value) {
+  const phone = String(value || '').replace(/\D/g, '');
+  if (phone.length < 4) return '';
+  return phone.slice(0, 4) + '***' + phone.slice(-3);
+}
+
+function showNotice(el, type, message) {
+  el.className = 'notice show ' + type;
+  el.textContent = message;
+}
+
+function hideNotice(el) {
+  el.className = 'notice';
+  el.textContent = '';
+}
+
+function jsonp(url, params, timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('連線逾時，請稍後再試'));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = data => {
+      cleanup();
+      resolve(data);
+    };
+
+    const search = new URLSearchParams({ ...params, callback: cbName });
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('目前無法連線，請稍後再試'));
+    };
+    script.src = url + '?' + search.toString();
+    document.body.appendChild(script);
+  });
+}
+
+async function pingInsuranceApi() {
+  try {
+    const res = await jsonp(INSURANCE_GAS_URL, {}, 6000);
+    insuranceApiReady = !!res.ok;
+  } catch (err) {
+    insuranceApiReady = false;
+  }
+}
+
+async function lookupRegistration() {
+  hideNotice($('lookupMsg'));
+  hideNotice($('submitMsg'));
+  $('summaryCard').classList.add('hidden');
+  $('insuranceCard').classList.add('hidden');
+  currentRegistration = null;
+
+  const name = normalizeText($('studentName').value);
+  const phoneLast4 = $('phoneLast4').value.replace(/\D/g, '').slice(-4);
+
+  if (!name || phoneLast4.length !== 4) {
+    showNotice($('lookupMsg'), 'error', '請輸入小朋友姓名與家長電話後 4 碼。');
+    return;
+  }
+
+  $('lookupBtn').disabled = true;
+  $('lookupBtn').textContent = '查詢中...';
+
+  try {
+    const res = await jsonp(READ_GAS_URL, {});
+    const rows = Array.isArray(res.data) ? res.data : [];
+    const matches = rows
+      .filter(row => normalizeText(row['學員姓名']) === name)
+      .filter(row => String(row['聯絡電話'] || '').replace(/\D/g, '').slice(-4) === phoneLast4);
+
+    if (matches.length === 0) {
+      showNotice($('lookupMsg'), 'error', '查無資料，請確認姓名是否與報名時相同、電話後 4 碼是否正確。');
+      return;
+    }
+
+    if (matches.length > 1) {
+      showNotice($('lookupMsg'), 'error', '查到多筆相同資料，請聯繫武樂協助確認。');
+      return;
+    }
+
+    currentRegistration = buildRegistration(matches[0], phoneLast4);
+    renderRegistration(currentRegistration);
+  } catch (err) {
+    showNotice($('lookupMsg'), 'error', err.message || '查詢失敗，請稍後再試。');
+  } finally {
+    $('lookupBtn').disabled = false;
+    $('lookupBtn').textContent = '查詢並確認資料';
+  }
+}
+
+function buildRegistration(row, phoneLast4) {
+  const total = parseMoney(row['總費用']);
+  const deposit = parseMoney(row['需付訂金']);
+  const status = row['訂金狀態'] || '待繳';
+  const paid = status === '已繳' ? deposit : 0;
+  const remaining = Math.max(total - paid, 0);
+  return {
+    name: row['學員姓名'] || '',
+    sessions: row['報名期數'] || '',
+    total,
+    deposit,
+    status,
+    paid,
+    remaining,
+    payment: row['付款方式'] || '未填',
+    parent: row['家長姓名'] || '',
+    phone: row['聯絡電話'] || '',
+    phoneLast4,
+    aftercare: row['延托服務'] || '未填',
+    equipment: row['裝備'] || '未填'
+  };
+}
+
+function renderRegistration(reg) {
+  $('sumName').textContent = reg.name;
+  $('sumSessions').textContent = reg.sessions;
+  $('sumPayment').textContent = reg.payment;
+  $('sumPhone').textContent = maskPhone(reg.phone);
+  $('sumAftercare').textContent = reg.aftercare;
+  $('sumEquipment').textContent = reg.equipment;
+  $('sumTotal').textContent = formatMoney(reg.total);
+  $('sumPaid').textContent = formatMoney(reg.paid);
+  $('sumRemain').textContent = formatMoney(reg.remaining);
+
+  const status = $('sumStatus');
+  status.textContent = reg.status === '已繳' ? '訂金已繳' : '訂金待繳';
+  status.className = 'status-pill ' + (reg.status === '已繳' ? 'status-paid' : 'status-pending');
+
+  $('guardian').value = reg.parent;
+  $('paymentNote').textContent = reg.status === '已繳'
+    ? '目前已收到訂金，尾款請於 ' + DEADLINE_TEXT + ' 完成。'
+    : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。';
+
+  $('summaryCard').classList.remove('hidden');
+  $('insuranceCard').classList.remove('hidden');
+  $('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function validateInsuranceForm() {
+  const childId = $('childId').value.trim().toUpperCase();
+  const guardian = $('guardian').value.trim();
+  const address = $('address').value.trim();
+
+  if (!currentRegistration) return '請先查詢報名資料。';
+  if (!/^[A-Z][12]\d{8}$/.test(childId)) return '請輸入正確的小朋友身分證字號。';
+  if (!guardian) return '請填寫監護人姓名。';
+  if (!address || address.length < 6) return '請填寫完整聯絡地址。';
+  if (!$('confirmed').checked) return '請勾選確認報名資訊與保險資料用途。';
+  if (!insuranceApiReady) return '保險資料送出功能尚未完成後端授權，請稍後再試或聯繫武樂。';
+  return '';
+}
+
+async function submitInsurance() {
+  hideNotice($('submitMsg'));
+  const error = validateInsuranceForm();
+  if (error) {
+    showNotice($('submitMsg'), 'error', error);
+    return;
+  }
+
+  $('submitBtn').disabled = true;
+  $('submitBtn').textContent = '送出中...';
+
+  const payload = {
+    action: 'submitInsurance',
+    studentName: currentRegistration.name,
+    phoneLast4: currentRegistration.phoneLast4,
+    childId: $('childId').value.trim().toUpperCase(),
+    guardian: $('guardian').value.trim(),
+    address: $('address').value.trim(),
+    note: $('note').value.trim(),
+    confirmed: $('confirmed').checked
+  };
+
+  try {
+    await fetch(INSURANCE_GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    showNotice($('submitMsg'), 'ok', '已送出保險資料，謝謝家長協助。');
+    $('submitBtn').textContent = '已送出';
+  } catch (err) {
+    $('submitBtn').disabled = false;
+    $('submitBtn').textContent = '送出保險資料';
+    showNotice($('submitMsg'), 'error', '送出失敗，請稍後再試。');
+  }
+}
+
+$('phoneLast4').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+});
+$('childId').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+});
+$('lookupBtn').addEventListener('click', lookupRegistration);
+$('submitBtn').addEventListener('click', submitInsurance);
+
+pingInsuranceApi();
+</script>
+</body>
+</html>
