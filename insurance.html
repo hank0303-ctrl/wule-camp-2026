@@ -117,6 +117,11 @@
     gap: 12px;
   }
 
+  .relation-grid {
+    grid-template-columns: 160px 1fr;
+    margin-top: 12px;
+  }
+
   label {
     display: block;
     color: var(--ink-mid);
@@ -306,7 +311,7 @@
     main { padding: 24px 14px 44px; }
     h1 { font-size: 26px; }
     .card { padding: 17px; border-radius: 10px; }
-    .field-grid, .money-grid { grid-template-columns: 1fr; }
+    .field-grid, .relation-grid, .money-grid { grid-template-columns: 1fr; }
     .summary-head { display: block; }
     .status-pill { display: inline-block; margin-top: 10px; }
     .info-row { grid-template-columns: 108px 1fr; padding: 11px 12px; }
@@ -400,9 +405,15 @@
         <input id="guardian" autocomplete="name" placeholder="請填監護人姓名">
       </div>
     </div>
-    <div style="margin-top:12px;">
-      <label for="address">聯絡地址</label>
-      <input id="address" autocomplete="street-address" placeholder="請填可聯繫或保險資料使用的地址">
+    <div class="field-grid relation-grid">
+      <div>
+        <label for="relationship">與小朋友關係</label>
+        <input id="relationship" autocomplete="off" placeholder="母子">
+      </div>
+      <div>
+        <label for="address">聯絡地址</label>
+        <input id="address" autocomplete="street-address" placeholder="請填可聯繫或保險資料使用的地址">
+      </div>
     </div>
     <div style="margin-top:12px;">
       <label for="note">備註</label>
@@ -627,11 +638,13 @@ function renderRegistration(reg) {
 function validateInsuranceForm() {
   const childId = $('childId').value.trim().toUpperCase();
   const guardian = $('guardian').value.trim();
+  const relationship = $('relationship').value.trim();
   const address = $('address').value.trim();
 
   if (!currentRegistration) return '請先查詢報名資料。';
   if (!/^[A-Z][12]\d{8}$/.test(childId)) return '請輸入正確的小朋友身分證字號。';
   if (!guardian) return '請填寫監護人姓名。';
+  if (!relationship) return '請填寫與小朋友關係，例如：母子、父女。';
   if (!address || address.length < 6) return '請填寫完整聯絡地址。';
   if (!$('confirmed').checked) return '請勾選確認報名資訊與保險資料用途。';
   if (!insuranceApiReady) return '保險資料送出功能尚未完成後端授權，請稍後再試或聯繫武樂。';
@@ -655,6 +668,7 @@ async function submitInsurance() {
     phoneLast4: currentRegistration.phoneLast4,
     childId: $('childId').value.trim().toUpperCase(),
     guardian: $('guardian').value.trim(),
+    relationship: $('relationship').value.trim(),
     address: $('address').value.trim(),
     note: $('note').value.trim(),
     confirmed: $('confirmed').checked

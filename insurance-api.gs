@@ -16,9 +16,30 @@ const INSURANCE_HEADERS = [
   '尾款期限',
   '小朋友身分證字號',
   '監護人姓名',
+  '與小朋友關係',
   '聯絡地址',
   '備註',
   '資料確認'
+];
+
+const WEEKLY_INSURANCE_SHEETS = [
+  { key: '第一期', sheetName: '第一期 7/1-7/3' },
+  { key: '第二期', sheetName: '第二期 7/6-7/10' },
+  { key: '第三期', sheetName: '第三期 7/13-7/17' },
+  { key: '第四期', sheetName: '第四期 7/20-7/24' },
+  { key: '第五期', sheetName: '第五期 8/10-8/14' },
+  { key: '第六期', sheetName: '第六期 8/17-8/21' },
+  { key: '第七期', sheetName: '第七期 8/24-8/28' }
+];
+
+const WEEKLY_HEADERS = [
+  '姓名(被保險人)',
+  '身分證字號(被保險人)',
+  '性別(被保險人)',
+  '出生年月日(被保險人)',
+  '聯絡人/電話',
+  '被保險人與聯絡人關係',
+  '聯絡地址'
 ];
 
 function doGet(e) {
@@ -30,10 +51,15 @@ function doGet(e) {
       return json_(e, result);
     }
 
+    if (action === 'refreshWeeklySheets') {
+      const result = refreshWeeklyInsuranceSheets_();
+      return json_(e, { ok: true, result });
+    }
+
     return json_(e, {
       ok: true,
       service: 'wule-insurance-api',
-      actions: ['lookup', 'submitInsurance']
+      actions: ['lookup', 'submitInsurance', 'refreshWeeklySheets']
     });
   } catch (err) {
     return json_(e, { ok: false, message: err.message });
@@ -68,10 +94,13 @@ function doPost(e) {
       reg.paymentDeadline,
       data.childId || '',
       data.guardian || '',
+      data.relationship || '',
       data.address || '',
       data.note || '',
       data.confirmed ? '已確認' : ''
     ]);
+
+    refreshWeeklyInsuranceSheets_();
 
     return json_(null, { ok: true });
   } catch (err) {
@@ -83,6 +112,7 @@ function authorize() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   ss.getSheetByName(REGISTRATION_SHEET).getLastRow();
   getInsuranceSheet_();
+  refreshWeeklyInsuranceSheets_();
   return 'ok';
 }
 
@@ -170,17 +200,110 @@ function getInsuranceSheet_() {
   let sheet = ss.getSheetByName(INSURANCE_SHEET);
   if (!sheet) sheet = ss.insertSheet(INSURANCE_SHEET);
 
-  const firstRow = sheet.getRange(1, 1, 1, INSURANCE_HEADERS.length).getValues()[0];
-  const needsHeader = firstRow.every(cell => cell === '');
-  if (needsHeader) {
+  ensureInsuranceHeaders_(sheet);
+  return sheet;
+}
+
+function ensureInsuranceHeaders_(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), INSURANCE_HEADERS.length);
+  const current = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  if (current.every(cell => cell === '')) {
     sheet.getRange(1, 1, 1, INSURANCE_HEADERS.length).setValues([INSURANCE_HEADERS]);
-    sheet.getRange(1, 1, 1, INSURANCE_HEADERS.length)
+  } else {
+    const guardianIndex = current.indexOf('監護人姓名');
+    const relationshipIndex = current.indexOf('與小朋友關係');
+    if (guardianIndex !== -1 && relationshipIndex === -1) {
+      sheet.insertColumnAfter(guardianIndex + 1);
+    }
+    sheet.getRange(1, 1, 1, INSURANCE_HEADERS.length).setValues([INSURANCE_HEADERS]);
+  }
+
+  sheet.getRange(1, 1, 1, INSURANCE_HEADERS.length)
+    .setBackground('#1A1610')
+    .setFontColor('#E8C97A')
+    .setFontWeight('bold');
+  sheet.setFrozenRows(1);
+}
+
+function refreshWeeklyInsuranceSheets_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const regRows = readSheetObjects_(ss, REGISTRATION_SHEET);
+  const insuranceRows = readSheetObjects_(ss, INSURANCE_SHEET);
+  const regMap = {};
+
+  regRows.forEach(row => {
+    const key = makeLookupKey_(row['學員姓名'], row['聯絡電話']);
+    if (key && !regMap[key]) regMap[key] = row;
+  });
+
+  const counts = {};
+  WEEKLY_INSURANCE_SHEETS.forEach(week => {
+    let sheet = ss.getSheetByName(week.sheetName);
+    if (!sheet) sheet = ss.insertSheet(week.sheetName);
+    sheet.clear();
+
+    const rows = insuranceRows
+      .map(row => {
+        const reg = regMap[makeLookupKey_(row['學員姓名'], row['家長電話後4碼'])] || {};
+        return { insurance: row, registration: reg };
+      })
+      .filter(item => String(item.registration['報名期數'] || item.insurance['報名期數'] || '').indexOf(week.key) !== -1)
+      .map(item => buildWeeklyInsuranceRow_(item.insurance, item.registration));
+
+    const output = [WEEKLY_HEADERS].concat(rows);
+    sheet.getRange(1, 1, output.length, WEEKLY_HEADERS.length).setValues(output);
+    sheet.getRange(1, 1, 1, WEEKLY_HEADERS.length)
       .setBackground('#1A1610')
       .setFontColor('#E8C97A')
       .setFontWeight('bold');
     sheet.setFrozenRows(1);
-  }
-  return sheet;
+    sheet.autoResizeColumns(1, WEEKLY_HEADERS.length);
+    if (sheet.getFilter()) sheet.getFilter().remove();
+    sheet.getRange(1, 1, Math.max(output.length, 2), WEEKLY_HEADERS.length).createFilter();
+    counts[week.sheetName] = rows.length;
+  });
+
+  return counts;
+}
+
+function readSheetObjects_(ss, sheetName) {
+  const sheet = sheetName === INSURANCE_SHEET ? getInsuranceSheet_() : ss.getSheetByName(sheetName);
+  if (!sheet) return [];
+  const values = sheet.getDataRange().getDisplayValues();
+  if (values.length < 2) return [];
+  const headers = values[0].map(String);
+  return values.slice(1)
+    .filter(row => row.some(cell => String(cell || '').trim() !== ''))
+    .map((row, index) => rowToObject_(headers, row, index + 2));
+}
+
+function buildWeeklyInsuranceRow_(insurance, registration) {
+  const phone = registration['聯絡電話'] || '';
+  const guardian = insurance['監護人姓名'] || registration['家長姓名'] || '';
+  const contact = [guardian, phone].filter(Boolean).join('/');
+  return [
+    insurance['學員姓名'] || registration['學員姓名'] || '',
+    insurance['小朋友身分證字號'] || '',
+    registration['性別'] || '',
+    normalizeDateText_(registration['出生年月日'] || ''),
+    contact,
+    insurance['與小朋友關係'] || '',
+    insurance['聯絡地址'] || ''
+  ];
+}
+
+function makeLookupKey_(name, phoneOrLast4) {
+  const normalizedName = normalizeText_(name);
+  const digits = String(phoneOrLast4 || '').replace(/\D/g, '');
+  const last4 = digits.slice(-4);
+  if (!normalizedName || last4.length !== 4) return '';
+  return normalizedName + '|' + last4;
+}
+
+function normalizeDateText_(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return text.replace(/-/g, '/');
 }
 
 function rowToObject_(headers, row, rowNum) {
