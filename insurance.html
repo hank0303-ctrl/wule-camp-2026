@@ -366,6 +366,8 @@
       <div class="info-row"><strong>報名期數</strong><span id="sumSessions">--</span></div>
       <div class="info-row"><strong>付款方式</strong><span id="sumPayment">--</span></div>
       <div class="info-row"><strong>家長電話</strong><span id="sumPhone">--</span></div>
+      <div class="info-row hidden" id="healthRow"><strong>身體狀況</strong><span id="sumHealth">--</span></div>
+      <div class="info-row hidden" id="dietRow"><strong>飲食注意</strong><span id="sumDiet">--</span></div>
       <div class="info-row"><strong>延托服務</strong><span id="sumAftercare">--</span></div>
       <div class="info-row"><strong>裝備需求</strong><span id="sumEquipment">--</span></div>
       <div class="info-row hidden" id="adjustmentRow"><strong>費用調整</strong><span id="sumAdjustment">--</span></div>
@@ -449,6 +451,11 @@ function parseMoney(value) {
 
 function hasValue(value) {
   return String(value || '').trim() !== '';
+}
+
+function shouldShowOptionalInfo(value) {
+  const text = String(value || '').trim();
+  return text !== '' && text !== '無' && text !== '无' && text !== '沒有';
 }
 
 function formatMoney(value) {
@@ -593,6 +600,8 @@ function buildRegistration(row, phoneLast4) {
     parent: row['家長姓名'] || '',
     phone: row['聯絡電話'] || '',
     phoneLast4,
+    health: row['身體狀況'] || '',
+    diet: row['飲食注意'] || '',
     aftercare: row['延托服務'] || '未填',
     equipment: row['裝備'] || '未填'
   };
@@ -603,6 +612,10 @@ function renderRegistration(reg) {
   $('sumSessions').textContent = reg.sessions;
   $('sumPayment').textContent = reg.payment;
   $('sumPhone').textContent = maskPhone(reg.phone);
+  $('healthRow').classList.toggle('hidden', !shouldShowOptionalInfo(reg.health));
+  $('dietRow').classList.toggle('hidden', !shouldShowOptionalInfo(reg.diet));
+  $('sumHealth').textContent = reg.health;
+  $('sumDiet').textContent = reg.diet;
   $('sumAftercare').textContent = reg.aftercare;
   $('sumEquipment').textContent = reg.equipment;
   $('sumTotal').textContent = formatMoney(reg.total);
