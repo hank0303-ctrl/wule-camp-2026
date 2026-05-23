@@ -118,11 +118,20 @@ function lookupRegistration_(name, phoneLast4) {
 }
 
 function buildRegistrationView_(row) {
-  const total = parseMoney_(row['總費用']);
+  const baseTotal = parseMoney_(row['總費用']);
   const deposit = parseMoney_(row['需付訂金']);
+  const adjustmentLabel = row['費用調整說明（給家長看）'] || '';
+  const adjustmentAmount = parseMoney_(row['費用調整金額（+加收/-優惠）']);
+  const adjustedTotalOverride = hasValue_(row['調整後總費用（可留空）'])
+    ? parseMoney_(row['調整後總費用（可留空）'])
+    : 0;
+  const total = adjustedTotalOverride > 0 ? adjustedTotalOverride : Math.max(baseTotal + adjustmentAmount, 0);
   const status = String(row['訂金狀態'] || '待繳');
   const isPaid = status === '已繳';
-  const paid = isPaid ? deposit : 0;
+  const paidOverride = hasValue_(row['已收款金額（可留空）'])
+    ? parseMoney_(row['已收款金額（可留空）'])
+    : null;
+  const paid = paidOverride !== null ? paidOverride : (isPaid ? deposit : 0);
   const remaining = Math.max(total - paid, 0);
 
   return {
@@ -132,10 +141,16 @@ function buildRegistrationView_(row) {
     age: row['年齡'] || '',
     birthday: row['出生年月日'] || '',
     sessions: row['報名期數'] || '',
+    baseTotalFee: baseTotal,
+    baseTotalFeeText: formatMoney_(baseTotal),
     totalFee: total,
     totalFeeText: formatMoney_(total),
     deposit: deposit,
     depositText: formatMoney_(deposit),
+    adjustmentLabel: adjustmentLabel,
+    adjustmentAmount: adjustmentAmount,
+    adjustmentAmountText: formatSignedMoney_(adjustmentAmount),
+    adjustedTotalOverride: adjustedTotalOverride,
     paymentMethod: row['付款方式'] || '',
     depositStatusText: status,
     paidAmount: paid,
@@ -178,6 +193,10 @@ function normalizeText_(value) {
   return String(value || '').replace(/\s+/g, '').trim();
 }
 
+function hasValue_(value) {
+  return String(value || '').trim() !== '';
+}
+
 function parseMoney_(value) {
   const num = Number(String(value || '').replace(/[^0-9.-]/g, ''));
   return Number.isFinite(num) ? num : 0;
@@ -185,6 +204,13 @@ function parseMoney_(value) {
 
 function formatMoney_(value) {
   return '$' + Number(value || 0).toLocaleString();
+}
+
+function formatSignedMoney_(value) {
+  const amount = Number(value || 0);
+  if (amount > 0) return '+$' + amount.toLocaleString();
+  if (amount < 0) return '-$' + Math.abs(amount).toLocaleString();
+  return '$0';
 }
 
 function maskPhone_(value) {

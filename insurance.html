@@ -363,6 +363,7 @@
       <div class="info-row"><strong>家長電話</strong><span id="sumPhone">--</span></div>
       <div class="info-row"><strong>延托服務</strong><span id="sumAftercare">--</span></div>
       <div class="info-row"><strong>裝備需求</strong><span id="sumEquipment">--</span></div>
+      <div class="info-row hidden" id="adjustmentRow"><strong>費用調整</strong><span id="sumAdjustment">--</span></div>
     </div>
 
     <div class="money-grid">
@@ -435,8 +436,19 @@ function parseMoney(value) {
   return Number.isFinite(num) ? num : 0;
 }
 
+function hasValue(value) {
+  return String(value || '').trim() !== '';
+}
+
 function formatMoney(value) {
   return '$' + Number(value || 0).toLocaleString();
+}
+
+function formatSignedMoney(value) {
+  const amount = Number(value || 0);
+  if (amount > 0) return '+$' + amount.toLocaleString();
+  if (amount < 0) return '-$' + Math.abs(amount).toLocaleString();
+  return '$0';
 }
 
 function maskPhone(value) {
@@ -540,19 +552,32 @@ async function lookupRegistration() {
 }
 
 function buildRegistration(row, phoneLast4) {
-  const total = parseMoney(row['總費用']);
+  const baseTotal = parseMoney(row['總費用']);
   const deposit = parseMoney(row['需付訂金']);
+  const adjustmentLabel = row['費用調整說明（給家長看）'] || '';
+  const adjustmentAmount = parseMoney(row['費用調整金額（+加收/-優惠）']);
+  const adjustedTotalOverride = hasValue(row['調整後總費用（可留空）'])
+    ? parseMoney(row['調整後總費用（可留空）'])
+    : 0;
+  const finalTotal = adjustedTotalOverride > 0 ? adjustedTotalOverride : Math.max(baseTotal + adjustmentAmount, 0);
   const status = row['訂金狀態'] || '待繳';
-  const paid = status === '已繳' ? deposit : 0;
-  const remaining = Math.max(total - paid, 0);
+  const paidOverride = hasValue(row['已收款金額（可留空）'])
+    ? parseMoney(row['已收款金額（可留空）'])
+    : null;
+  const paid = paidOverride !== null ? paidOverride : (status === '已繳' ? deposit : 0);
+  const remaining = Math.max(finalTotal - paid, 0);
   return {
     name: row['學員姓名'] || '',
     sessions: row['報名期數'] || '',
-    total,
+    baseTotal,
+    total: finalTotal,
     deposit,
     status,
     paid,
     remaining,
+    adjustmentLabel,
+    adjustmentAmount,
+    adjustedTotalOverride,
     payment: row['付款方式'] || '未填',
     parent: row['家長姓名'] || '',
     phone: row['聯絡電話'] || '',
@@ -573,14 +598,26 @@ function renderRegistration(reg) {
   $('sumPaid').textContent = formatMoney(reg.paid);
   $('sumRemain').textContent = formatMoney(reg.remaining);
 
+  const hasAdjustment = reg.adjustmentAmount !== 0 || hasValue(reg.adjustmentLabel) || reg.adjustedTotalOverride > 0;
+  $('adjustmentRow').classList.toggle('hidden', !hasAdjustment);
+  if (hasAdjustment) {
+    const parts = [];
+    if (reg.adjustmentLabel) parts.push(reg.adjustmentLabel);
+    if (reg.adjustmentAmount !== 0) parts.push('調整金額 ' + formatSignedMoney(reg.adjustmentAmount));
+    if (reg.adjustedTotalOverride > 0) parts.push('指定總費用 ' + formatMoney(reg.adjustedTotalOverride));
+    parts.push('原始費用 ' + formatMoney(reg.baseTotal));
+    $('sumAdjustment').textContent = parts.join('｜');
+  }
+
   const status = $('sumStatus');
   status.textContent = reg.status === '已繳' ? '訂金已繳' : '訂金待繳';
   status.className = 'status-pill ' + (reg.status === '已繳' ? 'status-paid' : 'status-pending');
 
   $('guardian').value = reg.parent;
-  $('paymentNote').textContent = reg.status === '已繳'
-    ? '目前已收到訂金，尾款請於 ' + DEADLINE_TEXT + ' 完成。'
-    : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。';
+  const totalNote = hasAdjustment ? '已依費用調整計算本次應付總額。' : '';
+  $('paymentNote').textContent = (reg.status === '已繳'
+    ? '目前已收到款項，尾款請於 ' + DEADLINE_TEXT + ' 完成。'
+    : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。') + totalNote;
 
   $('summaryCard').classList.remove('hidden');
   $('insuranceCard').classList.remove('hidden');
