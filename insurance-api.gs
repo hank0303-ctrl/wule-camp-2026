@@ -130,9 +130,9 @@ function lookupRegistration_(name, phoneLast4) {
   if (values.length < 2) return { ok: false, message: '目前沒有報名資料' };
 
   const headers = values[0].map(String);
-  const rows = values.slice(1);
+  const rows = values.slice(1)
+    .map((row, index) => rowToObject_(headers, row, index + 2));
   const matches = rows
-    .map((row, index) => rowToObject_(headers, row, index + 2))
     .filter(row => normalizeText_(row['學員姓名']) === targetName)
     .filter(row => String(row['聯絡電話'] || '').replace(/\D/g, '').slice(-4) === targetPhone);
 
@@ -144,7 +144,7 @@ function lookupRegistration_(name, phoneLast4) {
     return { ok: false, message: '查到多筆相同資料，請聯繫武樂協助確認' };
   }
 
-  return { ok: true, registration: buildRegistrationView_(matches[0]) };
+  return { ok: true, registration: buildFamilyRegistrationView_(matches[0], rows) };
 }
 
 function buildRegistrationView_(row) {
@@ -193,6 +193,49 @@ function buildRegistrationView_(row) {
     aftercare: row['延托服務'] || '未填',
     equipment: row['裝備'] || '未填'
   };
+}
+
+function buildFamilyRegistrationView_(currentRow, rows) {
+  const familyPhone = String(currentRow['聯絡電話'] || '').replace(/\D/g, '');
+  const currentName = normalizeText_(currentRow['學員姓名']);
+  const members = rows
+    .filter(row => String(row['聯絡電話'] || '').replace(/\D/g, '') === familyPhone)
+    .filter(row => hasValue_(row['學員姓名']))
+    .map(row => {
+      const member = buildRegistrationView_(row);
+      member.isCurrent = normalizeText_(row['學員姓名']) === currentName;
+      return member;
+    });
+
+  const current = members.filter(member => member.isCurrent)[0] || buildRegistrationView_(currentRow);
+  if (members.length <= 1) return current;
+
+  const total = members.reduce((sum, member) => sum + Number(member.totalFee || 0), 0);
+  const deposit = members.reduce((sum, member) => sum + Number(member.deposit || 0), 0);
+  const paid = members.reduce((sum, member) => sum + Number(member.paidAmount || 0), 0);
+  const remaining = Math.max(total - paid, 0);
+
+  const result = cloneRegistrationView_(current);
+  result.familyMembers = members.map(cloneRegistrationView_);
+  result.familyCount = members.length;
+  result.totalFee = total;
+  result.totalFeeText = formatMoney_(total);
+  result.deposit = deposit;
+  result.depositText = formatMoney_(deposit);
+  result.paidAmount = paid;
+  result.paidAmountText = formatMoney_(paid);
+  result.remainingAmount = remaining;
+  result.remainingAmountText = formatMoney_(remaining);
+  result.depositStatusText = remaining <= 0 ? '已繳清' : (paid > 0 ? '部分已繳' : current.depositStatusText);
+  return result;
+}
+
+function cloneRegistrationView_(source) {
+  const result = {};
+  Object.keys(source || {}).forEach(key => {
+    if (key !== 'familyMembers') result[key] = source[key];
+  });
+  return result;
 }
 
 function getInsuranceSheet_() {

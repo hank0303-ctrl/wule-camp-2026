@@ -272,6 +272,60 @@
     font-weight: 800;
   }
 
+  .family-panel {
+    background: #FFFEFC;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+
+  .family-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--gold-pale);
+    color: var(--ink-mid);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .family-title span:last-child {
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .family-member {
+    display: grid;
+    grid-template-columns: 92px 1fr auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .family-member strong {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  .family-member .member-sessions {
+    color: var(--ink-light);
+    line-height: 1.55;
+  }
+
+  .family-member .member-fee {
+    color: var(--ink);
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .family-member.current {
+    background: #FFF9EF;
+  }
+
   .money-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -403,6 +457,8 @@
     .summary-head { display: block; }
     .status-pill { display: inline-block; margin-top: 10px; }
     .info-row { grid-template-columns: 108px 1fr; padding: 11px 12px; }
+    .family-member { grid-template-columns: 1fr; gap: 5px; }
+    .family-member .member-fee { white-space: normal; }
     .deadline { display: block; }
     .deadline strong { display: block; margin-top: 5px; }
     .payment-row { grid-template-columns: 62px 1fr; }
@@ -460,6 +516,14 @@
       <div class="info-row"><strong>延托服務</strong><span id="sumAftercare">--</span></div>
       <div class="info-row"><strong>裝備需求</strong><span id="sumEquipment">--</span></div>
       <div class="info-row hidden" id="adjustmentRow"><strong>費用調整</strong><span id="sumAdjustment">--</span></div>
+    </div>
+
+    <div class="family-panel hidden" id="familyPanel">
+      <div class="family-title">
+        <span>同電話家庭合併計算</span>
+        <span id="familyCount">共 1 位</span>
+      </div>
+      <div id="familyMembers"></div>
     </div>
 
     <div class="money-grid">
@@ -571,6 +635,10 @@ function maskPhone(value) {
   return phone.slice(0, 4) + '***' + phone.slice(-3);
 }
 
+function phoneDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
 function formatSessionList(value) {
   const sessions = String(value || '')
     .split('、')
@@ -664,7 +732,7 @@ async function lookupRegistration() {
     const rows = Array.isArray(res.data) ? res.data : [];
     const matches = rows
       .filter(row => normalizeText(row['學員姓名']) === name)
-      .filter(row => String(row['聯絡電話'] || '').replace(/\D/g, '').slice(-4) === phoneLast4);
+      .filter(row => phoneDigits(row['聯絡電話']).slice(-4) === phoneLast4);
 
     if (matches.length === 0) {
       showNotice($('lookupMsg'), 'error', '查無資料，請確認姓名是否與報名時相同、電話後 4 碼是否正確。');
@@ -676,7 +744,9 @@ async function lookupRegistration() {
       return;
     }
 
-    currentRegistration = buildRegistration(matches[0], phoneLast4);
+    const familyPhone = phoneDigits(matches[0]['聯絡電話']);
+    const familyRows = rows.filter(row => phoneDigits(row['聯絡電話']) === familyPhone);
+    currentRegistration = buildFamilyRegistration(matches[0], familyRows, phoneLast4);
     renderRegistration(currentRegistration);
   } catch (err) {
     showNotice($('lookupMsg'), 'error', err.message || '查詢失敗，請稍後再試。');
@@ -686,7 +756,7 @@ async function lookupRegistration() {
   }
 }
 
-function buildRegistration(row, phoneLast4) {
+function buildStudentRegistration(row, phoneLast4, isCurrent) {
   const baseTotal = parseMoney(row['總費用']);
   const deposit = parseMoney(row['需付訂金']);
   const adjustmentLabel = row['費用調整說明（給家長看）'] || '';
@@ -720,7 +790,36 @@ function buildRegistration(row, phoneLast4) {
     health: row['身體狀況'] || '',
     diet: row['飲食注意'] || '',
     aftercare: row['延托服務'] || '未填',
-    equipment: row['裝備'] || '未填'
+    equipment: row['裝備'] || '未填',
+    isCurrent: !!isCurrent,
+    hasPaidOverride: paidOverride !== null
+  };
+}
+
+function buildFamilyRegistration(currentRow, familyRows, phoneLast4) {
+  const currentName = normalizeText(currentRow['學員姓名']);
+  const members = familyRows
+    .filter(row => hasValue(row['學員姓名']))
+    .map(row => buildStudentRegistration(row, phoneLast4, normalizeText(row['學員姓名']) === currentName));
+  const current = members.find(member => member.isCurrent) || buildStudentRegistration(currentRow, phoneLast4, true);
+  const total = members.reduce((sum, member) => sum + member.total, 0);
+  const deposit = members.reduce((sum, member) => sum + member.deposit, 0);
+  const paid = members.reduce((sum, member) => sum + member.paid, 0);
+  const remaining = Math.max(total - paid, 0);
+  const hasFamily = members.length > 1;
+  return {
+    ...current,
+    familyMembers: members,
+    familyCount: members.length,
+    familyTotal: total,
+    familyDeposit: deposit,
+    familyPaid: paid,
+    familyRemaining: remaining,
+    total: hasFamily ? total : current.total,
+    deposit: hasFamily ? deposit : current.deposit,
+    paid: hasFamily ? paid : current.paid,
+    remaining: hasFamily ? remaining : current.remaining,
+    status: remaining <= 0 ? '已繳清' : (paid > 0 ? '部分已繳' : current.status)
   };
 }
 
@@ -739,30 +838,61 @@ function renderRegistration(reg) {
   $('sumPaid').textContent = formatMoney(reg.paid);
   $('sumRemain').textContent = formatMoney(reg.remaining);
 
-  const hasAdjustment = reg.adjustmentAmount !== 0 || hasValue(reg.adjustmentLabel) || reg.adjustedTotalOverride > 0;
+  renderFamilyMembers(reg);
+
+  const adjustmentParts = buildAdjustmentParts(reg);
+  const hasAdjustment = adjustmentParts.length > 0;
   $('adjustmentRow').classList.toggle('hidden', !hasAdjustment);
   if (hasAdjustment) {
-    const parts = [];
-    if (reg.adjustmentLabel) parts.push(reg.adjustmentLabel);
-    if (reg.adjustmentAmount !== 0) parts.push('調整金額 ' + formatSignedMoney(reg.adjustmentAmount));
-    if (reg.adjustedTotalOverride > 0) parts.push('指定總費用 ' + formatMoney(reg.adjustedTotalOverride));
-    parts.push('原始費用 ' + formatMoney(reg.baseTotal));
-    $('sumAdjustment').textContent = parts.join('｜');
+    $('sumAdjustment').textContent = adjustmentParts.join('｜');
   }
 
   const status = $('sumStatus');
-  status.textContent = reg.status === '已繳' ? '訂金已繳' : '訂金待繳';
-  status.className = 'status-pill ' + (reg.status === '已繳' ? 'status-paid' : 'status-pending');
+  status.textContent = reg.remaining <= 0 ? '費用已繳清' : (reg.paid > 0 ? '尚有尾款' : '訂金待繳');
+  status.className = 'status-pill ' + (reg.remaining <= 0 ? 'status-paid' : 'status-pending');
 
   $('guardian').value = reg.parent;
+  const familyNote = reg.familyCount > 1 ? '已將同電話的 ' + reg.familyCount + ' 位學員合併計算。' : '';
   const totalNote = hasAdjustment ? '已依費用調整計算本次應付總額。' : '';
-  $('paymentNote').textContent = (reg.status === '已繳'
-    ? '目前已收到款項，尾款請於 ' + DEADLINE_TEXT + ' 完成。'
-    : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。') + totalNote;
+  $('paymentNote').textContent = (reg.remaining <= 0
+    ? '目前費用已繳清。'
+    : (reg.paid > 0
+      ? '目前已收到部分款項，剩餘尾款請於 ' + DEADLINE_TEXT + ' 完成。'
+      : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。')) + familyNote + totalNote;
 
   $('summaryCard').classList.remove('hidden');
   $('insuranceCard').classList.remove('hidden');
   $('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buildAdjustmentParts(reg) {
+  const members = reg.familyMembers || [reg];
+  return members.flatMap(member => {
+    const parts = [];
+    if (member.adjustmentLabel) parts.push(member.name + '：' + member.adjustmentLabel);
+    if (member.adjustmentAmount !== 0) parts.push(member.name + '：調整金額 ' + formatSignedMoney(member.adjustmentAmount));
+    if (member.adjustedTotalOverride > 0) parts.push(member.name + '：指定總費用 ' + formatMoney(member.adjustedTotalOverride));
+    return parts;
+  });
+}
+
+function renderFamilyMembers(reg) {
+  const members = reg.familyMembers || [];
+  const showFamily = members.length > 1;
+  $('familyPanel').classList.toggle('hidden', !showFamily);
+  if (!showFamily) {
+    $('familyMembers').innerHTML = '';
+    return;
+  }
+
+  $('familyCount').textContent = '共 ' + members.length + ' 位';
+  $('familyMembers').innerHTML = members.map(member => `
+    <div class="family-member ${member.isCurrent ? 'current' : ''}">
+      <strong>${escapeHtml(member.name)}</strong>
+      <div class="member-sessions">${escapeHtml(member.sessions || '未填期數')}</div>
+      <div class="member-fee">${formatMoney(member.total)}</div>
+    </div>
+  `).join('');
 }
 
 function validateInsuranceForm() {
