@@ -317,6 +317,63 @@
     white-space: nowrap;
   }
 
+  .payment-info {
+    background: var(--ink);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+
+  .payment-title {
+    color: var(--gold-light);
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .payment-row {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    font-size: 14px;
+  }
+
+  .payment-row:first-of-type {
+    border-top: none;
+  }
+
+  .payment-row span {
+    color: #CFC7B8;
+  }
+
+  .payment-row strong {
+    text-align: right;
+    color: var(--white);
+    font-weight: 800;
+    word-break: break-word;
+  }
+
+  .payment-row .account {
+    color: var(--gold-light);
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .card-note {
+    background: var(--gold-pale);
+    border: 1px solid #E9D2A0;
+    border-radius: 8px;
+    color: var(--ink-mid);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.6;
+    margin-top: 10px;
+    padding: 10px 12px;
+  }
+
   .confirm {
     display: flex;
     align-items: flex-start;
@@ -348,6 +405,7 @@
     .info-row { grid-template-columns: 108px 1fr; padding: 11px 12px; }
     .deadline { display: block; }
     .deadline strong { display: block; margin-top: 5px; }
+    .payment-row { grid-template-columns: 62px 1fr; }
   }
 </style>
 </head>
@@ -423,6 +481,13 @@
       <span>尾款繳費期限</span>
       <strong>2026/6/23 以前</strong>
     </div>
+    <div class="payment-info">
+      <div class="payment-title">匯款資訊</div>
+      <div class="payment-row"><span>銀行</span><strong>台北富邦銀行 中壢分行（012）</strong></div>
+      <div class="payment-row"><span>戶名</span><strong>運武樂有限公司</strong></div>
+      <div class="payment-row"><span>帳號</span><strong class="account">82120000015649</strong></div>
+    </div>
+    <div class="card-note">需刷卡請私訊我們。</div>
     <div class="notice info show" id="paymentNote"></div>
   </section>
 
