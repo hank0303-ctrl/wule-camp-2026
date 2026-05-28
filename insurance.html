@@ -428,6 +428,36 @@
     padding: 10px 12px;
   }
 
+  .insurance-forms {
+    display: grid;
+    gap: 14px;
+  }
+
+  .child-form {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #FFFEFC;
+    padding: 14px;
+  }
+
+  .child-form-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 900;
+    margin-bottom: 12px;
+  }
+
+  .child-form-title span {
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
   .confirm {
     display: flex;
     align-items: flex-start;
@@ -520,7 +550,7 @@
 
     <div class="family-panel hidden" id="familyPanel">
       <div class="family-title">
-        <span>同電話家庭合併計算</span>
+        <span>同戶兄弟姐妹合併計算</span>
         <span id="familyCount">共 1 位</span>
       </div>
       <div id="familyMembers"></div>
@@ -557,30 +587,7 @@
 
   <section class="card hidden" id="insuranceCard">
     <div class="section-title">補填保險資料</div>
-    <div class="field-grid">
-      <div>
-        <label for="childId">小朋友身分證字號</label>
-        <input id="childId" autocomplete="off" placeholder="例如 A123456789">
-      </div>
-      <div>
-        <label for="guardian">監護人姓名</label>
-        <input id="guardian" autocomplete="name" placeholder="請填監護人姓名">
-      </div>
-    </div>
-    <div class="field-grid relation-grid">
-      <div>
-        <label for="relationship">與小朋友關係</label>
-        <input id="relationship" autocomplete="off" placeholder="母子">
-      </div>
-      <div>
-        <label for="address">聯絡地址</label>
-        <input id="address" autocomplete="street-address" placeholder="請填可聯繫或保險資料使用的地址">
-      </div>
-    </div>
-    <div style="margin-top:12px;">
-      <label for="note">備註</label>
-      <textarea id="note" placeholder="若有需要補充的資訊可以填在這裡，沒有可留空"></textarea>
-    </div>
+    <div class="insurance-forms" id="insuranceForms"></div>
     <label class="confirm">
       <input type="checkbox" id="confirmed">
       <span>我已確認上方報名資訊與繳費狀態正確，並同意提供以上資料作為本次營隊保險使用。</span>
@@ -851,8 +858,8 @@ function renderRegistration(reg) {
   status.textContent = reg.remaining <= 0 ? '費用已繳清' : (reg.paid > 0 ? '尚有尾款' : '訂金待繳');
   status.className = 'status-pill ' + (reg.remaining <= 0 ? 'status-paid' : 'status-pending');
 
-  $('guardian').value = reg.parent;
-  const familyNote = reg.familyCount > 1 ? '已將同電話的 ' + reg.familyCount + ' 位學員合併計算。' : '';
+  renderInsuranceForms(reg);
+  const familyNote = reg.familyCount > 1 ? '已將同戶 ' + reg.familyCount + ' 位學員合併計算。' : '';
   const totalNote = hasAdjustment ? '已依費用調整計算本次應付總額。' : '';
   $('paymentNote').textContent = (reg.remaining <= 0
     ? '目前費用已繳清。'
@@ -895,17 +902,81 @@ function renderFamilyMembers(reg) {
   `).join('');
 }
 
+function getInsuranceMembers(reg) {
+  const members = reg.familyMembers && reg.familyMembers.length ? reg.familyMembers : [reg];
+  return members.map((member, index) => ({
+    ...member,
+    formIndex: index,
+    parent: member.parent || reg.parent,
+    phoneLast4: member.phoneLast4 || reg.phoneLast4
+  }));
+}
+
+function renderInsuranceForms(reg) {
+  const members = getInsuranceMembers(reg);
+  $('insuranceForms').innerHTML = members.map((member, index) => `
+    <div class="child-form" data-index="${index}" data-name="${escapeHtml(member.name)}">
+      <div class="child-form-title">
+        <strong>${escapeHtml(member.name)}</strong>
+        <span>第 ${index + 1} 份</span>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label for="childId-${index}">小朋友身分證字號</label>
+          <input id="childId-${index}" data-field="childId" autocomplete="off" placeholder="例如 A123456789">
+        </div>
+        <div>
+          <label for="guardian-${index}">監護人姓名</label>
+          <input id="guardian-${index}" data-field="guardian" autocomplete="name" value="${escapeHtml(member.parent || '')}" placeholder="請填監護人姓名">
+        </div>
+      </div>
+      <div class="field-grid relation-grid">
+        <div>
+          <label for="relationship-${index}">與小朋友關係</label>
+          <input id="relationship-${index}" data-field="relationship" autocomplete="off" placeholder="母子">
+        </div>
+        <div>
+          <label for="address-${index}">聯絡地址</label>
+          <input id="address-${index}" data-field="address" autocomplete="street-address" placeholder="請填可聯繫或保險資料使用的地址">
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label for="note-${index}">備註</label>
+        <textarea id="note-${index}" data-field="note" placeholder="若有需要補充的資訊可以填在這裡，沒有可留空"></textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function collectInsuranceForms() {
+  if (!currentRegistration) return [];
+  return getInsuranceMembers(currentRegistration).map((member, index) => {
+    const form = document.querySelector('.child-form[data-index="' + index + '"]');
+    const value = field => form.querySelector('[data-field="' + field + '"]').value.trim();
+    return {
+      member,
+      studentName: member.name,
+      phoneLast4: member.phoneLast4,
+      childId: value('childId').toUpperCase(),
+      guardian: value('guardian'),
+      relationship: value('relationship'),
+      address: value('address'),
+      note: value('note')
+    };
+  });
+}
+
 function validateInsuranceForm() {
-  const childId = $('childId').value.trim().toUpperCase();
-  const guardian = $('guardian').value.trim();
-  const relationship = $('relationship').value.trim();
-  const address = $('address').value.trim();
+  const forms = collectInsuranceForms();
 
   if (!currentRegistration) return '請先查詢報名資料。';
-  if (!/^[A-Z][12]\d{8}$/.test(childId)) return '請輸入正確的小朋友身分證字號。';
-  if (!guardian) return '請填寫監護人姓名。';
-  if (!relationship) return '請填寫與小朋友關係，例如：母子、父女。';
-  if (!address || address.length < 6) return '請填寫完整聯絡地址。';
+  if (!forms.length) return '請先查詢報名資料。';
+  for (const item of forms) {
+    if (!/^[A-Z][12]\d{8}$/.test(item.childId)) return '請輸入 ' + item.studentName + ' 正確的小朋友身分證字號。';
+    if (!item.guardian) return '請填寫 ' + item.studentName + ' 的監護人姓名。';
+    if (!item.relationship) return '請填寫 ' + item.studentName + ' 與小朋友關係，例如：母子、父女。';
+    if (!item.address || item.address.length < 6) return '請填寫 ' + item.studentName + ' 的完整聯絡地址。';
+  }
   if (!$('confirmed').checked) return '請勾選確認報名資訊與保險資料用途。';
   if (!insuranceApiReady) return '保險資料送出功能尚未完成後端授權，請稍後再試或聯繫武樂。';
   return '';
@@ -922,25 +993,26 @@ async function submitInsurance() {
   $('submitBtn').disabled = true;
   $('submitBtn').textContent = '送出中...';
 
-  const payload = {
-    action: 'submitInsurance',
-    studentName: currentRegistration.name,
-    phoneLast4: currentRegistration.phoneLast4,
-    childId: $('childId').value.trim().toUpperCase(),
-    guardian: $('guardian').value.trim(),
-    relationship: $('relationship').value.trim(),
-    address: $('address').value.trim(),
-    note: $('note').value.trim(),
-    confirmed: $('confirmed').checked
-  };
-
   try {
-    await fetch(INSURANCE_GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
+    const forms = collectInsuranceForms();
+    for (const item of forms) {
+      await fetch(INSURANCE_GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'submitInsurance',
+          studentName: item.studentName,
+          phoneLast4: item.phoneLast4,
+          childId: item.childId,
+          guardian: item.guardian,
+          relationship: item.relationship,
+          address: item.address,
+          note: item.note,
+          confirmed: $('confirmed').checked
+        })
+      });
+    }
     showNotice($('submitMsg'), 'ok', '已送出保險資料，謝謝家長協助。');
     $('submitBtn').textContent = '已送出';
   } catch (err) {
@@ -953,8 +1025,10 @@ async function submitInsurance() {
 $('phoneLast4').addEventListener('input', e => {
   e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
 });
-$('childId').addEventListener('input', e => {
-  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+$('insuranceForms').addEventListener('input', e => {
+  if (e.target.dataset.field === 'childId') {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+  }
 });
 $('lookupBtn').addEventListener('click', lookupRegistration);
 $('submitBtn').addEventListener('click', submitInsurance);
