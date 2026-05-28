@@ -817,8 +817,8 @@ function buildFamilyRegistration(currentRow, familyRows, phoneLast4) {
   const total = members.reduce((sum, member) => sum + member.total, 0);
   const deposit = members.reduce((sum, member) => sum + member.deposit, 0);
   const paid = members.reduce((sum, member) => sum + member.paid, 0);
-  const remaining = Math.max(total - paid, 0);
   const discount = Math.max(originalTotal - total, 0);
+  const remaining = Math.max(originalTotal - discount - paid, 0);
   const hasFamily = members.length > 1;
   return {
     ...current,
@@ -826,14 +826,15 @@ function buildFamilyRegistration(currentRow, familyRows, phoneLast4) {
     familyCount: members.length,
     originalTotal: hasFamily ? originalTotal : current.baseTotal,
     discount: hasFamily ? discount : Math.max(current.baseTotal - current.total, 0),
-    familyTotal: total,
+    familyTotal: originalTotal,
+    payableTotal: total,
     familyDeposit: deposit,
     familyPaid: paid,
     familyRemaining: remaining,
-    total: hasFamily ? total : current.total,
+    total: hasFamily ? originalTotal : current.baseTotal,
     deposit: hasFamily ? deposit : current.deposit,
     paid: hasFamily ? paid : current.paid,
-    remaining: hasFamily ? remaining : current.remaining,
+    remaining: hasFamily ? remaining : Math.max(current.baseTotal - Math.max(current.baseTotal - current.total, 0) - current.paid, 0),
     status: remaining <= 0 ? '已繳清' : (paid > 0 ? '部分已繳' : current.status)
   };
 }
