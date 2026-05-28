@@ -328,7 +328,7 @@
 
   .money-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin: 14px 0;
   }
@@ -560,6 +560,10 @@
       <div class="money-box">
         <div class="label">報名總費用</div>
         <div class="value" id="sumTotal">$0</div>
+      </div>
+      <div class="money-box">
+        <div class="label">折扣金額</div>
+        <div class="value" id="sumDiscount">$0</div>
       </div>
       <div class="money-box">
         <div class="label">目前已付</div>
@@ -809,15 +813,19 @@ function buildFamilyRegistration(currentRow, familyRows, phoneLast4) {
     .filter(row => hasValue(row['學員姓名']))
     .map(row => buildStudentRegistration(row, phoneLast4, normalizeText(row['學員姓名']) === currentName));
   const current = members.find(member => member.isCurrent) || buildStudentRegistration(currentRow, phoneLast4, true);
+  const originalTotal = members.reduce((sum, member) => sum + member.baseTotal, 0);
   const total = members.reduce((sum, member) => sum + member.total, 0);
   const deposit = members.reduce((sum, member) => sum + member.deposit, 0);
   const paid = members.reduce((sum, member) => sum + member.paid, 0);
   const remaining = Math.max(total - paid, 0);
+  const discount = Math.max(originalTotal - total, 0);
   const hasFamily = members.length > 1;
   return {
     ...current,
     familyMembers: members,
     familyCount: members.length,
+    originalTotal: hasFamily ? originalTotal : current.baseTotal,
+    discount: hasFamily ? discount : Math.max(current.baseTotal - current.total, 0),
     familyTotal: total,
     familyDeposit: deposit,
     familyPaid: paid,
@@ -842,6 +850,7 @@ function renderRegistration(reg) {
   $('sumAftercare').textContent = reg.aftercare;
   $('sumEquipment').textContent = reg.equipment;
   $('sumTotal').textContent = formatMoney(reg.total);
+  $('sumDiscount').textContent = reg.discount > 0 ? '-' + formatMoney(reg.discount) : formatMoney(0);
   $('sumPaid').textContent = formatMoney(reg.paid);
   $('sumRemain').textContent = formatMoney(reg.remaining);
 
@@ -860,12 +869,13 @@ function renderRegistration(reg) {
 
   renderInsuranceForms(reg);
   const familyNote = reg.familyCount > 1 ? '已將同戶 ' + reg.familyCount + ' 位學員合併計算。' : '';
+  const discountNote = reg.discount > 0 ? '本次已折扣 ' + formatMoney(reg.discount) + '。' : '';
   const totalNote = hasAdjustment ? '已依費用調整計算本次應付總額。' : '';
   $('paymentNote').textContent = (reg.remaining <= 0
     ? '目前費用已繳清。'
     : (reg.paid > 0
       ? '目前已收到部分款項，剩餘尾款請於 ' + DEADLINE_TEXT + ' 完成。'
-      : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。')) + familyNote + totalNote;
+      : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。')) + familyNote + discountNote + totalNote;
 
   $('summaryCard').classList.remove('hidden');
   $('insuranceCard').classList.remove('hidden');
@@ -897,7 +907,7 @@ function renderFamilyMembers(reg) {
     <div class="family-member ${member.isCurrent ? 'current' : ''}">
       <strong>${escapeHtml(member.name)}</strong>
       <div class="member-sessions">${escapeHtml(member.sessions || '未填期數')}</div>
-      <div class="member-fee">${formatMoney(member.total)}</div>
+      <div class="member-fee">${formatMoney(member.baseTotal)}</div>
     </div>
   `).join('');
 }
