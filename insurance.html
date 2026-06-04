@@ -875,13 +875,13 @@ function renderRegistration(reg) {
 
 function buildAdjustmentParts(reg) {
   const members = reg.familyMembers || [reg];
-  return members.flatMap(member => {
-    const parts = [];
-    if (member.adjustmentLabel) parts.push(member.name + '：' + member.adjustmentLabel);
-    if (member.adjustmentAmount !== 0) parts.push(member.name + '：調整金額 ' + formatSignedMoney(member.adjustmentAmount));
-    if (member.adjustedTotalOverride > 0) parts.push(member.name + '：指定總費用 ' + formatMoney(member.adjustedTotalOverride));
-    return parts;
-  });
+  return members.map(member => {
+    const details = [];
+    if (member.adjustmentLabel) details.push(member.adjustmentLabel);
+    if (member.adjustmentAmount !== 0) details.push('調整金額 ' + formatSignedMoney(member.adjustmentAmount));
+    if (member.adjustedTotalOverride > 0) details.push('指定總費用 ' + formatMoney(member.adjustedTotalOverride));
+    return details.length ? member.name + '：' + details.join('｜') : '';
+  }).filter(Boolean);
 }
 
 function renderFamilyMembers(reg) {
