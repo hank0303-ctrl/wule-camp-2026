@@ -586,7 +586,6 @@
       <div class="payment-row"><span>帳號</span><strong class="account">82120000015649</strong></div>
     </div>
     <div class="card-note">需刷卡請私訊我們。</div>
-    <div class="notice info show" id="paymentNote"></div>
   </section>
 
   <section class="card hidden" id="insuranceCard">
@@ -869,15 +868,6 @@ function renderRegistration(reg) {
   status.className = 'status-pill ' + (reg.remaining <= 0 ? 'status-paid' : 'status-pending');
 
   renderInsuranceForms(reg);
-  const familyNote = reg.familyCount > 1 ? '已將同戶 ' + reg.familyCount + ' 位學員合併計算。' : '';
-  const discountNote = reg.discount > 0 ? '本次已折扣 ' + formatMoney(reg.discount) + '。' : '';
-  const totalNote = hasAdjustment ? '已依費用調整計算本次應付總額。' : '';
-  $('paymentNote').textContent = (reg.remaining <= 0
-    ? '目前費用已繳清。'
-    : (reg.paid > 0
-      ? '目前已收到部分款項，剩餘尾款請於 ' + DEADLINE_TEXT + ' 完成。'
-      : '目前尚未完成訂金，請先完成訂金；所有款項最晚請於 ' + DEADLINE_TEXT + ' 完成。')) + familyNote + discountNote + totalNote;
-
   $('summaryCard').classList.remove('hidden');
   $('insuranceCard').classList.remove('hidden');
   $('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
