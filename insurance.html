@@ -272,6 +272,103 @@
     font-weight: 800;
   }
 
+  .family-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .student-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #FFFEFC;
+    overflow: hidden;
+  }
+
+  .student-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--gold-pale);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 14px;
+  }
+
+  .student-card-head strong {
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+  .student-card-head span {
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .student-card-body {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .student-field {
+    display: grid;
+    gap: 5px;
+  }
+
+  .student-field .label {
+    color: var(--ink-light);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .student-field .content {
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.55;
+    word-break: break-word;
+  }
+
+  .student-money {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .student-money-box {
+    background: #EEF8EF;
+    border: 1px solid #B8DDBB;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .student-money-box .label {
+    color: var(--ink-light);
+    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .student-money-box .sub-label {
+    color: var(--ink-light);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-top: -2px;
+    margin-bottom: 6px;
+  }
+
+  .student-money-box .content {
+    color: var(--green);
+    font-size: 16px;
+    font-weight: 900;
+  }
+
   .family-panel {
     background: #FFFEFC;
     border: 1px solid var(--border);
@@ -606,6 +703,8 @@
     .summary-head { display: block; }
     .status-pill { display: inline-block; margin-top: 10px; }
     .info-row { grid-template-columns: 108px 1fr; padding: 11px 12px; }
+    .family-detail-grid { grid-template-columns: 1fr; }
+    .student-money { grid-template-columns: 1fr; }
     .family-member { grid-template-columns: 1fr; gap: 5px; }
     .family-member .member-fee { white-space: normal; }
     .deadline { display: block; }
@@ -669,13 +768,7 @@
       <div class="info-row hidden" id="adjustmentRow"><strong>費用調整</strong><span id="sumAdjustment">--</span></div>
     </div>
 
-    <div class="family-panel hidden" id="familyPanel">
-      <div class="family-title">
-        <span>同戶兄弟姐妹合併計算</span>
-        <span id="familyCount">共 1 位</span>
-      </div>
-      <div id="familyMembers"></div>
-    </div>
+    <div class="family-detail-grid hidden" id="familyDetailGrid"></div>
 
     <div class="money-grid">
       <div class="money-box">
@@ -1010,7 +1103,8 @@ function buildFamilyRegistration(currentRow, familyRows, phoneLast4) {
 }
 
 function renderRegistration(reg) {
-  $('sumName').textContent = reg.name;
+  const isFamily = reg.familyMembers && reg.familyMembers.length > 1;
+  $('sumName').textContent = isFamily ? '同戶報名資料' : reg.name;
   $('sumSessions').innerHTML = formatSessionList(reg.sessions);
   $('sumPayment').textContent = reg.payment;
   $('sumPhone').textContent = maskPhone(reg.phone);
@@ -1025,14 +1119,14 @@ function renderRegistration(reg) {
   $('sumPaid').textContent = formatMoney(reg.paid);
   $('sumRemain').textContent = formatMoney(reg.remaining);
 
-  renderFamilyMembers(reg);
-
   const adjustmentParts = buildAdjustmentParts(reg);
   const hasAdjustment = adjustmentParts.length > 0;
   $('adjustmentRow').classList.toggle('hidden', !hasAdjustment);
   if (hasAdjustment) {
     $('sumAdjustment').textContent = adjustmentParts.join('｜');
   }
+
+  renderFamilyDetailCards(reg, isFamily);
 
   const status = $('sumStatus');
   status.textContent = reg.remaining <= 0 ? '費用已繳清' : (reg.paid > 0 ? '尚有尾款' : '訂金待繳');
@@ -1044,34 +1138,78 @@ function renderRegistration(reg) {
   $('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function buildAdjustmentParts(reg) {
-  const members = reg.familyMembers || [reg];
-  return members.map(member => {
-    const details = [];
-    if (member.adjustmentLabel) details.push(member.adjustmentLabel);
-    if (member.adjustmentAmount !== 0) details.push('調整金額 ' + formatSignedMoney(member.adjustmentAmount));
-    if (member.adjustedTotalOverride > 0) details.push('指定總費用 ' + formatMoney(member.adjustedTotalOverride));
-    return details.length ? member.name + '：' + details.join('｜') : '';
-  }).filter(Boolean);
-}
+function renderFamilyDetailCards(reg, isFamily) {
+  const infoList = document.querySelector('.info-list');
+  infoList.classList.toggle('hidden', isFamily);
+  $('familyDetailGrid').classList.toggle('hidden', !isFamily);
 
-function renderFamilyMembers(reg) {
-  const members = reg.familyMembers || [];
-  const showFamily = members.length > 1;
-  $('familyPanel').classList.toggle('hidden', !showFamily);
-  if (!showFamily) {
-    $('familyMembers').innerHTML = '';
+  if (!isFamily) {
+    $('familyDetailGrid').innerHTML = '';
     return;
   }
 
-  $('familyCount').textContent = '共 ' + members.length + ' 位';
-  $('familyMembers').innerHTML = members.map(member => `
-    <div class="family-member ${member.isCurrent ? 'current' : ''}">
-      <strong>${escapeHtml(member.name)}</strong>
-      <div class="member-sessions">${escapeHtml(member.sessions || '未填期數')}</div>
-      <div class="member-fee">${formatMoney(member.baseTotal)}</div>
+  const members = reg.familyMembers || [];
+  $('familyDetailGrid').innerHTML = members.map((member, index) => {
+    const adjustment = buildMemberAdjustmentText(member);
+    const discount = Math.max(member.baseTotal - member.total, 0);
+    const optionalRows = [
+      shouldShowOptionalInfo(member.health) ? studentFieldHtml('身體狀況', escapeHtml(member.health)) : '',
+      shouldShowOptionalInfo(member.diet) ? studentFieldHtml('飲食注意', escapeHtml(member.diet)) : '',
+      adjustment ? studentFieldHtml('費用調整', escapeHtml(adjustment)) : ''
+    ].join('');
+
+    return `
+      <div class="student-card">
+        <div class="student-card-head">
+          <strong>${escapeHtml(member.name)}</strong>
+          <span>第 ${index + 1} 位</span>
+        </div>
+        <div class="student-card-body">
+          ${studentFieldHtml('報名期數', formatSessionList(member.sessions))}
+          ${studentFieldHtml('付款方式', escapeHtml(member.payment))}
+          ${studentFieldHtml('延托服務', escapeHtml(member.aftercare))}
+          ${studentFieldHtml('裝備需求', escapeHtml(member.equipment))}
+          ${optionalRows}
+          <div class="student-money">
+            <div class="student-money-box">
+              <div class="label">總金額</div>
+              <div class="sub-label">已扣除多週報名優惠</div>
+              <div class="content">${formatMoney(member.baseTotal)}</div>
+            </div>
+            <div class="student-money-box">
+              <div class="label">${discount > 0 ? '折扣後' : '應付金額'}</div>
+              <div class="content">${formatMoney(member.total)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function studentFieldHtml(label, content) {
+  return `
+    <div class="student-field">
+      <div class="label">${escapeHtml(label)}</div>
+      <div class="content">${content}</div>
     </div>
-  `).join('');
+  `;
+}
+
+function buildAdjustmentParts(reg) {
+  const members = reg.familyMembers || [reg];
+  return members.map(member => {
+    const detail = buildMemberAdjustmentText(member);
+    return detail ? member.name + '：' + detail : '';
+  }).filter(Boolean);
+}
+
+function buildMemberAdjustmentText(member) {
+  const details = [];
+  if (member.adjustmentLabel) details.push(member.adjustmentLabel);
+  if (member.adjustmentAmount !== 0) details.push('調整金額 ' + formatSignedMoney(member.adjustmentAmount));
+  if (member.adjustedTotalOverride > 0) details.push('指定總費用 ' + formatMoney(member.adjustedTotalOverride));
+  return details.join('｜');
 }
 
 function getInsuranceMembers(reg) {
