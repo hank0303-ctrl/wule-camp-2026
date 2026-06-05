@@ -284,6 +284,8 @@
     border-radius: 10px;
     background: #FFFEFC;
     overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
   }
 
   .student-card-head {
@@ -311,8 +313,15 @@
 
   .student-card-body {
     display: grid;
+    grid-template-rows: auto 1fr auto;
     gap: 12px;
     padding: 14px;
+  }
+
+  .student-fields {
+    display: grid;
+    align-content: start;
+    gap: 12px;
   }
 
   .student-field {
@@ -336,8 +345,9 @@
 
   .student-money {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px;
+    align-self: end;
   }
 
   .student-money-box {
@@ -704,7 +714,6 @@
     .status-pill { display: inline-block; margin-top: 10px; }
     .info-row { grid-template-columns: 108px 1fr; padding: 11px 12px; }
     .family-detail-grid { grid-template-columns: 1fr; }
-    .student-money { grid-template-columns: 1fr; }
     .family-member { grid-template-columns: 1fr; gap: 5px; }
     .family-member .member-fee { white-space: normal; }
     .deadline { display: block; }
@@ -1151,7 +1160,6 @@ function renderFamilyDetailCards(reg, isFamily) {
   const members = reg.familyMembers || [];
   $('familyDetailGrid').innerHTML = members.map((member, index) => {
     const adjustment = buildMemberAdjustmentText(member);
-    const discount = Math.max(member.baseTotal - member.total, 0);
     const optionalRows = [
       shouldShowOptionalInfo(member.health) ? studentFieldHtml('身體狀況', escapeHtml(member.health)) : '',
       shouldShowOptionalInfo(member.diet) ? studentFieldHtml('飲食注意', escapeHtml(member.diet)) : '',
@@ -1165,20 +1173,18 @@ function renderFamilyDetailCards(reg, isFamily) {
           <span>第 ${index + 1} 位</span>
         </div>
         <div class="student-card-body">
-          ${studentFieldHtml('報名期數', formatSessionList(member.sessions))}
-          ${studentFieldHtml('付款方式', escapeHtml(member.payment))}
-          ${studentFieldHtml('延托服務', escapeHtml(member.aftercare))}
-          ${studentFieldHtml('裝備需求', escapeHtml(member.equipment))}
-          ${optionalRows}
+          <div class="student-fields">
+            ${studentFieldHtml('報名期數', formatSessionList(member.sessions))}
+            ${studentFieldHtml('付款方式', escapeHtml(member.payment))}
+            ${studentFieldHtml('延托服務', escapeHtml(member.aftercare))}
+            ${studentFieldHtml('裝備需求', escapeHtml(member.equipment))}
+            ${optionalRows}
+          </div>
           <div class="student-money">
             <div class="student-money-box">
               <div class="label">總金額</div>
               <div class="sub-label">已扣除多週報名優惠</div>
               <div class="content">${formatMoney(member.baseTotal)}</div>
-            </div>
-            <div class="student-money-box">
-              <div class="label">${discount > 0 ? '折扣後' : '應付金額'}</div>
-              <div class="content">${formatMoney(member.total)}</div>
             </div>
           </div>
         </div>
