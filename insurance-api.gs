@@ -19,7 +19,8 @@ const INSURANCE_HEADERS = [
   '與小朋友關係',
   '聯絡地址',
   '備註',
-  '資料確認'
+  '資料確認',
+  '肖像權同意'
 ];
 
 const WEEKLY_INSURANCE_SHEETS = [
@@ -97,7 +98,8 @@ function doPost(e) {
       data.relationship || '',
       data.address || '',
       data.note || '',
-      data.confirmed ? '已確認' : ''
+      data.confirmed ? '已確認' : '',
+      data.portraitConsent ? '同意' : '未同意'
     ]);
 
     refreshWeeklyInsuranceSheets_();

@@ -475,6 +475,125 @@
     flex: 0 0 auto;
   }
 
+  .portrait-consent {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--gold-pale);
+    padding: 14px;
+    margin-top: 14px;
+  }
+
+  .portrait-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .portrait-head strong {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .read-btn {
+    border: 1px solid #E9D2A0;
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--gold);
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  .portrait-consent .confirm {
+    margin-top: 0;
+  }
+
+  .portrait-consent input:disabled + span {
+    color: #9B9385;
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(26, 22, 16, 0.62);
+  }
+
+  .modal.show {
+    display: flex;
+  }
+
+  .modal-panel {
+    width: min(680px, 100%);
+    max-height: min(82vh, 760px);
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 80px rgba(26, 22, 16, 0.28);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+  }
+
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-head strong {
+    font-family: 'Noto Serif TC', serif;
+    color: var(--gold);
+    font-size: 18px;
+  }
+
+  .modal-close {
+    border: none;
+    background: transparent;
+    color: var(--ink-light);
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    padding: 2px 6px;
+  }
+
+  .modal-body {
+    overflow: auto;
+    padding: 18px;
+    color: var(--ink-mid);
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .modal-body h3 {
+    color: var(--ink);
+    font-size: 16px;
+    margin: 18px 0 6px;
+  }
+
+  .modal-body h3:first-child {
+    margin-top: 0;
+  }
+
+  .modal-actions {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    background: #FFFEFC;
+  }
+
   .hidden { display: none; }
 
   @media (max-width: 640px) {
@@ -492,6 +611,8 @@
     .deadline { display: block; }
     .deadline strong { display: block; margin-top: 5px; }
     .payment-row { grid-template-columns: 62px 1fr; }
+    .portrait-head { display: block; }
+    .read-btn { margin-top: 8px; width: 100%; }
   }
 </style>
 </head>
@@ -591,6 +712,16 @@
   <section class="card hidden" id="insuranceCard">
     <div class="section-title">補填保險資料</div>
     <div class="insurance-forms" id="insuranceForms"></div>
+    <div class="portrait-consent">
+      <div class="portrait-head">
+        <strong>肖像權與活動影像使用</strong>
+        <button class="read-btn" id="portraitReadBtn" type="button">閱讀聲明</button>
+      </div>
+      <label class="confirm">
+        <input type="checkbox" id="portraitConsent" disabled>
+        <span>我已閱讀並同意本次活動影像記錄及使用說明。</span>
+      </label>
+    </div>
     <label class="confirm">
       <input type="checkbox" id="confirmed">
       <span>我已確認上方報名資訊與繳費狀態正確，並同意提供以上資料作為本次營隊保險使用。</span>
@@ -599,6 +730,31 @@
     <div class="notice" id="submitMsg"></div>
   </section>
 </main>
+
+<div class="modal" id="portraitModal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="portraitTitle">
+    <div class="modal-head">
+      <strong id="portraitTitle">活動影像記錄及使用說明</strong>
+      <button class="modal-close" id="portraitCloseBtn" type="button" aria-label="關閉">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>活動影像記錄及使用說明</h3>
+      <p>為記錄本次「2026 -武動冬季，探索文化力！」的精彩過程，活動期間我們將進行拍照及錄影，捕捉孩子們在課堂中的學習歷程與成長瞬間。這些影像將作為未來活動分享與推廣素材，讓更多人看見孩子們的熱情與努力。</p>
+
+      <h3>影像使用範圍</h3>
+      <p>活動過程之照片、影片，將用於活動紀錄、教室宣傳、社群媒體及官方網站等對外推廣。使用僅限於教室之教學成果展示與未來活動推廣，不另收取或支付任何費用。</p>
+
+      <h3>影像處理方式</h3>
+      <p>影像內容可能經適度剪輯、美編，提升呈現效果。所有影像僅限於本活動及教室相關用途，不另作其他商業或不當使用。</p>
+
+      <h3>權益聲明</h3>
+      <p>為保障參加者知情權與肖像權，完成報名手續者，視為已閱讀並同意本影像使用聲明。若有任何疑慮或特殊需求，請於活動前主動聯繫官方 LINE 私訊洽詢。</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn full" id="portraitReadDoneBtn" type="button">我已閱讀</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const READ_GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
@@ -678,6 +834,21 @@ function showNotice(el, type, message) {
 function hideNotice(el) {
   el.className = 'notice';
   el.textContent = '';
+}
+
+function openPortraitModal() {
+  $('portraitModal').classList.add('show');
+  $('portraitModal').setAttribute('aria-hidden', 'false');
+}
+
+function closePortraitModal() {
+  $('portraitModal').classList.remove('show');
+  $('portraitModal').setAttribute('aria-hidden', 'true');
+}
+
+function markPortraitRead() {
+  $('portraitConsent').disabled = false;
+  closePortraitModal();
 }
 
 function jsonp(url, params, timeoutMs = 10000) {
@@ -1010,6 +1181,7 @@ async function submitInsurance() {
           relationship: item.relationship,
           address: item.address,
           note: item.note,
+          portraitConsent: $('portraitConsent').checked,
           confirmed: $('confirmed').checked
         })
       });
@@ -1033,6 +1205,12 @@ $('insuranceForms').addEventListener('input', e => {
 });
 $('lookupBtn').addEventListener('click', lookupRegistration);
 $('submitBtn').addEventListener('click', submitInsurance);
+$('portraitReadBtn').addEventListener('click', openPortraitModal);
+$('portraitCloseBtn').addEventListener('click', closePortraitModal);
+$('portraitReadDoneBtn').addEventListener('click', markPortraitRead);
+$('portraitModal').addEventListener('click', e => {
+  if (e.target === $('portraitModal')) closePortraitModal();
+});
 
 pingInsuranceApi();
 </script>
