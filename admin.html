@@ -1414,24 +1414,24 @@ function renderCommonExpensesList() {
   }
   return items.map((item, i) => `
     <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:#FFFEFC;">
-      <div style="display:grid;grid-template-columns:72px 96px 1fr 100px;gap:8px;align-items:end;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;align-items:end;">
         <div>
           <label style="font-size:11px;color:var(--ink-light);font-weight:700;">日期</label>
-          <input class="text-input" style="padding:7px 8px;font-size:12px;" value="${item.date||''}" placeholder="6/10" oninput="updateCommonExpense(${i},'date',this.value)">
+          <input class="text-input" style="width:100%;min-width:0;padding:7px 8px;font-size:12px;" value="${item.date||''}" placeholder="6/10" oninput="updateCommonExpense(${i},'date',this.value)">
         </div>
         <div>
           <label style="font-size:11px;color:var(--ink-light);font-weight:700;">分類</label>
-          <select class="text-input" style="padding:7px 8px;font-size:12px;" onchange="updateCommonExpense(${i},'category',this.value)">
+          <select class="text-input" style="width:100%;min-width:0;padding:7px 8px;font-size:12px;" onchange="updateCommonExpense(${i},'category',this.value)">
             ${COMMON_CATEGORIES.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c}</option>`).join('')}
           </select>
         </div>
         <div>
           <label style="font-size:11px;color:var(--ink-light);font-weight:700;">項目名稱</label>
-          <input class="text-input" style="padding:7px 8px;font-size:12px;" value="${item.item||''}" placeholder="游泳訂金" oninput="updateCommonExpense(${i},'item',this.value)">
+          <input class="text-input" style="width:100%;min-width:0;padding:7px 8px;font-size:12px;" value="${item.item||''}" placeholder="游泳訂金" oninput="updateCommonExpense(${i},'item',this.value)">
         </div>
         <div>
           <label style="font-size:11px;color:var(--ink-light);font-weight:700;">金額</label>
-          <input type="number" class="text-input" style="padding:7px 8px;font-size:12px;text-align:right;" value="${item.amount||''}" placeholder="0" oninput="updateCommonExpense(${i},'amount',parseInt(this.value)||0)">
+          <input type="number" class="text-input" style="width:100%;min-width:0;padding:7px 8px;font-size:12px;text-align:right;" value="${item.amount||''}" placeholder="0" oninput="updateCommonExpense(${i},'amount',parseInt(this.value)||0)">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;align-items:start;">
