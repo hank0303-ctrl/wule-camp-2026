@@ -1077,6 +1077,17 @@ const LEDGER_SESSIONS = [
 ];
 
 const DEFAULT_CATEGORIES = ['餐費','點心','羽球','戶外','雜費','職能課費','科學手作'];
+const COMMON_CATEGORIES = ['游泳','團服','材料','行政','保險','其他'];
+const ALLOCATION_METHODS = [
+  { value: 'all', label: '平均分攤到所有期別' },
+  { value: 'selected', label: '分攤到指定期別' },
+  { value: 'studentRatio', label: '依各期學生人數比例分攤' }
+];
+const FIXED_ALLOCATION_METHODS = [
+  { value: 'selected', label: '全部計入指定期別' },
+  { value: 'all', label: '平均分攤到所有期別' },
+  { value: 'studentRatio', label: '依學生人數比例分攤' }
+];
 
 // ledgerData 結構：
 // {
@@ -1088,10 +1099,15 @@ const DEFAULT_CATEGORIES = ['餐費','點心','羽球','戶外','雜費','職能
 //     extraCategories: [], // 自訂分類
 //     entries: [{date, item, category, amount, note}]
 //   }],
-//   extraCategories: []    // 全域額外分類
+//   extraCategories: [],   // 全域額外分類
+//   commonExpenses: [{date, category, item, amount, method, weeks, note}],
+//   fixedCosts: {
+//     rent: { amount, method, weeks },
+//     staff: { amount, method, weeks }
+//   }
 // }
 
-let ledgerData = { weeks: [], extraCategories: [] };
+let ledgerData = { weeks: [], extraCategories: [], commonExpenses: [], fixedCosts: null };
 let currentLedgerWeek = 0;
 
 function saveLedger() {
@@ -1102,6 +1118,30 @@ function loadLedgerStorage() {
   const saved = localStorage.getItem('wule_ledger');
   if (saved) {
     try { ledgerData = JSON.parse(saved); } catch(e) { ledgerData = { weeks: [], extraCategories: [] }; }
+  }
+  migrateLedgerData();
+}
+
+function migrateLedgerData() {
+  if (!ledgerData.weeks) ledgerData.weeks = [];
+  if (!ledgerData.extraCategories) ledgerData.extraCategories = [];
+  if (!ledgerData.commonExpenses) ledgerData.commonExpenses = [];
+
+  if (!ledgerData.fixedCosts) {
+    const rentWeeks = ledgerData.weeks.filter(w => (w.rent||0) > 0);
+    const staffWeeks = ledgerData.weeks.filter(w => (w.staff||0) > 0);
+    ledgerData.fixedCosts = {
+      rent: {
+        amount: rentWeeks.reduce((sum, w) => sum + (w.rent||0), 0),
+        method: rentWeeks.length > 1 ? 'selected' : 'selected',
+        weeks: rentWeeks.length ? rentWeeks.map(w => w.id) : [ledgerData.weeks[0]?.id].filter(Boolean)
+      },
+      staff: {
+        amount: staffWeeks.reduce((sum, w) => sum + (w.staff||0), 0),
+        method: staffWeeks.length > 1 ? 'selected' : 'selected',
+        weeks: staffWeeks.length ? staffWeeks.map(w => w.id) : [ledgerData.weeks[0]?.id].filter(Boolean)
+      }
+    };
   }
 }
 
@@ -1118,6 +1158,8 @@ function initLedger() {
     });
     saveLedger();
   }
+  migrateLedgerData();
+  saveLedger();
   currentLedgerWeek = 0;
   renderLedgerTabs();
   renderLedgerWeek();
@@ -1172,6 +1214,63 @@ function getWeekIncome(w) {
   return Math.round(total);
 }
 
+function getLedgerWeekIds() {
+  return ledgerData.weeks.map(w => w.id);
+}
+
+function getApplicableWeekIds(item) {
+  const allIds = getLedgerWeekIds();
+  if (!item) return allIds;
+  if (item.method === 'all') return allIds;
+  const selected = (item.weeks || []).filter(id => allIds.includes(id));
+  return selected.length ? selected : allIds;
+}
+
+function calcAllocatedAmount(item, week) {
+  const amount = Number(item?.amount || 0);
+  if (!amount || !week) return 0;
+  const weekIds = getApplicableWeekIds(item);
+  if (!weekIds.includes(week.id)) return 0;
+
+  if (item.method === 'studentRatio') {
+    const targetWeeks = ledgerData.weeks.filter(w => weekIds.includes(w.id));
+    const totalStudents = targetWeeks.reduce((sum, w) => sum + getWeekStudentCount(w), 0);
+    if (totalStudents <= 0) return Math.round(amount / weekIds.length);
+    return Math.round(amount * getWeekStudentCount(week) / totalStudents);
+  }
+
+  return Math.round(amount / weekIds.length);
+}
+
+function getWeekCommonAllocation(w) {
+  return (ledgerData.commonExpenses || []).reduce((sum, item) => sum + calcAllocatedAmount(item, w), 0);
+}
+
+function getWeekFixedAllocation(w) {
+  const fixed = ledgerData.fixedCosts || {};
+  const rent = calcAllocatedAmount(fixed.rent, w);
+  const staff = calcAllocatedAmount(fixed.staff, w);
+  return { rent, staff, total: rent + staff };
+}
+
+function getMethodLabel(method) {
+  return (ALLOCATION_METHODS.find(m => m.value === method) || ALLOCATION_METHODS[0]).label;
+}
+
+function renderWeekCheckboxes(name, selected = [], method = 'selected') {
+  const disabled = method === 'all';
+  const activeSelected = method === 'all' ? getLedgerWeekIds() : selected;
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+    ${ledgerData.weeks.map(w => `
+      <label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-light);background:${activeSelected.includes(w.id)?'var(--gold-pale)':'#FAFAF8'};border:1px solid var(--border);border-radius:999px;padding:4px 8px;">
+        <input type="checkbox" ${activeSelected.includes(w.id)?'checked':''} ${disabled?'disabled':''}
+          onchange="${name}(this.value, this.checked)" value="${w.id}" style="width:auto;">
+        ${w.name}
+      </label>
+    `).join('')}
+  </div>`;
+}
+
 function calcWeekSummary(w) {
   const cats = getAllCategories(w);
   const summary = {};
@@ -1184,9 +1283,11 @@ function calcWeekSummary(w) {
   const studentCount = getWeekStudentCount(w);
   const autoIncome = getWeekIncome(w);
   const income = w.income > 0 ? w.income : autoIncome;
-  const grossProfit = income - variableTotal - (w.rent||0) - (w.staff||0);
-  const netProfit = income - variableTotal - (w.rent||0) - (w.staff||0);
-  return { summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit };
+  const commonAllocation = getWeekCommonAllocation(w);
+  const fixedAllocation = getWeekFixedAllocation(w);
+  const grossProfit = income - variableTotal;
+  const netProfit = income - variableTotal - commonAllocation - fixedAllocation.total;
+  return { summary, variableTotal, studentCount, income, autoIncome, commonAllocation, fixedAllocation, grossProfit, netProfit };
 }
 
 function renderLedgerWeek() {
@@ -1194,7 +1295,7 @@ function renderLedgerWeek() {
   if (!ledgerData.weeks.length) { el.innerHTML = ''; return; }
   const w = ledgerData.weeks[currentLedgerWeek];
   const cats = getAllCategories(w);
-  const { summary, variableTotal, studentCount, income, autoIncome, grossProfit } = calcWeekSummary(w);
+  const { summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit, commonAllocation, fixedAllocation } = calcWeekSummary(w);
 
   el.innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -1235,18 +1336,8 @@ function renderLedgerWeek() {
       <!-- 固定費用 -->
       <div class="card">
         <div class="card-title">固定費用設定</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="price-field">
-            <label>店租</label>
-            <input type="number" id="ledger-rent" value="${w.rent||''}" placeholder="例：12500"
-              class="text-input" oninput="updateLedgerFixed()">
-          </div>
-          <div class="price-field">
-            <label>人事費用</label>
-            <input type="number" id="ledger-staff" value="${w.staff||''}" placeholder="例：44965"
-              class="text-input" oninput="updateLedgerFixed()">
-          </div>
-        </div>
+        ${renderFixedCostEditor('rent', '店租')}
+        ${renderFixedCostEditor('staff', '人事費用')}
         <div class="price-field" style="margin-top:8px;">
           <label style="display:flex;align-items:center;gap:8px;">
             單週收入
@@ -1255,6 +1346,18 @@ function renderLedgerWeek() {
           <input type="number" id="ledger-income" value="${w.income > 0 ? w.income : ''}" placeholder="留空 = 自動計算"
             class="text-input" oninput="updateLedgerFixed()">
         </div>
+      </div>
+
+      <!-- 共同費用 -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+          <div>
+            <div class="card-title" style="margin:0;">共同費用／前期支出</div>
+            <div style="font-size:12px;color:var(--ink-light);margin-top:4px;">記錄跨期共用或營隊開始前支出，系統自動分攤到各期。</div>
+          </div>
+          <button onclick="addCommonExpense()" style="padding:5px 12px;background:var(--gold);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">＋ 新增</button>
+        </div>
+        <div id="common-expenses-list">${renderCommonExpensesList()}</div>
       </div>
     </div>
 
@@ -1273,12 +1376,85 @@ function renderLedgerWeek() {
             </tr>
           </thead>
           <tbody id="ledger-summary-table">
-            ${buildSummaryRows(w, cats, summary, variableTotal, studentCount, income, autoIncome, grossProfit)}
+            ${buildSummaryRows(w, cats, summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit, commonAllocation, fixedAllocation)}
           </tbody>
         </table>
       </div>
     </div>
   </div>`;
+}
+
+function renderFixedCostEditor(key, label) {
+  const item = ledgerData.fixedCosts?.[key] || { amount: 0, method: 'selected', weeks: [] };
+  return `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:#FFFEFC;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="price-field">
+          <label>${label}</label>
+          <input type="number" value="${item.amount || ''}" placeholder="例：12500"
+            class="text-input" oninput="updateFixedCost('${key}','amount',parseInt(this.value)||0)">
+        </div>
+        <div class="price-field">
+          <label>分攤方式</label>
+          <select class="text-input" onchange="updateFixedCost('${key}','method',this.value)">
+            ${FIXED_ALLOCATION_METHODS.map(m => `<option value="${m.value}" ${item.method===m.value?'selected':''}>${m.label}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-light);margin-top:6px;">適用期別</div>
+      ${renderWeekCheckboxes(`toggleFixedCostWeek.bind(null,'${key}')`, item.weeks || [], item.method || 'selected')}
+    </div>
+  `;
+}
+
+function renderCommonExpensesList() {
+  const items = ledgerData.commonExpenses || [];
+  if (!items.length) {
+    return '<div style="padding:18px;text-align:center;color:var(--ink-light);font-size:12px;border:1px dashed var(--border);border-radius:10px;">尚無共同費用，點「＋ 新增」開始記錄。</div>';
+  }
+  return items.map((item, i) => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:#FFFEFC;">
+      <div style="display:grid;grid-template-columns:72px 96px 1fr 100px;gap:8px;align-items:end;">
+        <div>
+          <label style="font-size:11px;color:var(--ink-light);font-weight:700;">日期</label>
+          <input class="text-input" style="padding:7px 8px;font-size:12px;" value="${item.date||''}" placeholder="6/10" oninput="updateCommonExpense(${i},'date',this.value)">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--ink-light);font-weight:700;">分類</label>
+          <select class="text-input" style="padding:7px 8px;font-size:12px;" onchange="updateCommonExpense(${i},'category',this.value)">
+            ${COMMON_CATEGORIES.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--ink-light);font-weight:700;">項目名稱</label>
+          <input class="text-input" style="padding:7px 8px;font-size:12px;" value="${item.item||''}" placeholder="游泳訂金" oninput="updateCommonExpense(${i},'item',this.value)">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--ink-light);font-weight:700;">金額</label>
+          <input type="number" class="text-input" style="padding:7px 8px;font-size:12px;text-align:right;" value="${item.amount||''}" placeholder="0" oninput="updateCommonExpense(${i},'amount',parseInt(this.value)||0)">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;align-items:start;">
+        <div>
+          <label style="font-size:11px;color:var(--ink-light);font-weight:700;">分攤方式</label>
+          <select class="text-input" style="padding:7px 8px;font-size:12px;" onchange="updateCommonExpense(${i},'method',this.value)">
+            ${ALLOCATION_METHODS.map(m => `<option value="${m.value}" ${item.method===m.value?'selected':''}>${m.label}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--ink-light);font-weight:700;">備註</label>
+          <input class="text-input" style="padding:7px 8px;font-size:12px;" value="${item.note||''}" placeholder="" oninput="updateCommonExpense(${i},'note',this.value)">
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:8px;">
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--ink-light);font-weight:700;">適用期別</div>
+          ${renderWeekCheckboxes(`toggleCommonExpenseWeek.bind(null,${i})`, item.weeks || [], item.method || 'selected')}
+        </div>
+        <button onclick="deleteCommonExpense(${i})" style="border:none;background:none;color:#C0392B;cursor:pointer;font-size:18px;padding:4px 6px;">×</button>
+      </div>
+    </div>
+  `).join('');
 }
 
 function renderEntryRow(e, i, cats) {
@@ -1351,14 +1527,14 @@ function renderLedgerSummaryOnly() {
   // 只重渲右側統計表，不動左側輸入
   const w = ledgerData.weeks[currentLedgerWeek];
   const cats = getAllCategories(w);
-  const { summary, variableTotal, studentCount, income, autoIncome, grossProfit } = calcWeekSummary(w);
+  const { summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit, commonAllocation, fixedAllocation } = calcWeekSummary(w);
 
   const summaryEl = document.getElementById('ledger-summary-table');
   if (!summaryEl) return;
-  summaryEl.innerHTML = buildSummaryRows(w, cats, summary, variableTotal, studentCount, income, autoIncome, grossProfit);
+  summaryEl.innerHTML = buildSummaryRows(w, cats, summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit, commonAllocation, fixedAllocation);
 }
 
-function buildSummaryRows(w, cats, summary, variableTotal, studentCount, income, autoIncome, grossProfit) {
+function buildSummaryRows(w, cats, summary, variableTotal, studentCount, income, autoIncome, grossProfit, netProfit, commonAllocation, fixedAllocation) {
   return cats.map((c, i) => `
     <tr style="${i%2===0?'background:#FAFAF8;':''}border-top:1px solid var(--border);">
       <td style="padding:8px 12px;">${c}</td>
@@ -1371,13 +1547,18 @@ function buildSummaryRows(w, cats, summary, variableTotal, studentCount, income,
       <td style="padding:8px 12px;text-align:right;color:var(--ink-light);">${studentCount>0?'$'+Math.round(variableTotal/studentCount).toLocaleString():'—'}</td>
     </tr>
     <tr style="border-top:1px solid var(--border);">
-      <td style="padding:8px 12px;color:var(--ink-light);">店租</td>
-      <td style="padding:8px 12px;text-align:right;">$${(w.rent||0).toLocaleString()}</td>
-      <td></td>
+      <td style="padding:8px 12px;color:var(--ink-light);">共同費用分攤</td>
+      <td style="padding:8px 12px;text-align:right;">$${commonAllocation.toLocaleString()}</td>
+      <td style="padding:8px 12px;text-align:right;color:var(--ink-light);">${studentCount>0?'$'+Math.round(commonAllocation/studentCount).toLocaleString():'—'}</td>
     </tr>
     <tr style="border-top:1px solid var(--border);">
-      <td style="padding:8px 12px;color:var(--ink-light);">人事費用</td>
-      <td style="padding:8px 12px;text-align:right;">$${(w.staff||0).toLocaleString()}</td>
+      <td style="padding:8px 12px;color:var(--ink-light);">固定成本分攤</td>
+      <td style="padding:8px 12px;text-align:right;">$${fixedAllocation.total.toLocaleString()}</td>
+      <td style="padding:8px 12px;text-align:right;color:var(--ink-light);">${studentCount>0?'$'+Math.round(fixedAllocation.total/studentCount).toLocaleString():'—'}</td>
+    </tr>
+    <tr style="border-top:1px solid var(--border);font-size:12px;">
+      <td style="padding:7px 12px;color:var(--ink-light);">　店租 / 人事</td>
+      <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${fixedAllocation.rent.toLocaleString()} / $${fixedAllocation.staff.toLocaleString()}</td>
       <td></td>
     </tr>
     <tr style="border-top:1px solid var(--border);background:#FFFDF5;">
@@ -1391,19 +1572,84 @@ function buildSummaryRows(w, cats, summary, variableTotal, studentCount, income,
       <td style="padding:10px 12px;text-align:right;color:#7A5C00;">${income>0?Math.round((income-variableTotal)/income*100)+'%':'—'}</td>
     </tr>
     <tr style="border-top:1px solid #E8C97A;background:#FFF3CD;">
-      <td style="padding:10px 12px;font-weight:700;color:#5C4200;">盈利</td>
-      <td style="padding:10px 12px;text-align:right;font-weight:700;color:#5C4200;">$${grossProfit.toLocaleString()}</td>
-      <td style="padding:10px 12px;text-align:right;color:#5C4200;">${income>0?Math.round(grossProfit/income*100)+'%':'—'}</td>
+      <td style="padding:10px 12px;font-weight:700;color:#5C4200;">真實盈利</td>
+      <td style="padding:10px 12px;text-align:right;font-weight:700;color:#5C4200;">$${netProfit.toLocaleString()}</td>
+      <td style="padding:10px 12px;text-align:right;color:#5C4200;">${income>0?Math.round(netProfit/income*100)+'%':'—'}</td>
     </tr>`;
 }
 
 function updateLedgerFixed() {
   const w = ledgerData.weeks[currentLedgerWeek];
-  w.rent   = parseInt(document.getElementById('ledger-rent')?.value) || 0;
-  w.staff  = parseInt(document.getElementById('ledger-staff')?.value) || 0;
   w.income = parseInt(document.getElementById('ledger-income')?.value) || 0;
   saveLedger();
-  refreshLedgerSummary();
+  renderLedgerSummaryOnly();
+  renderLedgerOverview();
+}
+
+function updateFixedCost(key, field, value) {
+  if (!ledgerData.fixedCosts) migrateLedgerData();
+  if (!ledgerData.fixedCosts[key]) ledgerData.fixedCosts[key] = { amount: 0, method: 'selected', weeks: [] };
+  ledgerData.fixedCosts[key][field] = value;
+  if (field === 'method' && value === 'all') ledgerData.fixedCosts[key].weeks = getLedgerWeekIds();
+  saveLedger();
+  if (field === 'method') renderLedgerWeek();
+  else renderLedgerSummaryOnly();
+  renderLedgerOverview();
+}
+
+function toggleFixedCostWeek(key, weekId, checked) {
+  if (!ledgerData.fixedCosts?.[key]) return;
+  const weeks = new Set(ledgerData.fixedCosts[key].weeks || []);
+  checked ? weeks.add(weekId) : weeks.delete(weekId);
+  ledgerData.fixedCosts[key].weeks = [...weeks];
+  saveLedger();
+  renderLedgerWeek();
+  renderLedgerOverview();
+}
+
+function addCommonExpense() {
+  if (!ledgerData.commonExpenses) ledgerData.commonExpenses = [];
+  ledgerData.commonExpenses.push({
+    date: '',
+    category: COMMON_CATEGORIES[0],
+    item: '',
+    amount: 0,
+    method: 'selected',
+    weeks: getLedgerWeekIds(),
+    note: ''
+  });
+  saveLedger();
+  renderLedgerWeek();
+  renderLedgerOverview();
+}
+
+function updateCommonExpense(i, field, value) {
+  const item = ledgerData.commonExpenses?.[i];
+  if (!item) return;
+  item[field] = value;
+  if (field === 'method' && value === 'all') item.weeks = getLedgerWeekIds();
+  saveLedger();
+  if (field === 'method') renderLedgerWeek();
+  else renderLedgerSummaryOnly();
+  renderLedgerOverview();
+}
+
+function toggleCommonExpenseWeek(i, weekId, checked) {
+  const item = ledgerData.commonExpenses?.[i];
+  if (!item) return;
+  const weeks = new Set(item.weeks || []);
+  checked ? weeks.add(weekId) : weeks.delete(weekId);
+  item.weeks = [...weeks];
+  saveLedger();
+  renderLedgerWeek();
+  renderLedgerOverview();
+}
+
+function deleteCommonExpense(i) {
+  if (!ledgerData.commonExpenses) return;
+  ledgerData.commonExpenses.splice(i, 1);
+  saveLedger();
+  renderLedgerWeek();
   renderLedgerOverview();
 }
 
@@ -1439,21 +1685,37 @@ function renderLedgerOverview() {
   if (!el || !ledgerData.weeks.length) return;
 
   const allCats = [...DEFAULT_CATEGORIES, ...(ledgerData.extraCategories||[])];
-  let totalIncome = 0, totalVariable = 0, totalRent = 0, totalStaff = 0;
+  let totalIncome = 0, totalVariable = 0, totalCommon = 0, totalFixed = 0;
   const weekRows = ledgerData.weeks.map(w => {
-    const { summary, variableTotal, studentCount, income, grossProfit } = calcWeekSummary(w);
+    const { summary, variableTotal, studentCount, income, grossProfit, netProfit, commonAllocation, fixedAllocation } = calcWeekSummary(w);
     totalIncome += income;
     totalVariable += variableTotal;
-    totalRent += (w.rent||0);
-    totalStaff += (w.staff||0);
-    return { w, summary, variableTotal, studentCount, income, grossProfit };
+    totalCommon += commonAllocation;
+    totalFixed += fixedAllocation.total;
+    return { w, summary, variableTotal, studentCount, income, grossProfit, netProfit, commonAllocation, fixedAllocation };
   });
   const totalGross = totalIncome - totalVariable;
-  const totalNet = totalIncome - totalVariable - totalRent - totalStaff;
+  const totalExpense = totalVariable + totalCommon + totalFixed;
+  const totalNet = totalIncome - totalExpense;
+  const totalCommonOriginal = (ledgerData.commonExpenses || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   el.innerHTML = `
   <div class="card">
     <div class="card-title">整體總覽</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;">
+      ${[
+        ['總收入', totalIncome],
+        ['總支出', totalExpense],
+        ['總毛利', totalGross],
+        ['總淨利', totalNet],
+        ['共同費用總額', totalCommonOriginal]
+      ].map(([label, value]) => `
+        <div style="background:var(--gold-pale);border:1px solid #E9D2A0;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:var(--ink-light);font-weight:700;margin-bottom:4px;">${label}</div>
+          <div style="font-size:18px;font-weight:800;color:${label==='總淨利'?'#5C4200':'var(--ink)'};">$${value.toLocaleString()}</div>
+        </div>
+      `).join('')}
+    </div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px;">
         <thead>
@@ -1480,14 +1742,14 @@ function renderLedgerOverview() {
             <td style="padding:8px 12px;text-align:right;font-weight:700;">$${totalVariable.toLocaleString()}</td>
           </tr>
           <tr style="border-top:1px solid var(--border);">
-            <td style="padding:7px 12px;color:var(--ink-light);">店租</td>
-            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--ink-light);">${(r.w.rent||0)>0?'$'+(r.w.rent||0).toLocaleString():'—'}</td>`).join('')}
-            <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${totalRent.toLocaleString()}</td>
+            <td style="padding:7px 12px;color:var(--ink-light);">共同費用分攤</td>
+            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--ink-light);">${r.commonAllocation>0?'$'+r.commonAllocation.toLocaleString():'—'}</td>`).join('')}
+            <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${totalCommon.toLocaleString()}</td>
           </tr>
           <tr style="border-top:1px solid var(--border);">
-            <td style="padding:7px 12px;color:var(--ink-light);">人事費用</td>
-            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--ink-light);">${(r.w.staff||0)>0?'$'+(r.w.staff||0).toLocaleString():'—'}</td>`).join('')}
-            <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${totalStaff.toLocaleString()}</td>
+            <td style="padding:7px 12px;color:var(--ink-light);">固定成本分攤</td>
+            ${weekRows.map(r => `<td style="padding:7px 8px;text-align:right;color:var(--ink-light);">${r.fixedAllocation.total>0?'$'+r.fixedAllocation.total.toLocaleString():'—'}</td>`).join('')}
+            <td style="padding:7px 12px;text-align:right;color:var(--ink-light);">$${totalFixed.toLocaleString()}</td>
           </tr>
           <tr style="border-top:1px solid var(--border);background:#FFFDF5;">
             <td style="padding:7px 12px;color:var(--gold);font-weight:600;">收入</td>
@@ -1500,8 +1762,8 @@ function renderLedgerOverview() {
             <td style="padding:10px 12px;text-align:right;font-weight:700;color:#7A5C00;">$${totalGross.toLocaleString()}<div style="font-size:10px;">${totalIncome>0?Math.round(totalGross/totalIncome*100)+'%':''}</div></td>
           </tr>
           <tr style="border-top:1px solid #E8C97A;background:#FFF3CD;">
-            <td style="padding:10px 12px;font-weight:700;color:#5C4200;">盈利</td>
-            ${weekRows.map(r => `<td style="padding:10px 8px;text-align:right;font-weight:700;color:#5C4200;">$${r.grossProfit.toLocaleString()}<div style="font-size:10px;">${r.income>0?Math.round(r.grossProfit/r.income*100)+'%':''}</div></td>`).join('')}
+            <td style="padding:10px 12px;font-weight:700;color:#5C4200;">各期真實盈利</td>
+            ${weekRows.map(r => `<td style="padding:10px 8px;text-align:right;font-weight:700;color:#5C4200;">$${r.netProfit.toLocaleString()}<div style="font-size:10px;">${r.income>0?Math.round(r.netProfit/r.income*100)+'%':''}</div></td>`).join('')}
             <td style="padding:10px 12px;text-align:right;font-weight:700;color:#5C4200;">$${totalNet.toLocaleString()}<div style="font-size:10px;">${totalIncome>0?Math.round(totalNet/totalIncome*100)+'%':''}</div></td>
           </tr>
         </tbody>
