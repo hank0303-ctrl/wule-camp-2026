@@ -404,7 +404,7 @@
 
       <!-- 收費單內容 -->
       <div id="sub-panel-invoice">
-      <p class="panel-sub" style="margin-top:-12px;">選擇學員後自動帶入費用資料，可新增細項，生成收費圖片直接傳給家長。</p>
+      <p class="panel-sub" style="margin-top:-12px;">收到最後尾款後，選擇學員自動帶入報名與費用明細，可新增加收或折扣，生成收費明細證明給家長。</p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="invoice-grid">
 
@@ -436,29 +436,29 @@
 
             <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
               <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-                <span style="color:var(--ink-light);">課程費用</span>
+                <span style="color:var(--ink-light);">試算表總費用</span>
                 <span id="inv-course-total" style="font-weight:500;">$0</span>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;" id="inv-extra-row" style="display:none;">
-                <span style="color:var(--ink-light);">其他費用</span>
+                <span style="color:var(--ink-light);">手動加減</span>
                 <span id="inv-extra-total" style="font-weight:500;">$0</span>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-                <span>總計</span>
+                <span>收據總金額</span>
                 <span id="inv-grand-total" style="color:var(--gold);">$0</span>
               </div>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-title">繳費資訊</div>
+            <div class="card-title">收款資訊</div>
             <div style="display:grid;gap:12px;">
               <div class="price-field">
-                <label>繳費截止日期</label>
-                <input type="date" id="inv-due" class="text-input" onchange="updatePreview()">
+                <label>本次收到尾款金額</label>
+                <input type="number" id="inv-final-paid" class="text-input" placeholder="例：5000" oninput="updatePreview()">
               </div>
               <div class="price-field">
-                <label>繳費方式</label>
+                <label>收款方式</label>
                 <select id="inv-method" class="text-input" onchange="updatePreview()" style="appearance:none;">
                   <option value="銀行轉帳">銀行轉帳</option>
                   <option value="信用卡">信用卡（酌收 3% 手續費）</option>
@@ -467,7 +467,7 @@
               </div>
               <div class="price-field">
                 <label>備註說明</label>
-                <input type="text" id="inv-note" class="text-input" placeholder="例：尾款繳納通知" oninput="updatePreview()">
+                <input type="text" id="inv-note" class="text-input" placeholder="例：已收到尾款，營隊費用已結清" oninput="updatePreview()">
               </div>
             </div>
           </div>
@@ -476,7 +476,7 @@
         <!-- 右側：預覽 -->
         <div>
           <div class="card" style="position:sticky;top:20px;">
-            <div class="card-title">收費單預覽</div>
+            <div class="card-title">收費明細證明預覽</div>
             <div id="invoice-preview" style="background:#FAF7F2;border-radius:10px;padding:0;overflow:hidden;border:1px solid var(--border);">
               <!-- 收費單畫面 -->
               <div style="background:#1A1610;padding:20px 24px;">
@@ -484,7 +484,7 @@
                 <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;">2026 SUMMER CAMP</div>
               </div>
               <div style="padding:20px 24px;">
-                <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:12px;">收費通知單</div>
+                <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:12px;">收費明細證明</div>
 
                 <div id="prev-student-block" style="background:white;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid var(--border);">
                   <div style="font-size:12px;color:var(--ink-light);margin-bottom:4px;">學員姓名</div>
@@ -496,21 +496,25 @@
 
                 <div style="background:white;border-radius:8px;padding:12px 14px;border:1px solid var(--border);margin-bottom:14px;">
                   <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-                    <span style="color:var(--ink-light);">已繳金額</span>
+                    <span style="color:var(--ink-light);">已收訂金／前款</span>
                     <span id="prev-paid" style="color:var(--green-soft);font-weight:500;">$0</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;">
-                    <span style="color:var(--ink-light);">尚待繳納</span>
-                    <span id="prev-remain" style="color:var(--red-soft);font-weight:700;font-size:16px;">$0</span>
+                    <span style="color:var(--ink-light);">本次收到尾款</span>
+                    <span id="prev-final-paid" style="color:var(--gold);font-weight:700;font-size:16px;">$0</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;">
+                    <span style="color:var(--ink-light);">合計已收</span>
+                    <span id="prev-paid-total" style="color:var(--green-soft);font-weight:700;">$0</span>
                   </div>
                   <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
                   <div style="display:flex;justify-content:space-between;font-size:12px;">
-                    <span style="color:var(--ink-light);">繳費方式</span>
+                    <span style="color:var(--ink-light);">收款方式</span>
                     <span id="prev-method" style="color:var(--ink-mid);">銀行轉帳</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px;">
-                    <span style="color:var(--ink-light);">繳費截止</span>
-                    <span id="prev-due" style="color:var(--red-soft);font-weight:500;">──</span>
+                    <span style="color:var(--ink-light);">款項狀態</span>
+                    <span id="prev-balance-status" style="color:var(--green-soft);font-weight:700;">已結清</span>
                   </div>
                 </div>
 
@@ -525,12 +529,12 @@
                   <div style="font-size:12px;color:var(--ink-mid);">📌 <span id="prev-note"></span></div>
                 </div>
 
-                <div style="font-size:11px;color:var(--ink-light);text-align:center;">匯款完成後請截圖傳至武樂小小運動家官方 LINE</div>
+                <div style="font-size:11px;color:var(--ink-light);text-align:center;">此單據為營隊費用收款明細證明，如有疑問請私訊官方 LINE</div>
               </div>
             </div>
 
             <button onclick="downloadInvoice()" class="save-btn" style="width:100%;justify-content:center;margin-top:14px;margin-bottom:0;">
-              ⬇ 下載收費單圖片
+              ⬇ 下載收費明細證明
             </button>
           </div>
         </div>
@@ -2241,6 +2245,12 @@ function setPaymentFilter(val) {
   renderTable();
 }
 
+function getRowValue(row, keywords) {
+  const keys = Object.keys(row || {});
+  const key = keys.find(k => keywords.some(word => k.includes(word)));
+  return key ? (row[key] || '') : '';
+}
+
 function syncFromSheet() {
   statusOverride = {}; // 清除本地覆蓋，重新從雲端載入
   loadRegsFromSheet(true);
@@ -2294,6 +2304,8 @@ function loadRegsFromSheet(showToast = false) {
       bank:         r['匯款帳號後5碼'] || '',
       health:       r['身體狀況'] || '',
       diet:         r['飲食注意'] || '',
+      rawData:      r,
+      feeAdjust:    getRowValue(r, ['費用調整','調整','優惠','折扣','額外費用']),
     }));
     renderStats();
     renderTable();
@@ -2922,17 +2934,52 @@ function initInvoice() {
   });
 }
 
+function getSessionList(text) {
+  return (text || '').split('、').map(s => s.trim()).filter(Boolean);
+}
+
+function getCustomNet() {
+  return customRows.reduce((s, r) => s + (r.type === 'discount' ? -(r.amount || 0) : (r.amount || 0)), 0);
+}
+
+function getInvoicePreviousPaid(r) {
+  const manualPaid = getPaidAmount(r);
+  if (manualPaid > 0 && manualPaid < (r.totalFee || 0)) return manualPaid;
+  return r.depositStatus === 'paid' ? (r.deposit || 0) : 0;
+}
+
+function getInvoiceTotal() {
+  return (currentStudent ? (currentStudent.totalFee || 0) : 0) + getCustomNet();
+}
+
+function getInvoiceFinalPaid() {
+  return Math.max(0, parseInt(document.getElementById('inv-final-paid')?.value, 10) || 0);
+}
+
+function moneyText(amount) {
+  const n = Number(amount || 0);
+  return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString();
+}
+
 function loadStudentData() {
   const idx = document.getElementById('inv-student').value;
   if (idx === '') { currentStudent = null; updatePreview(); return; }
   currentStudent = allRegs[idx];
+  customRows = [];
+  renderCustomRows();
+  const previousPaid = getInvoicePreviousPaid(currentStudent);
+  const suggestedFinal = Math.max(0, (currentStudent.totalFee || 0) - previousPaid);
+  const finalInput = document.getElementById('inv-final-paid');
+  if (finalInput) finalInput.value = suggestedFinal || '';
   document.getElementById('inv-info-card').style.display = 'block';
+  const sessionCount = getSessionList(currentStudent.sessions).length;
   document.getElementById('inv-student-info').innerHTML = `
     <div><span style="color:var(--ink-light)">姓名：</span>${currentStudent.name}</div>
+    <div><span style="color:var(--ink-light)">報名數量：</span>${sessionCount} 期</div>
     <div><span style="color:var(--ink-light)">報名期數：</span>${currentStudent.sessions}</div>
-    <div><span style="color:var(--ink-light)">總費用：</span>$${(currentStudent.totalFee||0).toLocaleString()}</div>
-    <div><span style="color:var(--ink-light)">已繳訂金：</span><span style="color:var(--green-soft);font-weight:500;">$${(currentStudent.deposit||0).toLocaleString()}</span></div>
-    <div><span style="color:var(--ink-light)">訂金狀態：</span>${currentStudent.depositStatus === 'paid' ? '✅ 已繳' : currentStudent.depositStatus === 'cancel' ? '❌ 取消' : '⏳ 待繳'}</div>
+    <div><span style="color:var(--ink-light)">試算表總費用：</span>$${(currentStudent.totalFee||0).toLocaleString()}</div>
+    <div><span style="color:var(--ink-light)">已收訂金／前款：</span><span style="color:var(--green-soft);font-weight:500;">$${previousPaid.toLocaleString()}</span></div>
+    ${currentStudent.feeAdjust ? `<div><span style="color:var(--ink-light)">試算表費用調整：</span>${currentStudent.feeAdjust}</div>` : ''}
   `;
   renderInvBaseRows();
   updatePreview();
@@ -2940,21 +2987,30 @@ function loadStudentData() {
 
 function renderInvBaseRows() {
   if (!currentStudent) return;
-  const paid = currentStudent.depositStatus === 'paid' ? (currentStudent.deposit||0) : 0;
-  const remain = (currentStudent.totalFee||0) - paid;
+  const sessions = getSessionList(currentStudent.sessions);
+  const previousPaid = getInvoicePreviousPaid(currentStudent);
   document.getElementById('inv-base-rows').innerHTML = `
-    <div style="font-size:12px;font-weight:700;color:var(--ink-light);letter-spacing:1px;margin-bottom:8px;">課程費用</div>
+    <div style="font-size:12px;font-weight:700;color:var(--ink-light);letter-spacing:1px;margin-bottom:8px;">試算表帶入明細</div>
     <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="color:var(--ink-mid);">${currentStudent.sessions}</span>
-      <span style="font-weight:500;">$${(currentStudent.totalFee||0).toLocaleString()}</span>
+      <span style="color:var(--ink-mid);">學生姓名</span>
+      <span style="font-weight:600;">${currentStudent.name}</span>
     </div>
     <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="color:var(--green-soft);">已繳訂金</span>
-      <span style="color:var(--green-soft);font-weight:500;">－$${paid.toLocaleString()}</span>
+      <span style="color:var(--ink-mid);">報名數量</span>
+      <span style="font-weight:600;">${sessions.length || 0} 期</span>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;font-weight:700;">
-      <span>尚待繳納</span>
-      <span style="color:var(--red-soft);">$${remain.toLocaleString()}</span>
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:12px;color:var(--ink-light);margin-bottom:6px;">報名期數</div>
+      ${sessions.map((s, i) => `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:#F8F5F0;border-radius:5px;margin-bottom:4px;font-size:12px;color:var(--ink-mid);"><span style="width:18px;height:18px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>${s}</div>`).join('') || '<span style="color:var(--ink-faint);">未填</span>'}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="color:var(--ink-mid);">試算表總費用</span>
+      <span style="font-weight:600;">$${(currentStudent.totalFee||0).toLocaleString()}</span>
+    </div>
+    ${currentStudent.feeAdjust ? `<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:var(--ink-mid);flex-shrink:0;">費用調整</span><span style="font-weight:500;text-align:right;">${currentStudent.feeAdjust}</span></div>` : ''}
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">
+      <span style="color:var(--green-soft);">已收訂金／前款</span>
+      <span style="color:var(--green-soft);font-weight:600;">$${previousPaid.toLocaleString()}</span>
     </div>
   `;
   updateTotals();
@@ -2962,13 +3018,18 @@ function renderInvBaseRows() {
 
 function addCustomRow() {
   const id = Date.now();
-  customRows.push({ id, name: '', amount: 0 });
+  customRows.push({ id, type: 'extra', name: '', amount: 0 });
   renderCustomRows();
 }
 
 function renderCustomRows() {
   document.getElementById('inv-custom-rows').innerHTML = customRows.map(row => `
-    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;" id="crow-${row.id}">
+    <div style="display:grid;grid-template-columns:auto 1fr 92px auto;gap:8px;margin-bottom:8px;align-items:center;" id="crow-${row.id}">
+      <select onchange="updateCustomRow(${row.id},'type',this.value)"
+        style="padding:8px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--cream);color:var(--ink);outline:none;">
+        <option value="extra" ${row.type==='extra'?'selected':''}>＋ 加收</option>
+        <option value="discount" ${row.type==='discount'?'selected':''}>－ 折扣</option>
+      </select>
       <input type="text" placeholder="項目名稱" value="${row.name}"
         style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--cream);color:var(--ink);outline:none;"
         oninput="updateCustomRow(${row.id},'name',this.value)">
@@ -2998,15 +3059,19 @@ function removeCustomRow(id) {
 }
 
 function updateTotals() {
-  const courseTotal = currentStudent ? (currentStudent.totalFee||0) : 0;
-  const paid = (currentStudent && currentStudent.depositStatus === 'paid') ? (currentStudent.deposit||0) : 0;
-  const extraTotal = customRows.reduce((s, r) => s + (r.amount||0), 0);
-  const grandTotal = (courseTotal - paid) + extraTotal;
+  const courseTotal = currentStudent ? (currentStudent.totalFee || 0) : 0;
+  const customNet = getCustomNet();
+  const receiptTotal = courseTotal + customNet;
+  const previousPaid = currentStudent ? getInvoicePreviousPaid(currentStudent) : 0;
+  const finalInput = document.getElementById('inv-final-paid');
+  if (currentStudent && finalInput && finalInput.value === '') {
+    finalInput.value = Math.max(0, receiptTotal - previousPaid) || '';
+  }
 
-  document.getElementById('inv-course-total').textContent = '$' + (courseTotal - paid).toLocaleString();
-  document.getElementById('inv-extra-total').textContent = '$' + extraTotal.toLocaleString();
-  document.getElementById('inv-extra-row').style.display = extraTotal > 0 ? 'flex' : 'none';
-  document.getElementById('inv-grand-total').textContent = '$' + grandTotal.toLocaleString();
+  document.getElementById('inv-course-total').textContent = '$' + courseTotal.toLocaleString();
+  document.getElementById('inv-extra-total').textContent = moneyText(customNet);
+  document.getElementById('inv-extra-row').style.display = customRows.length ? 'flex' : 'none';
+  document.getElementById('inv-grand-total').textContent = '$' + receiptTotal.toLocaleString();
   updatePreview();
 }
 
@@ -3015,38 +3080,52 @@ function updatePreview() {
     document.getElementById('prev-name').textContent = '──';
     document.getElementById('prev-sessions').textContent = '尚未選擇學員';
     document.getElementById('prev-paid').textContent = '$0';
-    document.getElementById('prev-remain').textContent = '$0';
+    document.getElementById('prev-final-paid').textContent = '$0';
+    document.getElementById('prev-paid-total').textContent = '$0';
+    document.getElementById('prev-balance-status').textContent = '──';
     document.getElementById('prev-items').innerHTML = '';
     return;
   }
 
+  const sessions = getSessionList(currentStudent.sessions);
   document.getElementById('prev-name').textContent = currentStudent.name;
-  document.getElementById('prev-sessions').textContent = currentStudent.sessions;
+  document.getElementById('prev-sessions').textContent = `報名數量：${sessions.length} 期`;
 
-  const paid = (currentStudent.depositStatus === 'paid') ? (currentStudent.deposit||0) : 0;
-  const extraTotal = customRows.reduce((s, r) => s + (r.amount||0), 0);
-  const remain = (currentStudent.totalFee||0) - paid + extraTotal;
+  const previousPaid = getInvoicePreviousPaid(currentStudent);
+  const finalPaid = getInvoiceFinalPaid();
+  const receiptTotal = getInvoiceTotal();
+  const paidTotal = previousPaid + finalPaid;
+  const balance = receiptTotal - paidTotal;
 
-  document.getElementById('prev-paid').textContent = '$' + paid.toLocaleString();
-  document.getElementById('prev-remain').textContent = '$' + remain.toLocaleString();
+  document.getElementById('prev-paid').textContent = '$' + previousPaid.toLocaleString();
+  document.getElementById('prev-final-paid').textContent = '$' + finalPaid.toLocaleString();
+  document.getElementById('prev-paid-total').textContent = '$' + paidTotal.toLocaleString();
+  const balanceEl = document.getElementById('prev-balance-status');
+  balanceEl.textContent = balance === 0 ? '已結清' : balance > 0 ? `尚差 $${balance.toLocaleString()}` : `多收 $${Math.abs(balance).toLocaleString()}`;
+  balanceEl.style.color = balance === 0 ? 'var(--green-soft)' : balance > 0 ? 'var(--red-soft)' : '#856404';
 
   // 費用明細
   let itemsHtml = `<div style="background:white;border-radius:8px;padding:12px 14px;border:1px solid var(--border);margin-bottom:14px;">`;
   itemsHtml += `<div style="font-size:11px;font-weight:700;color:var(--ink-light);letter-spacing:1px;margin-bottom:8px;">費用明細</div>`;
-  itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span style="color:var(--ink-light);">課程費用</span><span>$${(currentStudent.totalFee||0).toLocaleString()}</span></div>`;
-  customRows.filter(r => r.name && r.amount).forEach(r => {
-    itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span style="color:var(--ink-light);">${r.name}</span><span>$${r.amount.toLocaleString()}</span></div>`;
+  itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span style="color:var(--ink-light);">報名數量</span><span>${sessions.length} 期</span></div>`;
+  sessions.forEach((s, i) => {
+    itemsHtml += `<div style="display:flex;gap:6px;font-size:12px;padding:3px 0;color:var(--ink-mid);"><span style="width:18px;height:18px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span><span>${s}</span></div>`;
   });
-  if (paid > 0) {
-    itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px dashed var(--border);margin-top:4px;"><span style="color:var(--green-soft);">已繳訂金</span><span style="color:var(--green-soft);">－$${paid.toLocaleString()}</span></div>`;
+  itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-top:1px dashed var(--border);margin-top:4px;"><span style="color:var(--ink-light);">試算表總費用</span><span style="font-weight:600;">$${(currentStudent.totalFee||0).toLocaleString()}</span></div>`;
+  if (currentStudent.feeAdjust) {
+    itemsHtml += `<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0;"><span style="color:var(--ink-light);flex-shrink:0;">費用調整</span><span style="text-align:right;">${currentStudent.feeAdjust}</span></div>`;
   }
+  customRows.filter(r => r.name && r.amount).forEach(r => {
+    const sign = r.type === 'discount' ? '－' : '＋';
+    const color = r.type === 'discount' ? '#C0392B' : 'var(--ink)';
+    itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span style="color:${color};">${r.name}</span><span style="color:${color};font-weight:600;">${sign}$${(r.amount||0).toLocaleString()}</span></div>`;
+  });
+  itemsHtml += `<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-top:1px solid var(--border);margin-top:6px;font-weight:700;"><span>本次收據總金額</span><span>$${receiptTotal.toLocaleString()}</span></div>`;
   itemsHtml += `</div>`;
   document.getElementById('prev-items').innerHTML = itemsHtml;
 
-  // 繳費方式、截止日
+  // 收款方式
   document.getElementById('prev-method').textContent = document.getElementById('inv-method').value;
-  const due = document.getElementById('inv-due').value;
-  document.getElementById('prev-due').textContent = due ? due.replace(/-/g,'/') : '──';
 
   // 備註
   const note = document.getElementById('inv-note').value.trim();
@@ -3072,19 +3151,22 @@ function downloadInvoice() {
 
   // 先收集資料
   const name = currentStudent.name;
-  const sessions = currentStudent.sessions;
+  const sessions = getSessionList(currentStudent.sessions);
   const totalFee = currentStudent.totalFee || 0;
-  const paid = currentStudent.depositStatus === 'paid' ? (currentStudent.deposit || 0) : 0;
-  const extraTotal = customRows.reduce((s, r) => s + (r.amount || 0), 0);
-  const remain = totalFee - paid + extraTotal;
+  const previousPaid = getInvoicePreviousPaid(currentStudent);
+  const finalPaid = getInvoiceFinalPaid();
+  const receiptTotal = getInvoiceTotal();
+  const paidTotal = previousPaid + finalPaid;
+  const balance = receiptTotal - paidTotal;
   const method = document.getElementById('inv-method').value;
-  const due = document.getElementById('inv-due').value.replace(/-/g, '/') || '──';
   const note = document.getElementById('inv-note').value.trim();
   const dateStr = new Date().toLocaleDateString('zh-TW');
 
   // 計算高度
   const customCount = customRows.filter(r => r.name && r.amount).length;
-  const H = 580 + customCount * 28 + (note ? 50 : 0);
+  const sessionCount = sessions.length;
+  const adjustLines = currentStudent.feeAdjust ? 1 : 0;
+  const H = 610 + sessionCount * 24 + customCount * 28 + adjustLines * 24 + (note ? 50 : 0);
   canvas.height = H * scale;
 
   const ctx = canvas.getContext('2d');
@@ -3106,10 +3188,10 @@ function downloadInvoice() {
 
   let y = 96;
 
-  // 收費通知單標題
+  // 收費證明標題
   ctx.font = 'bold 11px sans-serif';
   ctx.fillStyle = '#C9973A';
-  ctx.fillText('收費通知單', 24, y);
+  ctx.fillText('收費明細證明', 24, y);
   ctx.font = '11px sans-serif';
   ctx.fillStyle = '#C4B9A8';
   ctx.fillText(dateStr, W - 24 - ctx.measureText(dateStr).width, y);
@@ -3128,12 +3210,11 @@ function downloadInvoice() {
   ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#1A1610';
   ctx.fillText(name, 30, y + 38);
   ctx.font = '11px sans-serif'; ctx.fillStyle = '#7A6E5F';
-  const sessShort = sessions.length > 40 ? sessions.substring(0, 40) + '…' : sessions;
-  ctx.fillText(sessShort, 30, y + 56);
+  ctx.fillText('報名數量：' + sessions.length + ' 期', 30, y + 56);
   y += 82;
 
   // 費用明細卡
-  const itemCount = 2 + customCount + (paid > 0 ? 1 : 0);
+  const itemCount = 3 + sessionCount + customCount + adjustLines;
   const detailH = 36 + itemCount * 26 + 10;
   ctx.fillStyle = '#FFFFFF';
   roundRect(ctx, 16, y, W - 32, detailH, 8);
@@ -3151,30 +3232,41 @@ function downloadInvoice() {
     ctx.fillText(amtStr, W - 30 - ctx.measureText(amtStr).width, dy);
     dy += 26;
   };
-  drawItem('課程費用', '$' + totalFee.toLocaleString());
-  customRows.filter(r => r.name && r.amount).forEach(r => drawItem(r.name, '$' + r.amount.toLocaleString()));
-  if (paid > 0) drawItem('已繳訂金', '－$' + paid.toLocaleString(), '#2E7D32');
+  drawItem('報名數量', sessions.length + ' 期');
+  sessions.forEach((s, i) => drawItem((i + 1) + '. ' + s, ''));
+  drawItem('試算表總費用', '$' + totalFee.toLocaleString());
+  if (currentStudent.feeAdjust) drawItem('費用調整', '已反映於總費用', '#856404');
+  customRows.filter(r => r.name && r.amount).forEach(r => {
+    const sign = r.type === 'discount' ? '－' : '＋';
+    const color = r.type === 'discount' ? '#C0392B' : '#3D3628';
+    drawItem(r.name, sign + '$' + (r.amount || 0).toLocaleString(), color);
+  });
+  drawItem('收據總金額', '$' + receiptTotal.toLocaleString(), '#1A1610');
   y += detailH + 12;
 
-  // 繳費資訊卡
+  // 收款資訊卡
   ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, 16, y, W - 32, 110, 8); ctx.fill();
-  ctx.strokeStyle = '#E2D9CA'; roundRect(ctx, 16, y, W - 32, 110, 8); ctx.stroke();
-  // 待繳
-  ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F'; ctx.fillText('尚待繳納', 30, y + 22);
-  ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#C0392B';
-  ctx.fillText('$' + remain.toLocaleString(), W - 30 - ctx.measureText('$' + remain.toLocaleString()).width, y + 26);
-  // 分隔線
+  roundRect(ctx, 16, y, W - 32, 136, 8); ctx.fill();
+  ctx.strokeStyle = '#E2D9CA'; roundRect(ctx, 16, y, W - 32, 136, 8); ctx.stroke();
+  ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F'; ctx.fillText('已收訂金／前款', 30, y + 22);
+  ctx.fillStyle = '#2E7D32';
+  ctx.fillText('$' + previousPaid.toLocaleString(), W - 30 - ctx.measureText('$' + previousPaid.toLocaleString()).width, y + 22);
+  ctx.fillStyle = '#7A6E5F'; ctx.fillText('本次收到尾款', 30, y + 48);
+  ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#C9973A';
+  ctx.fillText('$' + finalPaid.toLocaleString(), W - 30 - ctx.measureText('$' + finalPaid.toLocaleString()).width, y + 50);
+  ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F'; ctx.fillText('合計已收', 30, y + 76);
+  ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = '#2E7D32';
+  ctx.fillText('$' + paidTotal.toLocaleString(), W - 30 - ctx.measureText('$' + paidTotal.toLocaleString()).width, y + 76);
   ctx.strokeStyle = '#E2D9CA'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(30, y + 36); ctx.lineTo(W - 30, y + 36); ctx.stroke();
-  // 方式、截止
+  ctx.beginPath(); ctx.moveTo(30, y + 88); ctx.lineTo(W - 30, y + 88); ctx.stroke();
   ctx.font = '12px sans-serif'; ctx.fillStyle = '#7A6E5F';
-  ctx.fillText('繳費方式', 30, y + 56);
-  ctx.fillStyle = '#3D3628'; ctx.fillText(method, W - 30 - ctx.measureText(method).width, y + 56);
-  ctx.fillStyle = '#7A6E5F'; ctx.fillText('繳費截止', 30, y + 80);
-  ctx.fillStyle = '#C0392B'; ctx.font = 'bold 12px sans-serif';
-  ctx.fillText(due, W - 30 - ctx.measureText(due).width, y + 80);
-  y += 122;
+  ctx.fillText('收款方式', 30, y + 108);
+  ctx.fillStyle = '#3D3628'; ctx.fillText(method, W - 30 - ctx.measureText(method).width, y + 108);
+  const balanceText = balance === 0 ? '已結清' : balance > 0 ? '尚差 $' + balance.toLocaleString() : '多收 $' + Math.abs(balance).toLocaleString();
+  ctx.fillStyle = balance === 0 ? '#2E7D32' : balance > 0 ? '#C0392B' : '#856404';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText(balanceText, W - 30 - ctx.measureText(balanceText).width, y + 126);
+  y += 148;
 
   // 銀行資訊
   ctx.fillStyle = '#1A1610';
@@ -3199,17 +3291,17 @@ function downloadInvoice() {
 
   // 底部說明
   ctx.font = '11px sans-serif'; ctx.fillStyle = '#C4B9A8';
-  const footTxt = '匯款完成後請截圖傳至武樂小小運動家官方 LINE';
+  const footTxt = '此單據為營隊費用收款明細證明，如有疑問請私訊官方 LINE';
   ctx.fillText(footTxt, W / 2 - ctx.measureText(footTxt).width / 2, y + 20);
 
   // 輸出
   const dataUrl = canvas.toDataURL('image/png');
   const a = document.createElement('a');
-  a.download = `武樂收費單_${name}_${dateStr.replace(/\//g,'-')}.png`;
+  a.download = `武樂收費明細證明_${name}_${dateStr.replace(/\//g,'-')}.png`;
   a.href = dataUrl;
   a.click();
 
-  if (btn) { btn.textContent = '⬇ 下載收費單圖片'; btn.disabled = false; }
+  if (btn) { btn.textContent = '⬇ 下載收費明細證明'; btn.disabled = false; }
 }
 
 function roundRect(ctx, x, y, w, h, r) {
