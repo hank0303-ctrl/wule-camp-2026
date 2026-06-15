@@ -209,7 +209,7 @@
   /* ── STATS ── */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 20px;
   }
@@ -350,6 +350,7 @@
   .del-btn:hover { background: var(--red-soft); color: var(--white); border-color: var(--red-soft); }
 
   @media(max-width: 700px) {
+    .stats-grid { grid-template-columns: 1fr; }
     .invoice-grid { grid-template-columns: 1fr !important; }
   }
 </style>
@@ -739,6 +740,13 @@
       <div class="card">
         <div class="toolbar">
           <input type="text" class="search-input" id="searchInput" placeholder="搜尋學員姓名、家長、電話…" oninput="renderTable()">
+          <select class="status-select" id="paymentFilter" onchange="setPaymentFilter(this.value)" style="padding:8px 12px;">
+            <option value="all">全部繳費狀態</option>
+            <option value="unpaid">未繳費</option>
+            <option value="partial">部分繳</option>
+            <option value="full">已全額</option>
+            <option value="cancel">取消</option>
+          </select>
           <button class="export-btn" onclick="syncFromSheet()" style="border-color:var(--gold);color:var(--gold);">↻ 同步雲端資料</button>
           <button class="export-btn" onclick="exportCSV()">⬇ 匯出 CSV</button>
           <button class="export-btn" onclick="clearAll()" style="border-color:#f5c6cb;color:var(--red-soft);">清除全部</button>
@@ -756,6 +764,8 @@
                 <th>總費用</th>
                 <th>訂金</th>
                 <th>訂金狀態</th>
+                <th>已收金額</th>
+                <th>繳費狀態</th>
                 <th>家長</th>
                 <th>電話</th>
                 <th>帳號後5碼</th>
@@ -2178,6 +2188,58 @@ function getGasUrl() {
 
 let allRegs = [];
 let statusOverride = {};
+let paymentOverride = {};
+let paymentFilter = 'all';
+
+function loadPaymentOverrides() {
+  try { paymentOverride = JSON.parse(localStorage.getItem('wule_payment_overrides') || '{}'); }
+  catch(e) { paymentOverride = {}; }
+}
+
+function savePaymentOverrides() {
+  localStorage.setItem('wule_payment_overrides', JSON.stringify(paymentOverride));
+}
+
+function makePaymentKey(r) {
+  return [r.name || '', r.phone || '', r.dob || ''].join('|');
+}
+
+function getPaidAmount(r) {
+  const key = makePaymentKey(r);
+  if (paymentOverride[key] !== undefined) return Number(paymentOverride[key] || 0);
+  if (r.sheetPaidAmount !== undefined && r.sheetPaidAmount !== null) return Number(r.sheetPaidAmount || 0);
+  return r.depositStatus === 'paid' ? (r.deposit || 0) : 0;
+}
+
+function getPaymentState(r) {
+  if (r.depositStatus === 'cancel') return 'cancel';
+  const paid = getPaidAmount(r);
+  const total = r.totalFee || 0;
+  if (paid >= total && total > 0) return 'full';
+  if (paid > 0) return 'partial';
+  return 'unpaid';
+}
+
+function getPaymentStatusMeta(state) {
+  const map = {
+    full: { label: '已全額', cls: 'badge-paid' },
+    partial: { label: '部分繳', cls: 'badge-pending' },
+    unpaid: { label: '未繳費', cls: 'badge-cancel' },
+    cancel: { label: '取消', cls: 'badge-cancel' },
+  };
+  return map[state] || map.unpaid;
+}
+
+function paymentStatusBadge(state, remain) {
+  const meta = getPaymentStatusMeta(state);
+  const remainText = state === 'partial' ? `<div style="font-size:10px;margin-top:4px;color:#856404;">待收 $${remain.toLocaleString()}</div>` : '';
+  return `<span class="badge ${meta.cls}">${meta.label}</span>${remainText}`;
+}
+
+function setPaymentFilter(val) {
+  paymentFilter = val || 'all';
+  renderTable();
+}
 
 function syncFromSheet() {
   statusOverride = {}; // 清除本地覆蓋，重新從雲端載入
@@ -2185,9 +2247,10 @@ function syncFromSheet() {
 }
 
 function loadRegsFromSheet(showToast = false) {
+  loadPaymentOverrides();
   const GAS_URL = getGasUrl();
   if (!GAS_URL) {
-    document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">請先在「系統設定」填寫 GAS 網址</div></td></tr>';
+    document.getElementById('regTbody').innerHTML = '<tr><td colspan="17"><div class="empty-state">請先在「系統設定」填寫 GAS 網址</div></td></tr>';
     return;
   }
 
@@ -2195,14 +2258,14 @@ function loadRegsFromSheet(showToast = false) {
   if (syncBtn) { syncBtn.textContent = '↻ 同步中…'; syncBtn.disabled = true; }
 
   document.getElementById('statsGrid').innerHTML = '<div style="color:var(--ink-faint);font-size:13px;padding:12px;">載入中…</div>';
-  document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">資料載入中…</div></td></tr>';
+  document.getElementById('regTbody').innerHTML = '<tr><td colspan="17"><div class="empty-state">資料載入中…</div></td></tr>';
 
   const cbName = 'gasCallback_' + Date.now();
   const script = document.createElement('script');
   const timer = setTimeout(() => {
     delete window[cbName];
     document.body.removeChild(script);
-    document.getElementById('regTbody').innerHTML = '<tr><td colspan="15"><div class="empty-state">載入失敗，請確認 GAS 網址並重試</div></td></tr>';
+    document.getElementById('regTbody').innerHTML = '<tr><td colspan="17"><div class="empty-state">載入失敗，請確認 GAS 網址並重試</div></td></tr>';
     if (showToast) showSyncToast('✗ 同步失敗，請重試', true);
     if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
   }, 10000);
@@ -2223,6 +2286,7 @@ function loadRegsFromSheet(showToast = false) {
       sessions:     r['報名期數'] || '',
       totalFee:     parseFloat((r['總費用']||'0').toString().replace(/[^0-9.]/g,'')),
       deposit:      parseFloat((r['需付訂金']||'0').toString().replace(/[^0-9.]/g,'')),
+      sheetPaidAmount: r['已收款金額（可留空）'] ? parseFloat((r['已收款金額（可留空）']||'0').toString().replace(/[^0-9.]/g,'')) : null,
       payment:      r['付款方式'] || '',
       depositStatus: statusOverride[i] || (r['訂金狀態'] === '已繳' ? 'paid' : r['訂金狀態'] === '取消' ? 'cancel' : 'pending'),
       parent:       r['家長姓名'] || '',
@@ -2278,23 +2342,14 @@ function getRegs() {
 function renderStats() {
   const regs = getRegs();
   const totalCount = regs.filter(r => r.depositStatus !== 'cancel').length;
-  const paidCount  = regs.filter(r => r.depositStatus === 'paid').length;
-  const pendingCount = regs.filter(r => r.depositStatus !== 'paid' && r.depositStatus !== 'cancel').length;
+  const fullPaidCount = regs.filter(r => getPaymentState(r) === 'full').length;
+  const partialPaidCount = regs.filter(r => getPaymentState(r) === 'partial').length;
+  const unpaidCount = regs.filter(r => getPaymentState(r) === 'unpaid').length;
 
-  // 已收訂金金額（已繳訂金人的 deposit 加總）
-  const paidDepositAmt = regs
-    .filter(r => r.depositStatus === 'paid')
-    .reduce((s, r) => s + (r.deposit || 0), 0);
-
-  // 待收尾款 = 已繳訂金的人的（總費用 - 訂金）
-  const remainAmt = regs
-    .filter(r => r.depositStatus === 'paid')
-    .reduce((s, r) => s + Math.max(0, (r.totalFee || 0) - (r.deposit || 0)), 0);
-
-  // 總課程費用（所有已繳訂金者）
-  const totalRevenue = regs
-    .filter(r => r.depositStatus === 'paid')
-    .reduce((s, r) => s + (r.totalFee || 0), 0);
+  const activeRegs = regs.filter(r => r.depositStatus !== 'cancel');
+  const paidAmount = activeRegs.reduce((s, r) => s + getPaidAmount(r), 0);
+  const totalRevenue = activeRegs.reduce((s, r) => s + (r.totalFee || 0), 0);
+  const remainAmt = activeRegs.reduce((s, r) => s + Math.max(0, (r.totalFee || 0) - getPaidAmount(r)), 0);
 
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card">
@@ -2302,21 +2357,27 @@ function renderStats() {
       <div class="stat-label">總報名人數</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" style="color:var(--green-soft)">${paidCount}</div>
-      <div class="stat-label">已繳訂金（人）</div>
+      <div class="stat-num" style="color:var(--green-soft)">${fullPaidCount}</div>
+      <div class="stat-label">已全額（人）</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" style="color:#856404">${pendingCount}</div>
-      <div class="stat-label">待繳訂金（人）</div>
+      <div class="stat-num" style="color:#856404">${partialPaidCount}</div>
+      <div class="stat-label">部分繳（人）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-item">
+        <div class="stat-num" style="color:#C0392B">${unpaidCount}</div>
+        <div class="stat-label">未繳費（人）</div>
+      </div>
     </div>
     <div class="stat-card-full">
       <div class="stat-item">
-        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">已收訂金</div>
-        <div style="font-size:22px;font-weight:700;color:var(--green-soft);">$${paidDepositAmt.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">已收金額</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-soft);">$${paidAmount.toLocaleString()}</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">待收尾款</div>
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">待收金額</div>
         <div style="font-size:22px;font-weight:700;color:#C0392B;">$${remainAmt.toLocaleString()}</div>
       </div>
       <div class="stat-divider"></div>
@@ -2331,20 +2392,26 @@ function renderStats() {
 function renderTable() {
   const regs = getRegs();
   const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
-  const filtered = q ? regs.filter(r =>
+  let filtered = q ? regs.filter(r =>
     (r.name||'').toLowerCase().includes(q) ||
     (r.parent||'').toLowerCase().includes(q) ||
     (r.phone||'').includes(q)
   ) : regs;
+  if (paymentFilter !== 'all') {
+    filtered = filtered.filter(r => getPaymentState(r) === paymentFilter);
+  }
 
   const tbody = document.getElementById('regTbody');
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="15"><div class="empty-state">尚無報名資料</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="17"><div class="empty-state">尚無符合條件的報名資料</div></td></tr>';
     return;
   }
 
   tbody.innerHTML = filtered.map((r, i) => {
     const status = r.depositStatus || 'pending';
+    const paidAmount = getPaidAmount(r);
+    const remain = Math.max(0, (r.totalFee || 0) - paidAmount);
+    const payState = getPaymentState(r);
     return `<tr>
       <td>${i + 1}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.timestamp}</td>
@@ -2361,6 +2428,13 @@ function renderTable() {
           <option value="cancel" ${status==='cancel'?'selected':''}>取消</option>
         </select>
       </td>
+      <td>
+        <div style="display:grid;gap:6px;min-width:118px;">
+          <input type="number" min="0" value="${paidAmount || ''}" placeholder="0" onchange="updatePaidAmount(${r._id}, this.value)" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--cream);font-family:'Noto Sans TC',sans-serif;">
+          <button class="export-btn" onclick="markFullPaid(${r._id})" style="justify-content:center;padding:5px 8px;font-size:12px;border-color:var(--green-soft);color:var(--green-soft);">全額</button>
+        </div>
+      </td>
+      <td>${paymentStatusBadge(payState, remain)}</td>
       <td>${r.parent}</td>
       <td>${r.phone}</td>
       <td>${r.bank}</td>
@@ -2374,7 +2448,12 @@ function renderTable() {
 function updateStatus(id, val) {
   statusOverride[id] = val;
   allRegs[id].depositStatus = val;
+  if (val === 'cancel') {
+    paymentOverride[makePaymentKey(allRegs[id])] = 0;
+    savePaymentOverrides();
+  }
   renderStats();
+  renderTable();
 
   // 同步更新到試算表
   const GAS_URL = getGasUrl();
@@ -2393,6 +2472,33 @@ function updateStatus(id, val) {
   document.body.appendChild(s2);
 }
 
+function updatePaidAmount(id, amount) {
+  const reg = allRegs[id];
+  if (!reg) return;
+  const paid = Math.max(0, parseInt(amount, 10) || 0);
+  paymentOverride[makePaymentKey(reg)] = paid;
+  if (paid > 0 && reg.depositStatus === 'pending') {
+    reg.depositStatus = 'paid';
+    statusOverride[id] = 'paid';
+  }
+  savePaymentOverrides();
+  renderStats();
+  renderTable();
+}
+
+function markFullPaid(id) {
+  const reg = allRegs[id];
+  if (!reg) return;
+  paymentOverride[makePaymentKey(reg)] = reg.totalFee || 0;
+  if (reg.depositStatus !== 'cancel') {
+    reg.depositStatus = 'paid';
+    statusOverride[id] = 'paid';
+  }
+  savePaymentOverrides();
+  renderStats();
+  renderTable();
+}
+
 function clearAll() {
   alert('請直接到 Google 試算表操作');
 }
@@ -2400,11 +2506,13 @@ function clearAll() {
 function exportCSV() {
   const regs = getRegs();
   if (!regs.length) { alert('目前沒有報名資料'); return; }
-  const headers = ['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','付款方式','訂金狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意'];
+  const headers = ['報名時間','學員姓名','性別','年齡','出生年月日','報名期數','總費用','訂金','付款方式','訂金狀態','已收金額','待收金額','繳費狀態','家長姓名','聯絡電話','匯款帳號後5碼','身體狀況','飲食注意'];
   const statusMap = { pending: '待繳', paid: '已繳', cancel: '取消' };
+  const payStateMap = { unpaid: '未繳費', partial: '部分繳', full: '已全額', cancel: '取消' };
   const rows = regs.map(r => [
     r.timestamp, r.name, r.gender, r.age, r.dob, r.sessions,
     r.totalFee, r.deposit, r.payment, statusMap[r.depositStatus||'pending'],
+    getPaidAmount(r), Math.max(0, (r.totalFee || 0) - getPaidAmount(r)), payStateMap[getPaymentState(r)] || '未繳費',
     r.parent, r.phone, r.bank, r.health, r.diet
   ].map(v => '"' + (v||'').toString().replace(/"/g,'""') + '"'));
 
