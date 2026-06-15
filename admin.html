@@ -348,9 +348,16 @@
     transition: all 0.2s;
   }
   .del-btn:hover { background: var(--red-soft); color: var(--white); border-color: var(--red-soft); }
+  .payment-card-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.5fr 1fr 1fr;
+    gap: 14px;
+    align-items: start;
+  }
 
   @media(max-width: 700px) {
     .stats-grid { grid-template-columns: 1fr; }
+    .payment-card-grid { grid-template-columns: 1fr; }
     .invoice-grid { grid-template-columns: 1fr !important; }
   }
 </style>
@@ -378,6 +385,7 @@
   </header>
   <div class="admin-tabs">
     <div class="admin-tab active" onclick="switchTab('registrations')">報名名單</div>
+    <div class="admin-tab" onclick="switchTab('payments')">繳費追蹤</div>
     <div class="admin-tab" onclick="switchTab('invoice')">收費單</div>
     <div class="admin-tab" onclick="switchTab('settings')">系統設定</div>
     <div class="admin-tab" onclick="switchTab('stats')">統計圖表</div>
@@ -784,6 +792,28 @@
       </div>
     </div>
 
+    <div class="panel" id="panel-payments">
+      <h2 class="panel-title">繳費追蹤</h2>
+      <p class="panel-sub">集中查看誰尚未結清、已收多少、還差多少；可直接填已收金額或一鍵設為全額。</p>
+
+      <div class="stats-grid" id="paymentSummaryGrid"></div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input type="text" class="search-input" id="paymentSearchInput" placeholder="搜尋學員姓名、家長、電話…" oninput="renderPaymentTracker()">
+          <select class="status-select" id="paymentTrackerFilter" onchange="renderPaymentTracker()" style="padding:8px 12px;">
+            <option value="open">只看未結清</option>
+            <option value="partial">部分繳</option>
+            <option value="unpaid">完全未繳</option>
+            <option value="full">已結清</option>
+            <option value="all">全部</option>
+          </select>
+          <button class="export-btn" onclick="syncFromSheet()" style="border-color:var(--gold);color:var(--gold);">↻ 同步雲端資料</button>
+        </div>
+        <div id="paymentTrackerList"></div>
+      </div>
+    </div>
+
     <!-- ── 系統設定 ── -->
     <div class="panel" id="panel-settings">
       <h2 class="panel-title">系統設定</h2>
@@ -912,10 +942,11 @@ function doLogout() {
 
 function switchTab(tab) {
   document.querySelectorAll('.admin-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['registrations','invoice','settings','stats','ledger'][i] === tab);
+    t.classList.toggle('active', ['registrations','payments','invoice','settings','stats','ledger'][i] === tab);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'payments') renderPaymentTracker();
   if (tab === 'invoice') initInvoice();
   if (tab === 'settings') { fetchQuotaAndRender(); loadBlacklist(); }
   if (tab === 'stats') renderStatsChart();
@@ -2309,6 +2340,7 @@ function loadRegsFromSheet(showToast = false) {
     }));
     renderStats();
     renderTable();
+    renderPaymentTracker();
     // 統計各期人數，存入 localStorage 供報名頁面讀取
     const SESSION_NAME_MAP = {
       'week-w1':'第一期','week-7/6':'第二期','week-7/13':'第三期',
@@ -2401,6 +2433,129 @@ function renderStats() {
   `;
 }
 
+function renderPaymentTracker() {
+  const summaryEl = document.getElementById('paymentSummaryGrid');
+  const listEl = document.getElementById('paymentTrackerList');
+  if (!summaryEl || !listEl) return;
+
+  const activeRegs = getRegs().filter(r => r.depositStatus !== 'cancel');
+  const totalDue = activeRegs.reduce((s, r) => s + (r.totalFee || 0), 0);
+  const totalPaid = activeRegs.reduce((s, r) => s + getPaidAmount(r), 0);
+  const totalRemain = activeRegs.reduce((s, r) => s + Math.max(0, (r.totalFee || 0) - getPaidAmount(r)), 0);
+  const openRegs = activeRegs.filter(r => getPaymentState(r) !== 'full');
+  const fullRegs = activeRegs.filter(r => getPaymentState(r) === 'full');
+  const unpaidRegs = activeRegs.filter(r => getPaymentState(r) === 'unpaid');
+
+  summaryEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num" style="color:#C0392B">${openRegs.length}</div>
+      <div class="stat-label">未結清人數</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#856404">${unpaidRegs.length}</div>
+      <div class="stat-label">完全未繳</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green-soft)">${fullRegs.length}</div>
+      <div class="stat-label">已結清</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${activeRegs.length}</div>
+      <div class="stat-label">有效報名</div>
+    </div>
+    <div class="stat-card-full">
+      <div class="stat-item">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">待收總額</div>
+        <div style="font-size:26px;font-weight:700;color:#C0392B;">$${totalRemain.toLocaleString()}</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">已收總額</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-soft);">$${totalPaid.toLocaleString()}</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">應收總額</div>
+        <div style="font-size:22px;font-weight:700;color:var(--gold);">$${totalDue.toLocaleString()}</div>
+      </div>
+    </div>
+  `;
+
+  const q = document.getElementById('paymentSearchInput')?.value.toLowerCase() || '';
+  const filter = document.getElementById('paymentTrackerFilter')?.value || 'open';
+  let rows = activeRegs.filter(r =>
+    (r.name || '').toLowerCase().includes(q) ||
+    (r.parent || '').toLowerCase().includes(q) ||
+    (r.phone || '').includes(q)
+  );
+  if (filter === 'open') rows = rows.filter(r => getPaymentState(r) !== 'full');
+  if (filter === 'partial') rows = rows.filter(r => getPaymentState(r) === 'partial');
+  if (filter === 'unpaid') rows = rows.filter(r => getPaymentState(r) === 'unpaid');
+  if (filter === 'full') rows = rows.filter(r => getPaymentState(r) === 'full');
+
+  rows.sort((a, b) => {
+    const remainA = Math.max(0, (a.totalFee || 0) - getPaidAmount(a));
+    const remainB = Math.max(0, (b.totalFee || 0) - getPaidAmount(b));
+    return remainB - remainA;
+  });
+
+  if (!rows.length) {
+    listEl.innerHTML = '<div class="empty-state">目前沒有符合條件的繳費資料</div>';
+    return;
+  }
+
+  listEl.innerHTML = rows.map(r => {
+    const paid = getPaidAmount(r);
+    const total = r.totalFee || 0;
+    const remain = Math.max(0, total - paid);
+    const state = getPaymentState(r);
+    const isFull = state === 'full';
+    const stateMeta = getPaymentStatusMeta(state);
+    const sessions = getSessionList(r.sessions);
+    const percent = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+    return `
+      <div style="border:1.5px solid ${isFull ? '#B7DEC2' : '#E8C97A'};background:${isFull ? '#F3FBF5' : '#FFF8EA'};border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div class="payment-card-grid">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+              <strong style="font-size:17px;color:var(--ink);">${r.name || '未填姓名'}</strong>
+              <span class="badge ${stateMeta.cls}">${stateMeta.label}</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink-light);line-height:1.7;">家長：${r.parent || '未填'}<br>電話：${r.phone || '未填'}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--ink-light);margin-bottom:6px;">報名期數（${sessions.length} 期）</div>
+            <div style="display:grid;gap:4px;">
+              ${sessions.map((s, i) => `<div style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-mid);"><span style="width:18px;height:18px;border-radius:50%;background:var(--gold);color:white;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span><span>${s}</span></div>`).join('') || '<span style="font-size:12px;color:var(--ink-faint);">未填</span>'}
+            </div>
+          </div>
+          <div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+              <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:9px;">
+                <div style="font-size:11px;color:var(--ink-light);">總費用</div>
+                <div style="font-size:17px;font-weight:700;color:var(--ink);">$${total.toLocaleString()}</div>
+              </div>
+              <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:9px;">
+                <div style="font-size:11px;color:var(--ink-light);">待收</div>
+                <div style="font-size:17px;font-weight:700;color:${remain > 0 ? '#C0392B' : 'var(--green-soft)'};">$${remain.toLocaleString()}</div>
+              </div>
+            </div>
+            <div style="height:8px;background:#EEE7DA;border-radius:99px;overflow:hidden;">
+              <div style="height:100%;width:${percent}%;background:${isFull ? 'var(--green-soft)' : 'var(--gold)'};"></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:4px;text-align:right;">已收 ${percent}%</div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--ink-light);margin-bottom:5px;">已收金額</label>
+            <input type="number" min="0" value="${paid || ''}" placeholder="0" onchange="updatePaidAmount(${r._id}, this.value)" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--cream);font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;">
+            <button class="export-btn" onclick="markFullPaid(${r._id})" style="width:100%;justify-content:center;border-color:var(--green-soft);color:var(--green-soft);">設為全額</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderTable() {
   const regs = getRegs();
   const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -2466,6 +2621,7 @@ function updateStatus(id, val) {
   }
   renderStats();
   renderTable();
+  renderPaymentTracker();
 
   // 同步更新到試算表
   const GAS_URL = getGasUrl();
@@ -2496,6 +2652,7 @@ function updatePaidAmount(id, amount) {
   savePaymentOverrides();
   renderStats();
   renderTable();
+  renderPaymentTracker();
 }
 
 function markFullPaid(id) {
@@ -2509,6 +2666,7 @@ function markFullPaid(id) {
   savePaymentOverrides();
   renderStats();
   renderTable();
+  renderPaymentTracker();
 }
 
 function clearAll() {
