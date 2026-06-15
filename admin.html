@@ -526,6 +526,11 @@
                   </div>
                 </div>
 
+                <div style="background:#F0FAF0;border:1px solid #A5D6A7;border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:center;">
+                  <div style="font-size:14px;font-weight:700;color:#1B5E20;">確認收到，感謝您。</div>
+                  <div style="font-size:11px;color:#2E7D32;margin-top:4px;">款項已完成登記，這份明細供您留存確認。</div>
+                </div>
+
                 <div style="background:#1A1610;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
                   <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px;">銀行轉帳資訊</div>
                   <div style="font-size:12px;color:rgba(255,255,255,0.7);">台北富邦銀行 中壢分行（012）</div>
@@ -3324,7 +3329,7 @@ function downloadInvoice() {
   const customCount = customRows.filter(r => r.name && r.amount).length;
   const sessionCount = sessions.length;
   const adjustLines = currentStudent.feeAdjust ? 1 : 0;
-  const H = 610 + sessionCount * 24 + customCount * 28 + adjustLines * 24 + (note ? 50 : 0);
+  const H = 670 + sessionCount * 24 + customCount * 28 + adjustLines * 24 + (note ? 50 : 0);
   canvas.height = H * scale;
 
   const ctx = canvas.getContext('2d');
@@ -3425,6 +3430,21 @@ function downloadInvoice() {
   ctx.font = 'bold 13px sans-serif';
   ctx.fillText(balanceText, W - 30 - ctx.measureText(balanceText).width, y + 126);
   y += 148;
+
+  // 確認收到
+  ctx.fillStyle = '#F0FAF0';
+  roundRect(ctx, 16, y, W - 32, 54, 8); ctx.fill();
+  ctx.strokeStyle = '#A5D6A7'; ctx.lineWidth = 1;
+  roundRect(ctx, 16, y, W - 32, 54, 8); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillStyle = '#1B5E20';
+  ctx.fillText('確認收到，感謝您。', W / 2, y + 23);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#2E7D32';
+  ctx.fillText('款項已完成登記，這份明細供您留存確認。', W / 2, y + 40);
+  ctx.textAlign = 'left';
+  y += 66;
 
   // 銀行資訊
   ctx.fillStyle = '#1A1610';
