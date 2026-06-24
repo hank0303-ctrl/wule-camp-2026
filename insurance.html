@@ -861,6 +861,8 @@
 <script>
 const READ_GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
 const INSURANCE_GAS_URL = 'https://script.google.com/macros/s/AKfycbyAVs4xw_T4PTW45gkCGlX7tPlYGnuCWIK-lA9etM830KkyGHHzNpwyMmiXWItKNSXZRw/exec';
+const REGISTRATION_SHEET_ID = '1_lTR7lCP_QS2fg3-b2R26Z8Zpmw8LFTd2169JF5Ranw';
+const REGISTRATION_GID = '509093591';
 const READ_TIMEOUT_MS = 30000;
 const ROW_CACHE_KEY = 'wule_insurance_rows_cache';
 const ROW_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -986,6 +988,58 @@ function jsonp(url, params, timeoutMs = 10000) {
   });
 }
 
+function jsonpGviz(url, params, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'gvizCb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('試算表連線逾時，請稍後再試'));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = data => {
+      cleanup();
+      resolve(data);
+    };
+
+    const search = new URLSearchParams(params);
+    search.set('tqx', 'responseHandler:' + cbName);
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('目前無法讀取試算表，請稍後再試'));
+    };
+    script.src = url + '?' + search.toString();
+    document.body.appendChild(script);
+  });
+}
+
+function gvizValue(cell) {
+  if (!cell) return '';
+  if (cell.f !== undefined && cell.f !== null) return cell.f;
+  if (cell.v === undefined || cell.v === null) return '';
+  if (cell.v instanceof Date) return cell.v.toISOString();
+  return cell.v;
+}
+
+function gvizToRows(data) {
+  const table = data && data.table;
+  if (!table || !Array.isArray(table.cols) || !Array.isArray(table.rows)) return [];
+  const headers = table.cols.map(col => col.label || col.id || '');
+  return table.rows
+    .map(row => {
+      const obj = {};
+      headers.forEach((header, index) => obj[header] = gvizValue(row.c && row.c[index]));
+      return obj;
+    })
+    .filter(row => Object.values(row).some(value => String(value || '').trim() !== ''));
+}
+
 function saveRowsCache(rows) {
   try {
     localStorage.setItem(ROW_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), rows }));
@@ -1004,21 +1058,26 @@ function loadRowsCache() {
 }
 
 async function loadRegistrationRows() {
-  let lastError = null;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${REGISTRATION_SHEET_ID}/gviz/tq`;
+    const data = await jsonpGviz(url, { gid: REGISTRATION_GID, t: Date.now() }, 15000);
+    const rows = gvizToRows(data);
+    if (!rows.length) throw new Error('試算表目前沒有回傳資料');
+    saveRowsCache(rows);
+    return rows;
+  } catch (sheetErr) {
     try {
       const res = await jsonp(READ_GAS_URL, { t: Date.now() }, READ_TIMEOUT_MS);
       const rows = Array.isArray(res.data) ? res.data : [];
+      if (!rows.length) throw new Error('GAS 目前沒有回傳資料');
       saveRowsCache(rows);
       return rows;
-    } catch (err) {
-      lastError = err;
+    } catch (gasErr) {
+      const cachedRows = loadRowsCache();
+      if (cachedRows) return cachedRows;
+      throw sheetErr || gasErr || new Error('查詢失敗，請稍後再試。');
     }
   }
-
-  const cachedRows = loadRowsCache();
-  if (cachedRows) return cachedRows;
-  throw lastError || new Error('查詢失敗，請稍後再試。');
 }
 
 async function pingInsuranceApi() {

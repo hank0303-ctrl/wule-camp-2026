@@ -2226,6 +2226,11 @@ function getGasUrl() {
   return localStorage.getItem('wule_gas_url') || 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
 }
 
+const REGISTRATION_SHEET_ID = '1_lTR7lCP_QS2fg3-b2R26Z8Zpmw8LFTd2169JF5Ranw';
+const REGISTRATION_GID = '509093591';
+const REG_CACHE_KEY = 'wule_admin_registration_rows_cache';
+const REG_CACHE_TTL_MS = 30 * 60 * 1000;
+
 let allRegs = [];
 let statusOverride = {};
 let paymentOverride = {};
@@ -2287,6 +2292,116 @@ function getRowValue(row, keywords) {
   return key ? (row[key] || '') : '';
 }
 
+function saveRegistrationRowsCache(rows) {
+  try {
+    localStorage.setItem(REG_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), rows }));
+  } catch(e) {}
+}
+
+function loadRegistrationRowsCache() {
+  try {
+    const cache = JSON.parse(localStorage.getItem(REG_CACHE_KEY) || 'null');
+    if (!cache || !Array.isArray(cache.rows)) return null;
+    if (Date.now() - cache.savedAt > REG_CACHE_TTL_MS) return null;
+    return cache.rows;
+  } catch(e) {
+    return null;
+  }
+}
+
+function jsonpLoad(url, params = {}, timeoutMs = 15000, callbackParam = 'callback') {
+  return new Promise((resolve, reject) => {
+    const cbName = 'jsonpCb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('連線逾時'));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = data => {
+      cleanup();
+      resolve(data);
+    };
+
+    const search = new URLSearchParams(params);
+    if (callbackParam === 'tqx') {
+      search.set('tqx', 'responseHandler:' + cbName);
+    } else {
+      search.set(callbackParam, cbName);
+    }
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('目前無法連線'));
+    };
+    script.src = url + (url.includes('?') ? '&' : '?') + search.toString();
+    document.body.appendChild(script);
+  });
+}
+
+function gvizValue(cell) {
+  if (!cell) return '';
+  if (cell.f !== undefined && cell.f !== null) return cell.f;
+  if (cell.v === undefined || cell.v === null) return '';
+  if (cell.v instanceof Date) return cell.v.toISOString();
+  return cell.v;
+}
+
+function gvizToRows(data) {
+  const table = data && data.table;
+  if (!table || !Array.isArray(table.cols) || !Array.isArray(table.rows)) return [];
+  const headers = table.cols.map(col => col.label || col.id || '');
+  return table.rows
+    .map(row => {
+      const obj = {};
+      headers.forEach((header, index) => obj[header] = gvizValue(row.c && row.c[index]));
+      return obj;
+    })
+    .filter(row => Object.values(row).some(value => String(value || '').trim() !== ''));
+}
+
+async function loadRowsFromSheet() {
+  const url = `https://docs.google.com/spreadsheets/d/${REGISTRATION_SHEET_ID}/gviz/tq`;
+  const data = await jsonpLoad(url, {
+    gid: REGISTRATION_GID,
+    t: Date.now()
+  }, 15000, 'tqx');
+  const rows = gvizToRows(data);
+  if (!rows.length) throw new Error('試算表目前沒有回傳資料');
+  saveRegistrationRowsCache(rows);
+  return rows;
+}
+
+async function loadRowsFromGas() {
+  const data = await jsonpLoad(getGasUrl(), { t: Date.now() }, 30000);
+  const rows = Array.isArray(data.data) ? data.data : [];
+  if (!rows.length) throw new Error('GAS 目前沒有回傳資料');
+  saveRegistrationRowsCache(rows);
+  return rows;
+}
+
+async function loadRegistrationRows() {
+  try {
+    return await loadRowsFromSheet();
+  } catch(sheetErr) {
+    try {
+      return await loadRowsFromGas();
+    } catch(gasErr) {
+      const cachedRows = loadRegistrationRowsCache();
+      if (cachedRows) {
+        showSyncToast('⚠ 使用上次成功載入的暫存資料', true);
+        return cachedRows;
+      }
+      throw new Error('載入失敗：試算表與 GAS 目前都無法讀取，請稍後再試。');
+    }
+  }
+}
+
 function syncFromSheet() {
   statusOverride = {}; // 清除本地覆蓋，重新從雲端載入
   loadRegsFromSheet(true);
@@ -2294,33 +2409,13 @@ function syncFromSheet() {
 
 function loadRegsFromSheet(showToast = false) {
   loadPaymentOverrides();
-  const GAS_URL = getGasUrl();
-  if (!GAS_URL) {
-    document.getElementById('regTbody').innerHTML = '<tr><td colspan="17"><div class="empty-state">請先在「系統設定」填寫 GAS 網址</div></td></tr>';
-    return;
-  }
-
   const syncBtn = document.querySelector('[onclick="syncFromSheet()"]');
   if (syncBtn) { syncBtn.textContent = '↻ 同步中…'; syncBtn.disabled = true; }
 
   document.getElementById('statsGrid').innerHTML = '<div style="color:var(--ink-faint);font-size:13px;padding:12px;">載入中…</div>';
   document.getElementById('regTbody').innerHTML = '<tr><td colspan="17"><div class="empty-state">資料載入中…</div></td></tr>';
 
-  const cbName = 'gasCallback_' + Date.now();
-  const script = document.createElement('script');
-  const timer = setTimeout(() => {
-    delete window[cbName];
-    document.body.removeChild(script);
-    document.getElementById('regTbody').innerHTML = '<tr><td colspan="17"><div class="empty-state">載入失敗，請確認 GAS 網址並重試</div></td></tr>';
-    if (showToast) showSyncToast('✗ 同步失敗，請重試', true);
-    if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
-  }, 10000);
-
-  window[cbName] = function(json) {
-    clearTimeout(timer);
-    delete window[cbName];
-    document.body.removeChild(script);
-    const rows = json.data || [];
+  loadRegistrationRows().then(rows => {
     allRegs = rows.map((r, i) => ({
       _id: i,
       rowNum: i + 2,
@@ -2362,10 +2457,12 @@ function loadRegsFromSheet(showToast = false) {
     localStorage.setItem('wule_session_counts', JSON.stringify(counts));
     if (showToast) showSyncToast('✓ 已同步最新資料');
     if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
-  };
-
-  script.src = GAS_URL + '?callback=' + cbName;
-  document.body.appendChild(script);
+  }).catch(err => {
+    document.getElementById('statsGrid').innerHTML = '';
+    document.getElementById('regTbody').innerHTML = `<tr><td colspan="17"><div class="empty-state">${err.message || '載入失敗，請稍後重試'}</div></td></tr>`;
+    if (showToast) showSyncToast('✗ ' + (err.message || '同步失敗'), true);
+    if (syncBtn) { syncBtn.textContent = '↻ 同步雲端資料'; syncBtn.disabled = false; }
+  });
 }
 
 function showSyncToast(msg, isErr = false) {
