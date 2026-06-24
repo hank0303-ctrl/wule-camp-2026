@@ -861,6 +861,9 @@
 <script>
 const READ_GAS_URL = 'https://script.google.com/macros/s/AKfycbyVSOSJhudWYx4I6wQiPn-Xbj6mnrrL2YPA20e7FgxfEQpb5LibtUgU2dg4xGI-Trwk/exec';
 const INSURANCE_GAS_URL = 'https://script.google.com/macros/s/AKfycbyAVs4xw_T4PTW45gkCGlX7tPlYGnuCWIK-lA9etM830KkyGHHzNpwyMmiXWItKNSXZRw/exec';
+const READ_TIMEOUT_MS = 30000;
+const ROW_CACHE_KEY = 'wule_insurance_rows_cache';
+const ROW_CACHE_TTL_MS = 5 * 60 * 1000;
 const DEADLINE_TEXT = '2026/6/23 以前';
 
 let currentRegistration = null;
@@ -983,6 +986,41 @@ function jsonp(url, params, timeoutMs = 10000) {
   });
 }
 
+function saveRowsCache(rows) {
+  try {
+    localStorage.setItem(ROW_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), rows }));
+  } catch (err) {}
+}
+
+function loadRowsCache() {
+  try {
+    const cache = JSON.parse(localStorage.getItem(ROW_CACHE_KEY) || 'null');
+    if (!cache || !Array.isArray(cache.rows)) return null;
+    if (Date.now() - cache.savedAt > ROW_CACHE_TTL_MS) return null;
+    return cache.rows;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadRegistrationRows() {
+  let lastError = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await jsonp(READ_GAS_URL, { t: Date.now() }, READ_TIMEOUT_MS);
+      const rows = Array.isArray(res.data) ? res.data : [];
+      saveRowsCache(rows);
+      return rows;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  const cachedRows = loadRowsCache();
+  if (cachedRows) return cachedRows;
+  throw lastError || new Error('查詢失敗，請稍後再試。');
+}
+
 async function pingInsuranceApi() {
   try {
     const res = await jsonp(INSURANCE_GAS_URL, {}, 6000);
@@ -1008,11 +1046,10 @@ async function lookupRegistration() {
   }
 
   $('lookupBtn').disabled = true;
-  $('lookupBtn').textContent = '查詢中...';
+  $('lookupBtn').textContent = '查詢中，請稍候...';
 
   try {
-    const res = await jsonp(READ_GAS_URL, {});
-    const rows = Array.isArray(res.data) ? res.data : [];
+    const rows = await loadRegistrationRows();
     const matches = rows
       .filter(row => normalizeText(row['學員姓名']) === name)
       .filter(row => phoneDigits(row['聯絡電話']).slice(-4) === phoneLast4);
