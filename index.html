@@ -802,39 +802,43 @@
 
       <div class="session-group-title">全部週次<span id="price-tier-label" style="font-size:11px;font-weight:400;color:var(--gold-light);margin-left:8px;"></span></div>
       <div class="session-grid" id="session-week">
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="week-w1">
+        <div class="session-item closed" onclick="toggleSession(this)">
+          <input type="checkbox" value="week-w1" disabled>
           <div class="session-check">✓</div>
           <div class="session-info">
             <div class="session-name">第一期</div>
             <div class="session-date">7/1 – 7/3 &nbsp;🔥 夏日啟動</div>
+            <div><span class="closed-badge">已截止</span></div>
           </div>
           <div class="session-price" id="price-w1-display">$—</div>
         </div>
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="week-7/6">
+        <div class="session-item closed" onclick="toggleSession(this)">
+          <input type="checkbox" value="week-7/6" disabled>
           <div class="session-check">✓</div>
           <div class="session-info">
             <div class="session-name">第二期</div>
             <div class="session-date">7/6 – 7/10 &nbsp;⚡ 武動覺醒</div>
+            <div><span class="closed-badge">已截止</span></div>
           </div>
           <div class="session-price" id="price-week-display">$—</div>
         </div>
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="week-7/13">
+        <div class="session-item closed" onclick="toggleSession(this)">
+          <input type="checkbox" value="week-7/13" disabled>
           <div class="session-check">✓</div>
           <div class="session-info">
             <div class="session-name">第三期</div>
             <div class="session-date">7/13 – 7/17 &nbsp;🥊 熱血出擊</div>
+            <div><span class="closed-badge">已截止</span></div>
           </div>
           <div class="session-price" id="price-week-display2">$—</div>
         </div>
-        <div class="session-item" onclick="toggleSession(this)">
-          <input type="checkbox" value="week-7/20">
+        <div class="session-item closed" onclick="toggleSession(this)">
+          <input type="checkbox" value="week-7/20" disabled>
           <div class="session-check">✓</div>
           <div class="session-info">
             <div class="session-name">第四期</div>
             <div class="session-date">7/20 – 7/24 &nbsp;🪃 極限翻轉</div>
+            <div><span class="closed-badge">已截止</span></div>
           </div>
           <div class="session-price" id="price-week-display3">$—</div>
         </div>
@@ -1203,11 +1207,16 @@ function applyQuotaToUI(counts) {
 
     el.classList.remove('full', 'closed');
     el.querySelectorAll('.full-badge, .closed-badge, .almost-full-badge, .waitlist-btn').forEach(e => e.remove());
+    const checkbox = el.querySelector('input');
+    if (checkbox) checkbox.disabled = false;
 
     if (isClosed || isFull) {
       el.classList.add(isClosed ? 'closed' : 'full');
       el.classList.remove('selected');
-      el.querySelector('input').checked = false;
+      if (checkbox) {
+        checkbox.checked = false;
+        checkbox.disabled = true;
+      }
       const info = el.querySelector('.session-info');
       if (info) {
         const badge = document.createElement('div');
