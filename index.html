@@ -340,15 +340,18 @@
   }
   .session-item:hover { border-color: var(--gold); }
   .session-item.selected { border-color: var(--gold); background: var(--gold-pale); }
-  .session-item.full {
+  .session-item.full,
+  .session-item.closed {
     opacity: 0.55;
     pointer-events: none;
     border-color: #ccc;
     background: rgba(0,0,0,0.03);
     cursor: not-allowed;
   }
-  .session-item.full .session-price { color: #bbb; }
-  .full-badge {
+  .session-item.full .session-price,
+  .session-item.closed .session-price { color: #bbb; }
+  .full-badge,
+  .closed-badge {
     font-size: 11px;
     font-weight: 700;
     color: #fff;
@@ -358,6 +361,7 @@
     margin-top: 3px;
     display: inline-block;
   }
+  .closed-badge { background: #7A6E5F; }
   .waitlist-btn {
     display: inline-flex;
     align-items: center;
@@ -1164,6 +1168,8 @@ const SESSIONS = [
   { id: 'week-8/24', name: '第七期（8/24–8/28 拳力對決）',  type: 'week' },
 ];
 
+const CLOSED_SESSIONS = ['week-w1', 'week-7/6', 'week-7/13', 'week-7/20'];
+
 // 需要拳擊裝備的期數
 const BOXING_SESSIONS = ['week-7/13', 'week-8/24'];
 
@@ -1192,20 +1198,23 @@ function applyQuotaToUI(counts) {
     const count = (counts && counts[val]) ? counts[val] : 0;
     const remaining = limit > 0 ? limit - count : 999;
     const isFull = limit > 0 && count >= limit;
+    const isClosed = CLOSED_SESSIONS.includes(val);
     const isAlmostFull = !isFull && limit > 0 && remaining <= ALMOST_FULL_THRESHOLD;
 
-    el.classList.remove('full');
-    el.querySelectorAll('.full-badge, .almost-full-badge, .waitlist-btn').forEach(e => e.remove());
+    el.classList.remove('full', 'closed');
+    el.querySelectorAll('.full-badge, .closed-badge, .almost-full-badge, .waitlist-btn').forEach(e => e.remove());
 
-    if (isFull) {
-      el.classList.add('full');
+    if (isClosed || isFull) {
+      el.classList.add(isClosed ? 'closed' : 'full');
       el.classList.remove('selected');
       el.querySelector('input').checked = false;
       const info = el.querySelector('.session-info');
       if (info) {
         const badge = document.createElement('div');
-        badge.innerHTML = `<span class="full-badge">額滿</span>
-          <a class="waitlist-btn" href="${LINE_URL}" target="_blank">💬 詢問候補</a>`;
+        badge.innerHTML = isClosed
+          ? `<span class="closed-badge">已截止</span>`
+          : `<span class="full-badge">額滿</span>
+            <a class="waitlist-btn" href="${LINE_URL}" target="_blank">💬 詢問候補</a>`;
         info.appendChild(badge);
       }
       selectedSessions = selectedSessions.filter(s => s !== val);
@@ -1575,7 +1584,7 @@ function selectPayment(el, val) {
 }
 
 function toggleSession(el) {
-  if (el.classList.contains('full')) return; // 額滿不可點
+  if (el.classList.contains('full') || el.classList.contains('closed')) return; // 額滿或截止不可點
   el.classList.toggle('selected');
   const input = el.querySelector('input');
   const val = input.value;
@@ -1905,6 +1914,7 @@ function showThanks(d, deposit) {
 
 // init
 initPrices();
+applyQuotaToUI({}); // 先套用已截止週次，避免等待名額 API 時仍可點選
 fetchCountsAndApply(); // 從 GAS 即時查詢各期人數，額滿自動鎖定
 </script>
 </body>
