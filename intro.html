@@ -4,6 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>2026 武動暑假｜全能運動挑戰營</title>
+<script>
+(function restrictToLocalHost() {
+  const allowedHosts = new Set(['localhost', '127.0.0.1', '::1']);
+  const isLocalFile = window.location.protocol === 'file:';
+  const isLocalHost = allowedHosts.has(window.location.hostname);
+
+  if (isLocalFile || isLocalHost) return;
+
+  document.documentElement.classList.add('wule-private-blocked');
+  document.title = '頁面未開放';
+  document.addEventListener('DOMContentLoaded', function showPrivateNotice() {
+    document.body.innerHTML = '<main id="wule-private-blocker"><section><h1>頁面未開放</h1><p>此頁面目前僅限武樂內部本機使用。</p></section></main>';
+  });
+})();
+</script>
+<style>
+  html.wule-private-blocked body {
+    margin: 0 !important;
+    min-height: 100vh !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #f8f3ea !important;
+    color: #17140c !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "Microsoft JhengHei", sans-serif !important;
+  }
+  html.wule-private-blocked body > * { display: none !important; }
+  html.wule-private-blocked #wule-private-blocker {
+    width: min(88vw, 420px) !important;
+    display: block !important;
+    padding: 28px !important;
+    border: 1px solid #ddcda9 !important;
+    border-radius: 12px !important;
+    background: #fffaf2 !important;
+    box-shadow: 0 18px 45px rgba(23, 20, 12, 0.12) !important;
+  }
+  html.wule-private-blocked #wule-private-blocker h1 { margin: 0 0 10px !important; font-size: 24px !important; }
+  html.wule-private-blocked #wule-private-blocker p { margin: 0 !important; line-height: 1.8 !important; color: #6f6658 !important; }
+</style>
 <meta name="description" content="2026武樂夏令營，六週全能運動挑戰營，武術、拳擊、翻滾、舞蹈、戶外探索，適合6-12歲。">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-SEM57GKKQV"></script>
